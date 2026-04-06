@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Facebook, Twitter, Instagram, Linkedin, 
-  Mail, Phone, MapPin, ExternalLink, 
   ShieldCheck, Award, Microscope, Activity,
   Server, Globe, Database
 } from 'lucide-react';

@@ -22,7 +22,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [flippedIdx, setFlippedIdx] = useState(null);
 
-  const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+
   const heroOffersList = offersData.length > 0 
     ? offersData.map(o => `${o.offer_type} Deal: ${o.title} - $${o.discounted_price}!`)
     : [
@@ -32,12 +32,7 @@ const Home = () => {
         "Limited Time: 45% Off All Wellness Packages!"
       ];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentOfferIndex((prev) => (prev + 1) % heroOffersList.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [heroOffersList.length]);
+
 
   useEffect(() => {
     const fetchData = async () => {

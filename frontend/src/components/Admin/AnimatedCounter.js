@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useSpring, useTransform, animate } from 'framer-motion';
+import { motion, animate } from 'framer-motion';
 
 const AnimatedCounter = ({ value, duration = 2, suffix = '' }) => {
   const [displayValue, setDisplayValue] = useState(0);

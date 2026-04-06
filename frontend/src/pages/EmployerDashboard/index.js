@@ -2,14 +2,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   LayoutDashboard, Users, Calendar, Wallet, CreditCard, 
   MapPin, LogOut, Menu, X, Bell, Search, Plus, 
-  Download, Filter, ChevronRight, TrendingUp, AlertCircle,
-  FileText, CheckCircle2, Clock, Sun, Moon, Share2, Copy, Check, Trash2
+  Download, Filter, ChevronRight, AlertCircle,
+  FileText, CheckCircle2, Clock, Sun, Moon, Share2, Copy, Trash2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { employersAPI } from '../../services/api';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, PieChart, Pie, Cell 
+  ResponsiveContainer 
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'react-qr-code';
@@ -17,7 +17,7 @@ import AnimatedCounter from '../../components/Admin/AnimatedCounter';
 import './EmployerDashboard.css';
 
 const EmployerDashboard = () => {
-  const { user, logout, token } = useAuth();
+  const { logout, token } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [stats, setStats] = useState(null);

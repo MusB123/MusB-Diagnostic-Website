@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Bell, CheckCircle2, Clock, Droplets, 
-  LayoutDashboard, LogOut, MapPin, Menu, 
-  Search, ShieldCheck, TrendingUp, Truck, X, AlertCircle,
-  Target, Zap, Thermometer, Heart, Star, Award, ChevronRight,
-  Navigation, User, Settings, Info, CreditCard, ListChecks,
+  CheckCircle2, Clock, Droplets, 
+  LogOut, MapPin, 
+  ShieldCheck, TrendingUp, Truck, AlertCircle,
+  Zap,
+  Navigation, User, Info, ListChecks,
   Calendar, Users, Map
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, BarChart, Bar 
+  Tooltip, ResponsiveContainer 
 } from 'recharts';
 import './Portal.css';
 
@@ -23,7 +23,7 @@ const PhlebotomistDashboard = () => {
   const [checkedSpecimens, setCheckedSpecimens] = useState([]);
   const [sessionYield, setSessionYield] = useState(215.00);
   const [totalDrops, setTotalDrops] = useState(142);
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('phleb_user')) || { name: 'Demo Specialist', company: 'MUSB Field Ops' });
+  const [user] = useState(JSON.parse(localStorage.getItem('phleb_user')) || { name: 'Demo Specialist', company: 'MUSB Field Ops' });
   const navigate = useNavigate();
 
   useEffect(() => {
