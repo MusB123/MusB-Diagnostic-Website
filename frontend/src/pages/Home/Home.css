@@ -738,7 +738,7 @@
   .trust-content { flex-direction: column; }
 }
 
-/* Section F: Popular Panels */
+/* Section F: Reused stellar midnight elements */
 .panels-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

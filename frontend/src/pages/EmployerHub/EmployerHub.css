@@ -67,7 +67,7 @@
 .text-center { text-align: center; }
 .mb-5 { margin-bottom: 3rem; }
 
-/* Benefits Section */
+/* Service Stats Symmetry */
 .benefits-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
