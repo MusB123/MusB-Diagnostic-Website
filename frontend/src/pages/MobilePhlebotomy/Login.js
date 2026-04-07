@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import api from '../../api/api';
 import './Portal.css';
 
 const PhlebotomistLogin = ({ isOpen, onClose }) => {
@@ -33,15 +34,10 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
     const endpoint = isSignup ? '/api/phleb/signup/' : '/api/phleb/login/';
     
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const response = await api.post(endpoint, formData);
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         localStorage.setItem('phleb_token', data.token);
         localStorage.setItem('phleb_user', JSON.stringify(data.user));
         onClose();
@@ -50,7 +46,8 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
         setError(data.error || 'Invalid phlebotomist credentials');
       }
     } catch (err) {
-      setError('Connection error. Please check your internet.');
+      console.error('Login Error:', err);
+      setError(err.response?.data?.error || 'Connection error. Please check your internet.');
     } finally {
       setLoading(false);
     }

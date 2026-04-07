@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Microscope, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../../api/api';
 import './ResearchPortal.css';
 
 const ResearchLoginModal = ({ isOpen, onClose }) => {
@@ -26,15 +27,10 @@ const ResearchLoginModal = ({ isOpen, onClose }) => {
         const endpoint = isSignup ? '/api/research/portal/signup/' : '/api/research/portal/login/';
         
         try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(credentials),
-            });
+            const response = await api.post(endpoint, credentials);
+            const data = response.data;
 
-            const data = await response.json();
-
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 localStorage.setItem('res_token', data.token);
                 localStorage.setItem('res_user', JSON.stringify(data.user));
                 navigate('/portal/research/dashboard');
@@ -42,7 +38,8 @@ const ResearchLoginModal = ({ isOpen, onClose }) => {
                 setError(data.error || 'Authentication failed. Please check your data.');
             }
         } catch (err) {
-            setError('Server connection error. Please try again later.');
+            console.error('Research Login Error:', err);
+            setError(err.response?.data?.error || 'Server connection error. Please try again later.');
         } finally {
             setLoading(false);
         }
