@@ -139,15 +139,27 @@ def signup_view(request):
 @api_view(['POST'])
 def login_view(request):
     """POST /api/employers/login/ — Login with credentials or Google."""
-    email = request.data.get('email')
-    password = request.data.get('password')
-    
-    # Check manual login (Developer account)
-    login_data = login_manual(email, password)
-    if login_data:
-        return Response(login_data)
+    try:
+        email = request.data.get('email')
+        password = request.data.get('password')
         
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check manual login (Developer account)
+        login_data = login_manual(email, password)
+        if login_data:
+            return Response(login_data)
+            
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        import traceback
+        print(f"🔥 LOGIN CRASH: {str(e)}")
+        print(traceback.format_exc())
+        return Response({
+            'error': 'Internal Server Error (Login view crashed)',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def get_current_employer(request):
     """Helper to verify JWT and get employer info from request."""

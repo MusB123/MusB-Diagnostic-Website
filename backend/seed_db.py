@@ -83,6 +83,49 @@ RESEARCH_COLLABORATIONS = [
     {'id': 3, 'title': 'Grant Collaboration', 'description': 'Sub-award capable laboratory partner for NIH and NSF funded projects.', 'icon_name': 'Award'},
 ]
 
+# --- Research Portal Core Data ---
+RESEARCH_USERS = [
+    {
+        'email': 'research@musb.com',
+        'password': 'research2026',
+        'name': 'Dr. Aris Thorne',
+        'role': 'admin',
+        'institution': 'MusB Central Research'
+    },
+    {
+        'email': 'lab-pi@musb.com',
+        'password': 'research2026',
+        'name': 'Prof. Elena Vance',
+        'role': 'client',
+        'institution': 'Black Mesa Diagnostics'
+    }
+]
+
+MOCK_STUDIES = [
+    {
+        'study_id': 'STUDY-ALPHA-9',
+        'title': 'Viral Load Longitudinal Analysis',
+        'sponsor': 'NIH / NIAID',
+        'status': 'Active',
+        'pi': 'Dr. Aris Thorne',
+        'created_at': '2026-01-15'
+    },
+    {
+        'study_id': 'STUDY-OMEGA-4',
+        'title': 'Biomarker Validation for Pan-Cancer',
+        'sponsor': 'Black Mesa Diagnostics',
+        'status': 'Pending Review',
+        'pi': 'Prof. Elena Vance',
+        'created_at': '2026-03-10'
+    }
+]
+
+MOCK_SAMPLES = [
+    {'barcode': 'MUSB-999-TR', 'type': 'Whole Blood', 'study_id': 'STUDY-ALPHA-9', 'status': 'Received', 'location': 'Freezer-B2'},
+    {'barcode': 'MUSB-121-PL', 'type': 'Plasma', 'study_id': 'STUDY-ALPHA-9', 'status': 'Processing', 'location': 'Centrifuge-01'},
+    {'barcode': 'MUSB-443-SR', 'type': 'Serum', 'study_id': 'STUDY-OMEGA-4', 'status': 'Stored', 'location': 'Freezer-A1'},
+]
+
 def seed():
     db = get_db()
     
@@ -101,7 +144,10 @@ def seed():
         'biorepository_info': BIOREPOSITORY_STATS,
         'research_collaborations': RESEARCH_COLLABORATIONS,
         'research_quotes': [],
-        'research_subscriptions': []
+        'research_subscriptions': [],
+        'research_users': RESEARCH_USERS,
+        'research_studies': MOCK_STUDIES,
+        'research_samples': MOCK_SAMPLES
     }
     
     print("🌱 [MONGODB] Seeding project metadata...")

@@ -21,7 +21,7 @@
                 "Women's & Metabolic Health",
                 "Thyroid & STD Testing"
             ],
-            "_id": "69d21844f6e9432117d9fbc0"
+            "_id": "69d4d39c7cd301b7982d046e"
         },
         {
             "id": 2,
@@ -35,7 +35,7 @@
                 "Executive & Family Credits",
                 "Retention Benefits"
             ],
-            "_id": "69d21844f6e9432117d9fbc1"
+            "_id": "69d4d39c7cd301b7982d046f"
         },
         {
             "id": 3,
@@ -49,7 +49,7 @@
                 "LIS Integration",
                 "Physician Portal Login"
             ],
-            "_id": "69d21844f6e9432117d9fbc2"
+            "_id": "69d4d39c7cd301b7982d0470"
         },
         {
             "id": 4,
@@ -63,7 +63,7 @@
                 "Mobile Collection Workflow",
                 "LIS Routing & Portal"
             ],
-            "_id": "69d21844f6e9432117d9fbc3"
+            "_id": "69d4d39c7cd301b7982d0471"
         },
         {
             "id": 5,
@@ -77,7 +77,7 @@
                 "What to Expect",
                 "Book Home Draw"
             ],
-            "_id": "69d21844f6e9432117d9fbc4"
+            "_id": "69d4d39c7cd301b7982d0472"
         },
         {
             "id": 6,
@@ -90,7 +90,7 @@
                 "Partnership Application",
                 "Affiliate Fundraising Tie-ins"
             ],
-            "_id": "69d21844f6e9432117d9fbc5"
+            "_id": "69d4d39c7cd301b7982d0473"
         },
         {
             "id": 7,
@@ -104,7 +104,7 @@
                 "Submit NDA & Technology",
                 "Project Tracker Portal"
             ],
-            "_id": "69d21844f6e9432117d9fbc6"
+            "_id": "69d4d39c7cd301b7982d0474"
         },
         {
             "id": 8,
@@ -118,7 +118,7 @@
                 "Academic Collaboration",
                 "Request Quote Portal"
             ],
-            "_id": "69d21844f6e9432117d9fbc7"
+            "_id": "69d4d39c7cd301b7982d0475"
         }
     ],
     "popular_panels": [
@@ -128,7 +128,7 @@
             "icon_name": "Activity",
             "price": "150.00",
             "link": "/tests",
-            "_id": "69d21844f6e9432117d9fbc9"
+            "_id": "69d4d39c7cd301b7982d0477"
         },
         {
             "id": 2,
@@ -136,7 +136,7 @@
             "icon_name": "Droplets",
             "price": "45.00",
             "link": "/tests",
-            "_id": "69d21844f6e9432117d9fbca"
+            "_id": "69d4d39c7cd301b7982d0478"
         },
         {
             "id": 3,
@@ -144,7 +144,7 @@
             "icon_name": "AlertCircle",
             "price": "85.00",
             "link": "/tests",
-            "_id": "69d21844f6e9432117d9fbcb"
+            "_id": "69d4d39c7cd301b7982d0479"
         },
         {
             "id": 4,
@@ -152,7 +152,7 @@
             "icon_name": "Heart",
             "price": "199.00",
             "link": "/tests",
-            "_id": "69d21844f6e9432117d9fbcc"
+            "_id": "69d4d39c7cd301b7982d047a"
         },
         {
             "id": 5,
@@ -160,7 +160,7 @@
             "icon_name": "ShieldCheck",
             "price": "130.00",
             "link": "/tests",
-            "_id": "69d21844f6e9432117d9fbcd"
+            "_id": "69d4d39c7cd301b7982d047b"
         },
         {
             "id": 6,
@@ -168,7 +168,7 @@
             "icon_name": "Zap",
             "price": "110.00",
             "link": "/tests",
-            "_id": "69d21844f6e9432117d9fbce"
+            "_id": "69d4d39c7cd301b7982d047c"
         }
     ],
     "testimonials": [
@@ -178,7 +178,7 @@
             "content": "The mobile phlebotomy service is a game changer! The nurse arrived on time, was extremely professional, and I got my results the next morning without ever leaving my house.",
             "rating": 5,
             "is_featured": true,
-            "_id": "69d21844f6e9432117d9fbc8"
+            "_id": "69d4d39c7cd301b7982d0476"
         }
     ],
     "categories": [
@@ -307,7 +307,7 @@
                 "Iron Panel"
             ],
             "time_left": "3d 14h 22m",
-            "_id": "69d21844f6e9432117d9fbb1"
+            "_id": "69d4d39c7cd301b7982d045f"
         },
         {
             "id": 2,
@@ -322,7 +322,7 @@
                 "CBC & Lipid Profile"
             ],
             "time_left": "Ends on Mar 31",
-            "_id": "69d21844f6e9432117d9fbb2"
+            "_id": "69d4d39c7cd301b7982d0460"
         },
         {
             "id": 3,
@@ -337,7 +337,7 @@
                 "CRP Inflammation"
             ],
             "time_left": "Limited Time",
-            "_id": "69d21844f6e9432117d9fbb3"
+            "_id": "69d4d39c7cd301b7982d0461"
         }
     ],
     "phlebotomists": [
@@ -371,10 +371,22 @@
         }
     ],
     "coverage_zones": [
-        { "name": "Manhattan Core", "status": "High Saturation" },
-        { "name": "Brooklyn North", "status": "Normal Coverage" },
-        { "name": "Queens Central", "status": "Critical Unit Needed" },
-        { "name": "Bronx District", "status": "Normal Coverage" }
+        {
+            "name": "Manhattan Core",
+            "status": "High Saturation"
+        },
+        {
+            "name": "Brooklyn North",
+            "status": "Normal Coverage"
+        },
+        {
+            "name": "Queens Central",
+            "status": "Critical Unit Needed"
+        },
+        {
+            "name": "Bronx District",
+            "status": "Normal Coverage"
+        }
     ],
     "employers": [
         {
@@ -481,45 +493,7 @@
             "_id": "69cd4939b084bf71bd845d2c"
         }
     ],
-    "appointments": [
-        {
-            "id": "APP-901",
-            "patient": "Sarah Jenkins",
-            "time": "09:00 AM",
-            "status": "Completed",
-            "addr": "120 Broadway, NY"
-        },
-        {
-            "id": "APP-902",
-            "patient": "R. Thompson",
-            "patient_id": "PT-5512",
-            "initials": "RT",
-            "age": 45,
-            "gender": "M",
-            "time": "10:45 AM",
-            "status": "Next",
-            "addr": "450 Park Ave, NY",
-            "instructions": "Fast 12h, Cold-Chain Box A needed. Patient is a difficult stick.",
-            "specimens": ["SST (Gold)", "EDTA (Purple)", "Sodium Citrate (Blue)"],
-            "payment_status": "Prepaid",
-            "associated_facility": "Northwell Health",
-            "doctor": "Dr. Aris Thorne"
-        },
-        {
-            "id": "APP-903",
-            "patient": "Jane Doe",
-            "time": "01:15 PM",
-            "status": "Scheduled",
-            "addr": "78 W 52nd St, NY"
-        },
-        {
-            "id": "APP-904",
-            "patient": "Test Invitee",
-            "time": "03:00 PM",
-            "status": "Scheduled",
-            "addr": "12 Hudson Yard, NY"
-        }
-    ],
+    "appointments": [],
     "credits_wallet": [],
     "onsite_requests": [
         {
@@ -536,81 +510,48 @@
     "activity_log": [],
     "research_studies": [
         {
-            "title": "Isolation Test 0",
-            "sponsor": "Isolation Corp",
-            "pi_name": "Dr. Isolation",
-            "sample_types": [
-                "Blood"
-            ],
-            "sops": "v1.0",
+            "study_id": "STUDY-ALPHA-9",
+            "title": "Viral Load Longitudinal Analysis",
+            "sponsor": "NIH / NIAID",
             "status": "Active",
-            "study_id": "STUDY-4ABF38",
-            "created_at": "2026-04-03 11:45:36.870653",
-            "_id": "69cfa86081b247b503a9716a"
+            "pi": "Dr. Aris Thorne",
+            "created_at": "2026-01-15",
+            "_id": "69d4d39c7cd301b7982d048a"
         },
         {
-            "title": "Isolation Test 1",
-            "sponsor": "Isolation Corp",
-            "pi_name": "Dr. Isolation",
-            "sample_types": [
-                "Blood"
-            ],
-            "sops": "v1.0",
-            "status": "Active",
-            "study_id": "STUDY-AC1D48",
-            "created_at": "2026-04-03 11:45:38.933355",
-            "_id": "69cfa86281b247b503a9716b"
-        },
-        {
-            "title": "Isolation Test 2",
-            "sponsor": "Isolation Corp",
-            "pi_name": "Dr. Isolation",
-            "sample_types": [
-                "Blood"
-            ],
-            "sops": "v1.0",
-            "status": "Active",
-            "study_id": "STUDY-805DC9",
-            "created_at": "2026-04-03 11:45:41.030466",
-            "_id": "69cfa86581b247b503a9716c"
-        },
-        {
-            "title": "Beat the bloat",
-            "sponsor": "Musb diagnostics",
-            "pi_name": "Barenya",
-            "sample_types": [
-                "plasma"
-            ],
-            "sops": "clinical",
-            "status": "Active",
-            "study_id": "STUDY-228C4E",
-            "created_at": "2026-04-03 15:45:04.900280",
-            "_id": "69cfe0807eeaba7db71b704f"
+            "study_id": "STUDY-OMEGA-4",
+            "title": "Biomarker Validation for Pan-Cancer",
+            "sponsor": "Black Mesa Diagnostics",
+            "status": "Pending Review",
+            "pi": "Prof. Elena Vance",
+            "created_at": "2026-03-10",
+            "_id": "69d4d39c7cd301b7982d048b"
         }
     ],
     "research_samples": [
         {
-            "id": "res-samp-001",
-            "sample_id": "SAMP-X99",
-            "study_id": "STUDY-A102",
-            "type": "Plasma",
-            "barcode": "MUSB-A102-X99",
-            "status": "Stored",
-            "storage_location": {
-                "freezer": "FZ-01",
-                "rack": "R02",
-                "shelf": "S3",
-                "box": "B08",
-                "position": "A1"
-            }
+            "barcode": "MUSB-999-TR",
+            "type": "Whole Blood",
+            "study_id": "STUDY-ALPHA-9",
+            "status": "Received",
+            "location": "Freezer-B2",
+            "_id": "69d4d39c7cd301b7982d048c"
         },
         {
-            "study_id": "STUDY-BF5492",
+            "barcode": "MUSB-121-PL",
             "type": "Plasma",
-            "aliquots_count": "2",
-            "barcode": "MUSB-8DEFDF40",
-            "status": "Received",
-            "_id": "69cfbbb97eeaba7db71b704e"
+            "study_id": "STUDY-ALPHA-9",
+            "status": "Processing",
+            "location": "Centrifuge-01",
+            "_id": "69d4d39c7cd301b7982d048d"
+        },
+        {
+            "barcode": "MUSB-443-SR",
+            "type": "Serum",
+            "study_id": "STUDY-OMEGA-4",
+            "status": "Stored",
+            "location": "Freezer-A1",
+            "_id": "69d4d39c7cd301b7982d048e"
         }
     ],
     "research_shipments": [
@@ -638,31 +579,31 @@
             "id": 1,
             "name": "General Wellness",
             "slug": "general-wellness",
-            "_id": "69d21844f6e9432117d9fbb4"
+            "_id": "69d4d39c7cd301b7982d0462"
         },
         {
             "id": 2,
             "name": "Heart Health",
             "slug": "heart-health",
-            "_id": "69d21844f6e9432117d9fbb5"
+            "_id": "69d4d39c7cd301b7982d0463"
         },
         {
             "id": 3,
             "name": "Vitamins & Minerals",
             "slug": "vitamins-minerals",
-            "_id": "69d21844f6e9432117d9fbb6"
+            "_id": "69d4d39c7cd301b7982d0464"
         },
         {
             "id": 4,
             "name": "Kidney Health",
             "slug": "kidney-health",
-            "_id": "69d21844f6e9432117d9fbb7"
+            "_id": "69d4d39c7cd301b7982d0465"
         },
         {
             "id": 5,
             "name": "Infectious Disease",
             "slug": "infectious-disease",
-            "_id": "69d21844f6e9432117d9fbb8"
+            "_id": "69d4d39c7cd301b7982d0466"
         }
     ],
     "lab_tests": [
@@ -677,7 +618,7 @@
             "sample_type": "Blood",
             "turnaround": "24h",
             "icon_name": "Droplet",
-            "_id": "69d21844f6e9432117d9fbb9"
+            "_id": "69d4d39c7cd301b7982d0467"
         },
         {
             "id": 2,
@@ -690,7 +631,7 @@
             "sample_type": "Blood",
             "turnaround": "24h",
             "icon_name": "HeartPulse",
-            "_id": "69d21844f6e9432117d9fbba"
+            "_id": "69d4d39c7cd301b7982d0468"
         },
         {
             "id": 3,
@@ -703,7 +644,7 @@
             "sample_type": "Blood",
             "turnaround": "24h",
             "icon_name": "Activity",
-            "_id": "69d21844f6e9432117d9fbbb"
+            "_id": "69d4d39c7cd301b7982d0469"
         },
         {
             "id": 4,
@@ -716,7 +657,7 @@
             "sample_type": "Blood",
             "turnaround": "48h",
             "icon_name": "Bone",
-            "_id": "69d21844f6e9432117d9fbbc"
+            "_id": "69d4d39c7cd301b7982d046a"
         },
         {
             "id": 5,
@@ -729,7 +670,7 @@
             "sample_type": "Urine",
             "turnaround": "24h",
             "icon_name": "Activity",
-            "_id": "69d21844f6e9432117d9fbbd"
+            "_id": "69d4d39c7cd301b7982d046b"
         },
         {
             "id": 6,
@@ -742,7 +683,7 @@
             "sample_type": "Swab",
             "turnaround": "48h",
             "icon_name": "FileWarning",
-            "_id": "69d21844f6e9432117d9fbbe"
+            "_id": "69d4d39c7cd301b7982d046c"
         }
     ],
     "hero_content": [
@@ -751,7 +692,7 @@
             "badge_text": "Next-Gen Diagnostics",
             "title": "Affordable Lab Testing + Mobile Collections + Research-Grade Quality",
             "subtitle": "Self-pay, employer plans, physicians, facilities, research & biomarker validation.",
-            "_id": "69d21844f6e9432117d9fbbf"
+            "_id": "69d4d39c7cd301b7982d046d"
         }
     ],
     "research_services": [
@@ -760,28 +701,28 @@
             "title": "Sample Collection & Processing",
             "description": "Multi-site specimen collection with standardized processing protocols.",
             "icon_name": "FlaskConical",
-            "_id": "69d21844f6e9432117d9fbcf"
+            "_id": "69d4d39c7cd301b7982d047d"
         },
         {
             "id": 2,
             "title": "Cold Chain Logistics",
             "description": "Temperature-controlled shipping and chain-of-custody documentation.",
             "icon_name": "Truck",
-            "_id": "69d21844f6e9432117d9fbd0"
+            "_id": "69d4d39c7cd301b7982d047e"
         },
         {
             "id": 3,
             "title": "Data Management",
             "description": "Secure data capture, EDC integration, and regulatory-compliant reporting.",
             "icon_name": "Database",
-            "_id": "69d21844f6e9432117d9fbd1"
+            "_id": "69d4d39c7cd301b7982d047f"
         },
         {
             "id": 4,
             "title": "Regulatory Compliance",
             "description": "GCP, GLP, and CLIA-compliant testing workflows for clinical trials.",
             "icon_name": "ShieldCheck",
-            "_id": "69d21844f6e9432117d9fbd2"
+            "_id": "69d4d39c7cd301b7982d0480"
         }
     ],
     "biorepository_info": [
@@ -790,28 +731,28 @@
             "stat_label": "Uptime & Reliability",
             "stat_value": "99.99%",
             "description": "Redundant power and monitoring systems.",
-            "_id": "69d21844f6e9432117d9fbd3"
+            "_id": "69d4d39c7cd301b7982d0481"
         },
         {
             "id": 2,
             "stat_label": "Sample Capacity",
             "stat_value": "500K+",
             "description": "Ultra-low temperature storage for biospecimens.",
-            "_id": "69d21844f6e9432117d9fbd4"
+            "_id": "69d4d39c7cd301b7982d0482"
         },
         {
             "id": 3,
             "stat_label": "Active Studies",
             "stat_value": "120+",
             "description": "Concurrent clinical trial support.",
-            "_id": "69d21844f6e9432117d9fbd5"
+            "_id": "69d4d39c7cd301b7982d0483"
         },
         {
             "id": 4,
             "stat_label": "Turnaround",
             "stat_value": "< 24h",
             "description": "Expedited processing for priority studies.",
-            "_id": "69d21844f6e9432117d9fbd6"
+            "_id": "69d4d39c7cd301b7982d0484"
         }
     ],
     "research_collaborations": [
@@ -820,21 +761,39 @@
             "title": "University Partnerships",
             "description": "Joint research programs with leading academic institutions.",
             "icon_name": "GraduationCap",
-            "_id": "69d21844f6e9432117d9fbd7"
+            "_id": "69d4d39c7cd301b7982d0485"
         },
         {
             "id": 2,
             "title": "Publication Support",
             "description": "Assistance with manuscript preparation and peer review submissions.",
             "icon_name": "BookOpen",
-            "_id": "69d21844f6e9432117d9fbd8"
+            "_id": "69d4d39c7cd301b7982d0486"
         },
         {
             "id": 3,
             "title": "Grant Collaboration",
             "description": "Sub-award capable laboratory partner for NIH and NSF funded projects.",
             "icon_name": "Award",
-            "_id": "69d21844f6e9432117d9fbd9"
+            "_id": "69d4d39c7cd301b7982d0487"
+        }
+    ],
+    "research_users": [
+        {
+            "email": "research@musb.com",
+            "password": "research2026",
+            "name": "Dr. Aris Thorne",
+            "role": "admin",
+            "institution": "MusB Central Research",
+            "_id": "69d4d39c7cd301b7982d0488"
+        },
+        {
+            "email": "lab-pi@musb.com",
+            "password": "research2026",
+            "name": "Prof. Elena Vance",
+            "role": "client",
+            "institution": "Black Mesa Diagnostics",
+            "_id": "69d4d39c7cd301b7982d0489"
         }
     ]
 }
