@@ -340,6 +340,42 @@
             "_id": "69d21844f6e9432117d9fbb3"
         }
     ],
+    "phlebotomists": [
+        {
+            "id": "PHLEB-01",
+            "name": "Sarah J.",
+            "email": "sarah@musb.com",
+            "status": "Active",
+            "zone": "Manhattan"
+        },
+        {
+            "id": "PHLEB-02",
+            "name": "Mike R.",
+            "email": "mike@musb.com",
+            "status": "On Break",
+            "zone": "Brooklyn"
+        },
+        {
+            "id": "PHLEB-03",
+            "name": "Eli W.",
+            "email": "eli@musb.com",
+            "status": "Offline",
+            "zone": "Queens"
+        },
+        {
+            "id": "PHLEB-04",
+            "name": "Jessica K.",
+            "email": "jessica@musb.com",
+            "status": "Active",
+            "zone": "Bronx"
+        }
+    ],
+    "coverage_zones": [
+        { "name": "Manhattan Core", "status": "High Saturation" },
+        { "name": "Brooklyn North", "status": "Normal Coverage" },
+        { "name": "Queens Central", "status": "Critical Unit Needed" },
+        { "name": "Bronx District", "status": "Normal Coverage" }
+    ],
     "employers": [
         {
             "company_name": "MusB Health Corp",
@@ -443,6 +479,45 @@
             "status": "Invited",
             "invite_token": "dac06cb7-014e-4b58-bf01-12d8dea7f885",
             "_id": "69cd4939b084bf71bd845d2c"
+        }
+    ],
+    "appointments": [
+        {
+            "id": "APP-901",
+            "patient": "Sarah Jenkins",
+            "time": "09:00 AM",
+            "status": "Completed",
+            "addr": "120 Broadway, NY"
+        },
+        {
+            "id": "APP-902",
+            "patient": "R. Thompson",
+            "patient_id": "PT-5512",
+            "initials": "RT",
+            "age": 45,
+            "gender": "M",
+            "time": "10:45 AM",
+            "status": "Next",
+            "addr": "450 Park Ave, NY",
+            "instructions": "Fast 12h, Cold-Chain Box A needed. Patient is a difficult stick.",
+            "specimens": ["SST (Gold)", "EDTA (Purple)", "Sodium Citrate (Blue)"],
+            "payment_status": "Prepaid",
+            "associated_facility": "Northwell Health",
+            "doctor": "Dr. Aris Thorne"
+        },
+        {
+            "id": "APP-903",
+            "patient": "Jane Doe",
+            "time": "01:15 PM",
+            "status": "Scheduled",
+            "addr": "78 W 52nd St, NY"
+        },
+        {
+            "id": "APP-904",
+            "patient": "Test Invitee",
+            "time": "03:00 PM",
+            "status": "Scheduled",
+            "addr": "12 Hudson Yard, NY"
         }
     ],
     "credits_wallet": [],

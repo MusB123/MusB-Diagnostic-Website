@@ -17,6 +17,7 @@ import certifi
 
 _client = None
 _use_fallback = False
+_db_instance = None # Singleton Instance
 
 def get_client(silent=False):
     """Get or create singleton MongoClient with fallback detection."""
@@ -43,11 +44,15 @@ def get_client(silent=False):
 
 
 def get_db():
-    """Get the database instance (or a Mock object if falling back)."""
-    client = get_client()
-    if _use_fallback or client is None:
-        return MockDatabase()
-    return client[settings.MONGO_DB_NAME]
+    """Get the database instance (Singleton)."""
+    global _db_instance
+    if _db_instance is None:
+        client = get_client()
+        if _use_fallback or client is None:
+            _db_instance = MockDatabase()
+        else:
+            _db_instance = client[settings.MONGO_DB_NAME]
+    return _db_instance
 
 
 class MongoJSONEncoder(json.JSONEncoder):
@@ -63,13 +68,18 @@ class MongoJSONEncoder(json.JSONEncoder):
 class MockDatabase:
     """A minimal mock object that behaves like a pymongo DB but reads from a JSON file."""
     def __init__(self):
-        self.path = Path(settings.BASE_DIR) / "mock_db.json"
+        # Professional-grade absolute path resolution
+        self._set_paths()
         try:
-            with open(self.path, 'r') as f:
+            with open(self.path, 'r', encoding='utf-8') as f:
                 self.data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            # Fallback if file is missing or corrupted
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"⚠️ [MOCK DB] Data Load Warning: {e}")
             self.data = {}
+
+    def _set_paths(self):
+        base_dir = Path(__file__).resolve().parent.parent
+        self.path = base_dir / "mock_db.json"
 
     def __getitem__(self, collection_name):
         # Pass the database object to the collection so it can trigger saves
@@ -209,8 +219,8 @@ def close_connection():
 
 def transform_doc(doc):
     """Transforms documents for API response, handling both real and mock formats."""
-    if not isinstance(doc, dict):
-        return doc
+    if not doc or not isinstance(doc, dict):
+        return {}
     new_doc = doc.copy()
     if '_id' in new_doc:
         new_doc['id'] = str(new_doc.pop('_id'))

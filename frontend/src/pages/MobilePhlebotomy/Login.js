@@ -83,8 +83,8 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
         </div>
 
         <div className="text-center">
-          <h2 className="phleb-title">{isSignup ? 'Phlebotomist Registration' : 'Phlebotomist Login'}</h2>
-          <p className="phleb-subtitle">
+          <h2 className="phleb-title text-white">{isSignup ? 'Phlebotomist Registration' : 'Phlebotomist Login'}</h2>
+          <p className="phleb-subtitle text-slate-100">
             {isSignup ? 'Join the MusB mobile collections network' : 'Access your field operations dashboard'}
           </p>
         </div>
@@ -149,16 +149,16 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
           ) : (
             <>
               <div className="phleb-form-group">
-                <label className="phleb-label">Email Address</label>
+                <label className="phleb-label text-slate-100">Email Address</label>
                 <input 
-                  name="email" type="email" className="phleb-input" 
+                  name="email" type="email" className="phleb-input !text-white" 
                   placeholder="name@agency.com" value={formData.email} onChange={handleChange} required 
                 />
               </div>
               <div className="phleb-form-group">
-                <label className="phleb-label">Password</label>
+                <label className="phleb-label text-slate-100">Password</label>
                 <input 
-                  name="password" type="password" className="phleb-input" 
+                  name="password" type="password" className="phleb-input !text-white" 
                   placeholder="••••••••" value={formData.password} onChange={handleChange} required 
                 />
               </div>
@@ -166,17 +166,17 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
           )}
 
           <div className={isSignup ? 'phleb-form-group full-width' : ''}>
-            <button type="submit" className="phleb-submit-btn" disabled={loading}>
+            <button type="submit" className="btn-primary !w-full !p-5 !rounded-2xl" disabled={loading}>
               {loading ? <Loader2 className="animate-spin mx-auto" /> : (isSignup ? 'Complete Registration' : 'Login Now')}
             </button>
           </div>
 
           {!isSignup && (
-            <div className="mt-6">
-              <div className="phleb-divider">OR</div>
-              <button type="button" className="phleb-google-btn">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" width="20" />
-                Login with Google
+            <div className="mt-8">
+              <div className="phleb-divider mb-8">OR</div>
+              <button type="button" className="btn-tactical !w-full !p-5 !rounded-2xl">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" width="18" />
+                Auth via Google Workspace
               </button>
             </div>
           )}
