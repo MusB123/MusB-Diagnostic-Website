@@ -102,10 +102,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS — allow all for development
 # CORS Configuration — Universal Accessibility for Frontends
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+# Explicitly trust the specific Netlify origin for CSRF if needed
+CSRF_TRUSTED_ORIGINS = [
+    "https://enchanting-treacle-c65bf1.netlify.app",
+    "http://localhost:3000"
+]
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
@@ -133,4 +137,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # Custom exception handler to ensure JSON responses on production crashes
+    'EXCEPTION_HANDLER': 'musb_backend.exceptions.custom_exception_handler',
 }

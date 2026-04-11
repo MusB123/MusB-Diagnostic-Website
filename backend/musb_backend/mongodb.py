@@ -341,19 +341,45 @@ def close_connection():
 
 
 def transform_doc(doc):
-    """Transforms documents for API response, handling both real and mock formats.
-    Preserves existing 'id' field if present (e.g. seed data), otherwise uses '_id'.
     """
-    if not doc or not isinstance(doc, dict):
+    Expert-level document transformation for API responses.
+    - Handles both real MongoDB docs and Mock data.
+    - Recursively ensures ObjectIds and Datetimes are serialized.
+    - Guarantees an 'id' field is present for the frontend.
+    """
+    if not doc:
         return {}
+    
+    # Handle list of docs recursively
+    if isinstance(doc, list):
+        return [transform_doc(d) for d in doc]
+        
+    if not isinstance(doc, dict):
+        return doc
+
+    from bson import ObjectId
+    import datetime
+
     new_doc = doc.copy()
+    
+    # Standardize ID field
     if '_id' in new_doc:
         if 'id' not in new_doc:
-            # No explicit id — use the MongoDB _id
             new_doc['id'] = str(new_doc.pop('_id'))
         else:
-            # Explicit id exists (seed data) — just remove _id
             new_doc.pop('_id')
+    
+    # Deep serialization check
+    for key, value in new_doc.items():
+        if isinstance(value, ObjectId):
+            new_doc[key] = str(value)
+        elif isinstance(value, (datetime.datetime, datetime.date)):
+            new_doc[key] = value.isoformat()
+        elif isinstance(value, dict):
+            new_doc[key] = transform_doc(value)
+        elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], dict):
+            new_doc[key] = [transform_doc(item) for item in value]
+
     return new_doc
 
 # --- MusB Employer & Portal Specific Helpers ---

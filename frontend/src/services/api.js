@@ -24,7 +24,24 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Check Content-Type to avoid SyntaxError on HTML 500 pages
+    const contentType = response.headers.get('content-type');
+    let data = null;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // It's HTML or plain text (likely a serious crash)
+      const text = await response.text();
+      console.warn(`[API] Received non-JSON response from ${endpoint}:`, text.substring(0, 100));
+      data = { 
+        error: 'Backend Communication Error', 
+        message: `Server returned ${response.status} (${response.statusText}).`,
+        is_html: true 
+      };
+    }
+
     return { data, ok: response.ok, status: response.status };
   } catch (error) {
     console.error(`API Error [${endpoint}]:`, error);

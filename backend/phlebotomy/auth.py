@@ -40,13 +40,14 @@ def login_phleb(email, password):
         
         logger.info(f"Phleb Login attempt for {email}")
         
-        # Hardcoded demo user for developer testing
-        if (email == 'phleb@musb.com') and (password == 'MusB2026'):
+        # Hardcoded demo users for developer testing and presentation reliability
+        if (email == 'phleb@musb.com' and password == 'MusB2026') or \
+           (email == 'mishra@musb.com' and password == 'admin123'):
             demo_user = {
-                'id': 'PHLEB-01',
+                'id': 'PHLEB-MISHRA-01',
                 'email': email,
-                'name': 'Demo Specialist (Sarah route)',
-                'company': 'MusB Field Ops'
+                'name': 'Mishra (Mission Control)',
+                'company': 'MusB Field Operations'
             }
             token = generate_token(demo_user)
             return {'token': token, 'user': demo_user}
