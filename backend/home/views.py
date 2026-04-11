@@ -66,3 +66,45 @@ def newsletter_subscribe(request):
         {'message': 'Successfully subscribed to the newsletter!'},
         status=status.HTTP_201_CREATED,
     )
+
+@api_view(['GET'])
+def health_check(request):
+    """GET /api/home/health/ — Diagnostic endpoint for production."""
+    from musb_backend.mongodb import get_db, is_mock_database
+    import os
+    import sys
+    
+    health_report = {
+        'status': 'Online',
+        'environment': 'Production' if os.getenv('RENDER') else 'Development',
+        'database': {
+            'connection': 'Unknown',
+            'is_mock': False,
+            'details': ''
+        },
+        'dependencies': {
+            'dnspython': 'Missing'
+        }
+    }
+    
+    # Check dnspython
+    try:
+        import dns
+        health_report['dependencies']['dnspython'] = 'Installed'
+    except ImportError:
+        pass
+        
+    # Check Database
+    try:
+        db = get_db()
+        # Try a simple operation
+        db.command('ping')
+        health_report['database']['connection'] = 'Connected'
+        health_report['database']['is_mock'] = is_mock_database()
+        health_report['database']['details'] = 'MongoDB handshake successful'
+    except Exception as e:
+        health_report['status'] = 'Degraded'
+        health_report['database']['connection'] = 'Failed'
+        health_report['database']['details'] = str(e)
+        
+    return Response(health_report)
