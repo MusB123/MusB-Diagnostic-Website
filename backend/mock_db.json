@@ -428,7 +428,7 @@
             "reviews": [],
             "created_at": "2026-04-11T12:13:38.843133",
             "_id": "69da3af2af0706b6fcd85d86",
-            "last_active_at": "2026-04-11T14:20:21.958163",
+            "last_active_at": "2026-04-11T14:35:32.413226",
             "current_location": {
                 "type": "Point",
                 "coordinates": [
@@ -706,7 +706,7 @@
                     40.7105104
                 ]
             },
-            "status": "assigned",
+            "status": "completed",
             "created_at": "2026-04-11T11:33:58.763596",
             "_id": "69da31a6af0706b6fcd85d84",
             "assigned_phlebotomist_id": "5",

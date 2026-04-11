@@ -4,6 +4,9 @@ from rest_framework import status
 import datetime
 from .auth import login_phleb, verify_token
 from musb_backend.mongodb import get_phlebotomists_collection, transform_doc
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def signup_view(request):
@@ -36,12 +39,26 @@ def signup_view(request):
 @api_view(['POST'])
 def login_view(request):
     """POST /api/phleb/login/ — Phlebotomist authentication."""
-    email = request.data.get('email')
-    password = request.data.get('password')
-    login_data = login_phleb(email, password)
-    if login_data:
-        return Response(login_data)
-    return Response({'error': 'Invalid phlebotomist credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    try:
+        email = request.data.get('email')
+        password = request.data.get('password')
+        login_data = login_phleb(email, password)
+        if login_data:
+            return Response(login_data)
+        return Response({'error': 'Invalid phlebotomist credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        logger.error(f"VIEW ERROR [Phleb Login]: {str(e)}", exc_info=True)
+        # Handle Database Connection Errors specifically for Better UX
+        if "COMMAND CENTER OFFLINE" in str(e):
+            return Response({
+                'error': 'Command Center connection failure. Please try again in a few minutes.',
+                'code': 'DB_CONNECTION_ERROR'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+        return Response({
+            'error': 'System encountered an operational error. Field ops has been notified.',
+            'details': str(e) if settings.DEBUG else None
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def dashboard_stats(request):

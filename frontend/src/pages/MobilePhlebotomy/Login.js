@@ -58,7 +58,9 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error('Login Error:', err);
-      setError(err.response?.data?.error || 'Connection error. Please check your internet.');
+      // Priority: Backend explicit error message > Axios generic message > Network error
+      const errorMsg = err.response?.data?.error || err.message || 'Connection error. Please check your internet.';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

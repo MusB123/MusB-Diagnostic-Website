@@ -54,16 +54,22 @@ def get_client(silent=False):
         opts = _mongo_client_options(uri)
         try:
             _client = MongoClient(uri, **opts)
+            # Short timeout ping to check connection immediately
             _client.admin.command('ping')
             if not silent:
                 print(f"SUCCESS: Connected to MongoDB ({settings.MONGO_DB_NAME})")
         except Exception as e:
             _client = None
+            error_msg = f"MongoDB connection failed: {str(e)}"
             if not silent:
-                print(f"ERROR: MongoDB connection failed: {e}")
+                print(f"ERROR: {error_msg}")
+            
+            # Diagnostic details for production logs
+            is_atlas = "mongodb+srv" in uri
             raise ConnectionError(
-                f"Cannot connect to MongoDB (URI={uri!r}). "
-                "Start mongod, fix MONGO_URI for Atlas, or set MONGO_USE_MOCK=true to use mock_db.json."
+                f"COMMAND CENTER OFFLINE: {error_msg}. "
+                f"Target: {'Atlas/Remote' if is_atlas else 'Localhost'}. "
+                "Check MONGO_URI and IP Whitelisting."
             ) from e
     return _client
 
