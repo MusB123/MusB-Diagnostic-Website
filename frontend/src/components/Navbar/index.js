@@ -20,7 +20,7 @@ const Navbar = () => {
     <nav className="navbar glass">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          <img src="/images/MusB_Diagnostic_Logo.png" alt="MusB Diagnostics Logo" className="logo-img" />
+          <img src="/images/MusB_Diagnostic_Logo.webp" alt="MusB Diagnostics Logo" className="logo-img" />
         </Link>
         <ul className="nav-menu">
           <li className="nav-item">

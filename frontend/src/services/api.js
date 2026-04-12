@@ -6,33 +6,37 @@
 
 const API_BASE = '/api';
 
+// Simple in-memory cache to prevent redundant fetches
+const apiCache = new Map();
+
 async function request(endpoint, options = {}) {
+  const isCacheable = options.method === 'GET' || !options.method;
+  const cacheKey = endpoint;
+
+  if (isCacheable && apiCache.has(cacheKey)) {
+    return apiCache.get(cacheKey);
+  }
+
   const url = `${API_BASE}${endpoint}`;
   const { headers, ...restOptions } = options;
   const config = {
     method: options.method || 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
       ...headers,
     },
-    cache: 'no-store',
     ...restOptions,
   };
 
   try {
     const response = await fetch(url, config);
-    
-    // Check Content-Type to avoid SyntaxError on HTML 500 pages
     const contentType = response.headers.get('content-type');
     let data = null;
     
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
-      // It's HTML or plain text (likely a serious crash)
+      // It's HTML or plain text (likely a server-level crash or gateway timeout)
       const text = await response.text();
       console.warn(`[API] Received non-JSON response from ${endpoint}:`, text.substring(0, 100));
       data = { 
@@ -42,7 +46,14 @@ async function request(endpoint, options = {}) {
       };
     }
 
-    return { data, ok: response.ok, status: response.status };
+    const result = { data, ok: response.ok, status: response.status };
+    
+    // Cache successful GET requests
+    if (isCacheable && response.ok) {
+      apiCache.set(cacheKey, result);
+    }
+
+    return result;
   } catch (error) {
     console.error(`API Error [${endpoint}]:`, error);
     return { data: null, ok: false, status: 0, error };

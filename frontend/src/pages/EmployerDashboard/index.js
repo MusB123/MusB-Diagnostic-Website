@@ -254,7 +254,7 @@ const EmployerDashboard = () => {
               style={{ background: 'transparent', border: 'none', width: 'auto', height: 'auto', marginBottom: '0.35rem' }}
             >
               <img 
-                src="/images/MusB_Diagnostic_Logo.png" 
+                src="/images/MusB_Diagnostic_Logo.webp" 
                 alt="MusB Logo" 
                 style={{ width: '120px', height: 'auto', objectFit: 'contain' }} 
               />

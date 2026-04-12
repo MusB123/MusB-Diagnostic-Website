@@ -36,7 +36,7 @@ const Footer = () => {
             variants={sectionVariants}
           >
             <Link to="/" className="footer-logo">
-              <img src="/images/MusB_Diagnostic_Logo.png" alt="MusB Diagnostics" />
+              <img src="/images/MusB_Diagnostic_Logo.webp" alt="MusB Diagnostics" />
               <div className="logo-glow"></div>
             </Link>
             <p className="brand-description">

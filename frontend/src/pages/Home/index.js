@@ -30,8 +30,8 @@ const Home = () => {
 
 
 
-  const fetchData = React.useCallback(async () => {
-    setLoading(true);
+  const fetchData = React.useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     try {
       const [heroRes, servicesRes, testimonialsRes, panelsRes, offersRes] = await Promise.all([
         homeAPI.getHero(),
@@ -49,16 +49,12 @@ const Home = () => {
     } catch (error) {
       console.error("Error fetching home data:", error);
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-
-    // Expert fix: Revalidate data when window gains focus (tabs switch)
-    window.addEventListener('focus', fetchData);
-    return () => window.removeEventListener('focus', fetchData);
+    fetchData(true);
   }, [fetchData]);
 
   const handleSearch = (e) => {

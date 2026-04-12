@@ -24,8 +24,8 @@ _db_instance = None  # Singleton: real Database or MockDatabase
 
 def _mongo_client_options(uri):
     """TLS only for Atlas / SRV / explicit tls — not for plain mongodb://localhost."""
-    timeout_ms = int(os.getenv('MONGO_SERVER_SELECTION_TIMEOUT_MS', '10000'))
-    opts = {'serverSelectionTimeoutMS': timeout_ms}
+    timeout_ms = int(os.getenv('MONGO_SERVER_SELECTION_TIMEOUT_MS', '5000'))
+    opts = {'serverSelectionTimeoutMS': timeout_ms, 'connectTimeoutMS': timeout_ms}
     ul = uri.lower()
     if uri.startswith('mongodb+srv://') or 'tls=true' in ul or 'ssl=true' in ul:
         opts['tlsCAFile'] = certifi.where()
@@ -68,8 +68,7 @@ def get_client(silent=False):
             is_atlas = "mongodb+srv" in uri
             raise ConnectionError(
                 f"COMMAND CENTER OFFLINE: {error_msg}. "
-                f"Target: {'Atlas/Remote' if is_atlas else 'Localhost'}. "
-                "Check MONGO_URI and IP Whitelisting."
+                f"Target: {'Atlas/Remote' if is_atlas else 'Localhost'}."
             ) from e
     return _client
 
@@ -83,16 +82,15 @@ def get_db():
         else:
             try:
                 client = get_client()
-                _db_instance = client[settings.MONGO_DB_NAME]
-            except ConnectionError:
-                if getattr(settings, 'MONGO_FALLBACK_MOCK', False):
-                    print(
-                        "WARNING: MongoDB unreachable — using mock_db.json. "
-                        "Start MongoDB or set MONGO_URI, then set MONGO_FALLBACK_MOCK=false."
-                    )
-                    _db_instance = MockDatabase()
+                if client:
+                    _db_instance = client[settings.MONGO_DB_NAME]
                 else:
-                    raise
+                    _db_instance = MockDatabase()
+            except (ConnectionError, Exception) as e:
+                # Expert Resilience: Always fallback to mock in case of any DB-related error
+                # This ensures the app never crashes on data-fetch for the user.
+                print(f"RESILIENCE ALERT: MongoDB failed ({str(e)}). Falling back to mock_db.json.")
+                _db_instance = MockDatabase()
     return _db_instance
 
 

@@ -111,7 +111,7 @@ const EmployeeEnrollment = () => {
             </div>
             
             <div className="enrollment-footer">
-                <img src="/images/MusB_Diagnostic_Logo.png" alt="MusB Diagnostics" className="footer-logo" />
+                <img src="/images/MusB_Diagnostic_Logo.webp" alt="MusB Diagnostics" className="footer-logo" />
                 <p>&copy; 2026 MusB Diagnostics. All rights reserved.</p>
             </div>
         </div>
