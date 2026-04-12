@@ -26,7 +26,7 @@ def login_manual(email, password):
     Includes a demo fallback for presentation reliability.
     """
     # Hardcoded fallback for presentation stability
-    if email == 'research@musb.com' and password == 'MusB123':
+    if email == 'research@musb.com' and (password == 'research2026' or password == 'MusB123'):
         demo_user = {
             'id': 'research_demo_id',
             'email': email,
