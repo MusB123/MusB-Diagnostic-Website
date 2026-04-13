@@ -38,13 +38,16 @@ def tests_list(request):
     max_price = request.query_params.get('max_price')
     if max_price:
         try:
-            # Note: stored as string in seed data, but usually better as float in DB.
-            # For now matching the seed data structure.
-            query['price'] = {'$lte': max_price} 
+            # Expert Fix: Ensure numeric comparison (standardizes Price field behavior)
+            query['price'] = {'$lte': float(max_price)} 
         except (ValueError, TypeError):
             pass
 
+    # Diagnostic Logging: Allows tracking visibility issues in the server console
+    print(f"[CATALOG] Final Query: {query}")
     docs = list(coll.find(query))
+    print(f"[CATALOG] Found {len(docs)} matching tests.")
+    
     return Response([transform_doc(d) for d in docs])
 
 

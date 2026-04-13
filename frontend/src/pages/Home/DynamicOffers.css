@@ -6,7 +6,7 @@
    ========================================== */
 
 .dynamic-offers-container {
-  padding: 4rem 5% 2rem;
+  padding: 7.5rem 5% 2rem; /* Increased top padding to clear fixed navbar */
   max-width: 1600px;
   margin: 0 auto;
 }

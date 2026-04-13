@@ -162,31 +162,40 @@ class MockCollection:
             
         # Support exact matches (category_name, sample_type, etc.)
         for key, val in query.items():
-            if key == 'title' or isinstance(val, dict):
-                # Handle geospatial simulation ($nearSphere)
-                if isinstance(val, dict) and '$nearSphere' in val:
-                    from musb_backend.geocoding import haversine_meters
-                    target_geo = val['$nearSphere']['$geometry']
-                    max_dist = val['$nearSphere'].get('$maxDistance', float('inf'))
-
-                    target_lng, target_lat = target_geo['coordinates']
-
-                    def distance_meters(item):
-                        loc = item.get('current_location', {})
-                        if not loc or 'coordinates' not in loc:
-                            return float('inf')
-                        ilng, ilat = loc['coordinates']
-                        return haversine_meters(
-                            float(target_lng), float(target_lat),
-                            float(ilng), float(ilat),
-                        )
-
-                    filtered = [
-                        item for item in filtered
-                        if distance_meters(item) <= max_dist
-                    ]
-                    filtered.sort(key=distance_meters)
+            if key == 'title' and isinstance(val, dict) and '$regex' in val:
+                search_val = val['$regex']
+                filtered = [i for i in filtered if search_val.lower() in i.get('title', '').lower()]
                 continue
+
+            if isinstance(val, dict):
+                # Handle operators
+                for op, op_val in val.items():
+                    if op == '$ne':
+                        filtered = [item for item in filtered if item.get(key) != op_val]
+                    elif op == '$lte':
+                        filtered = [item for item in filtered if float(item.get(key, 0)) <= float(op_val)]
+                    elif op == '$gte':
+                        filtered = [item for item in filtered if float(item.get(key, 0)) >= float(op_val)]
+                    elif op == '$regex':
+                        filtered = [item for item in filtered if op_val.lower() in str(item.get(key, '')).lower()]
+                    # Geospatial simulation
+                    elif op == '$nearSphere':
+                        from musb_backend.geocoding import haversine_meters
+                        target_geo = op_val['$geometry']
+                        max_dist = op_val.get('$maxDistance', float('inf'))
+                        target_lng, target_lat = target_geo['coordinates']
+
+                        def distance_meters(item):
+                            loc = item.get('current_location', {})
+                            if not loc or 'coordinates' not in loc:
+                                return float('inf')
+                            ilng, ilat = loc['coordinates']
+                            return haversine_meters(float(target_lng), float(target_lat), float(ilng), float(ilat))
+
+                        filtered = [item for item in filtered if distance_meters(item) <= max_dist]
+                        filtered.sort(key=distance_meters)
+                continue
+            
             if val and val != 'All':
                 # Precise comparison: Convert both to strings (handles ObjectId vs string)
                 filtered = [item for item in filtered if str(item.get(key)) == str(val)]

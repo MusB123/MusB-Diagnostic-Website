@@ -282,7 +282,7 @@ def admin_test_create(request):
         'title': data.get('title', 'New Test'),
         'category_name': data.get('category_name', 'General Wellness'),
         'sample_type': data.get('sample_type', 'Blood'),
-        'price': data.get('price', '29.00'),
+        'price': float(data.get('price', 29.00)),
         'turnaround': data.get('turnaround', '24h'),
         'preparation': data.get('preparation', 'No fasting required'),
         'description': data.get('description', ''),
@@ -315,7 +315,13 @@ def admin_test_update(request, test_id):
     ]
     for field in fields:
         if field in data:
-            update_fields[field] = data[field]
+            val = data[field]
+            if field == 'price':
+                try:
+                    val = float(val)
+                except (ValueError, TypeError):
+                    pass
+            update_fields[field] = val
     
     update_fields['updated_at'] = datetime.now().isoformat()
     
