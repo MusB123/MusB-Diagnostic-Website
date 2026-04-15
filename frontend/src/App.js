@@ -38,6 +38,8 @@ const EarlyDiagnostics = lazy(() => import('./pages/EarlyDiagnostics/index.js'))
 const SelfPayPatients = lazy(() => import('./pages/SelfPay/index.js'));
 const PhlebotomistDashboard = lazy(() => import('./pages/MobilePhlebotomy/Dashboard.js'));
 const PhlebotomistLogin = lazy(() => import('./pages/MobilePhlebotomy/Login.js'));
+const DiagnosticLogin = lazy(() => import('./pages/DiagnosticPortal/DiagnosticLogin.js'));
+const DiagnosticDashboard = lazy(() => import('./pages/DiagnosticPortal/DiagnosticDashboard.js'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -96,6 +98,8 @@ function App() {
                 } />
                 <Route path="/portal/research/login" element={<ResearchLogin />} />
                 <Route path="/portal/research/*" element={<ResearchDashboard />} />
+                <Route path="/portal/diagnostic/login" element={<DiagnosticLogin />} />
+                <Route path="/portal/diagnostic/*" element={<DiagnosticDashboard />} />
                 <Route path="/portal/phlebotomist/login" element={<PhlebotomistLogin isOpen={true} onClose={() => window.location.href='/mobile-phlebotomy'} />} />
                 <Route path="/portal/phlebotomist/dashboard" element={<PhlebotomistDashboard />} />
                 <Route path="/enroll/:token" element={<EmployeeEnrollment />} />

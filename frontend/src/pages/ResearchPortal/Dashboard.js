@@ -79,7 +79,7 @@ const ResearchDashboard = () => {
             <aside className="res-sidebar">
                 <div className="res-logo">
                     <Microscope size={28} />
-                    <h2>CENTRAL LAB</h2>
+                    <h2>{user.role === 'admin' ? 'CENTRAL LAB' : 'RESEARCH HUB'}</h2>
                 </div>
                 
                 <nav className="res-nav-menu">
@@ -115,7 +115,7 @@ const ResearchDashboard = () => {
                 <header className="res-header">
                     <div className="res-header-title">
                         <h1>{location.pathname.includes('dashboard') ? 'System Overview' : location.pathname.split('/').pop().replace(/-/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</h1>
-                        <div className="breadcrumb">Research Central Lab » {user.institution}</div>
+                        <div className="breadcrumb">Research & Diagnostics » {user.institution}</div>
                     </div>
                     <div className="res-header-actions">
                         <div className="res-search-wrapper">

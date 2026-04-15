@@ -17,4 +17,15 @@ urlpatterns = [
     path('portal/samples/', views.sample_tracking, name='research-portal-samples'),
     path('portal/reporting/', views.inventory_reporting, name='research-portal-reporting'),
     path('portal/universities/', views.university_directory, name='research-portal-universities'),
+    
+    # Validation Pathways
+    path('validation/submit/', views.submit_validation_brief, name='research-validation-submit'),
+    path('validation/tracker/', views.validation_tracker_list, name='research-validation-tracker'),
+    
+    # NEW: Diagnostic Development Panel Modules
+    path('diag/tasks/', views.diagnostic_tasks, name='diag-tasks'),
+    path('diag/messages/', views.diagnostic_messages, name='diag-messages'),
+    path('diag/documents/', views.diagnostic_documents, name='diag-documents'),
+    path('diag/invoices/', views.diagnostic_invoices, name='diag-invoices'),
+    path('diag/pipeline/', views.diagnostic_pipeline, name='diag-pipeline'),
 ]

@@ -38,6 +38,27 @@ def login_manual(email, password):
             'token': generate_token(demo_user),
             'user': demo_user
         }
+        
+    # NEW: Specific credentials for Diagnostic Validation Panel
+    if email == 'developer@biotech.com' and password == 'BioTech2026':
+        client_user = {
+            'id': 'diag_client_1',
+            'email': email,
+            'name': 'Biotech Developer',
+            'role': 'client',
+            'institution': 'Nova Biotechs'
+        }
+        return {'token': generate_token(client_user), 'user': client_user}
+        
+    if email == 'admin@musb.com' and password == 'MusBAdmin2026':
+        admin_user = {
+            'id': 'diag_admin_1',
+            'email': email,
+            'name': 'MusB Internal Admin',
+            'role': 'admin',
+            'institution': 'MusB Research'
+        }
+        return {'token': generate_token(admin_user), 'user': admin_user}
 
     coll = get_research_users_collection()
     user = coll.find_one({'email': email})

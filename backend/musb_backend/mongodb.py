@@ -441,6 +441,21 @@ def get_research_subscriptions_collection():
 def get_research_users_collection():
     return get_db()['research_users']
 
+def get_research_validations_collection():
+    return get_db()['research_validations']
+
+def get_diag_tasks_collection():
+    return get_db()['diag_tasks']
+
+def get_diag_messages_collection():
+    return get_db()['diag_messages']
+
+def get_diag_documents_collection():
+    return get_db()['diag_documents']
+
+def get_diag_invoices_collection():
+    return get_db()['diag_invoices']
+
 
 # --- Phlebotomist Portal Specific Helpers ---
 

@@ -240,3 +240,182 @@ def university_directory(request):
         uni_id = request.data.get('id')
         coll.delete_one({'_id': uni_id})
         return Response({'success': True})
+
+# --- Technology Validation & Research ---
+
+@api_view(['POST'])
+def submit_validation_brief(request):
+    """POST /api/research/validation/submit/ — Submit technology brief for review."""
+    from musb_backend.mongodb import get_research_validations_collection
+    coll = get_research_validations_collection()
+    data = request.data
+    data['project_id'] = f"VAL-{uuid.uuid4().hex[:4].upper()}"
+    data['status'] = 'Intake'
+    data['progress'] = 10
+    data['created_at'] = str(datetime.datetime.utcnow())
+    data['last_updated'] = str(datetime.datetime.utcnow())
+    coll.insert_one(data)
+    return Response({'message': 'Technology brief submitted successfully!', 'project_id': data['project_id']}, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def validation_tracker_list(request):
+    """GET /api/research/validation/tracker/ — Get active validation projects."""
+    from musb_backend.mongodb import get_research_validations_collection, transform_doc
+    coll = get_research_validations_collection()
+    docs = list(coll.find().sort('created_at', -1))
+    
+    # If empty, return some professional mock data for demo purposes
+    if not docs:
+        docs = [
+            {'project_id': 'VAL-9021', 'name': 'GLP-1 Biomarker Assay', 'status': 'Analytical Validation', 'progress': 75, 'date': '2024-05-12'},
+            {'project_id': 'VAL-8842', 'name': 'Neuro-Pro G5 Panel', 'status': 'Feasibility', 'progress': 40, 'date': '2024-06-18'},
+            {'project_id': 'VAL-7721', 'name': 'Early Oncology Screening', 'status': 'Pilot Clinical', 'progress': 15, 'date': '2024-07-02'}
+        ]
+        return Response([transform_doc(d) for d in docs])
+        
+    return Response([transform_doc(d) for d in docs])
+
+# --- Diagnostic Marker Development Panel Modules ---
+
+@api_view(['GET', 'POST'])
+def diagnostic_tasks(request):
+    """GET/POST /api/research/diag/tasks/ — Project tasks."""
+    user = get_current_user(request)
+    if not user: return Response({'error': 'Unauthorized'}, status=401)
+    
+    from musb_backend.mongodb import get_diag_tasks_collection
+    coll = get_diag_tasks_collection()
+    
+    if request.method == 'GET':
+        project_id = request.GET.get('project_id')
+        query = {'project_id': project_id} if project_id else {}
+        docs = list(coll.find(query))
+        
+        if not docs and not project_id:
+            docs = [
+                {'project_id': 'VAL-9021', 'title': 'Assay Precision Report', 'status': 'Pending', 'due_date': '2026-05-20'},
+                {'project_id': 'VAL-9021', 'title': 'LOD Verification', 'status': 'Completed', 'due_date': '2026-04-10'},
+                {'project_id': 'VAL-8842', 'title': 'Resource Assessment', 'status': 'In Progress', 'due_date': '2026-06-01'}
+            ]
+        return Response([transform_doc(d) for d in docs])
+        
+    if request.method == 'POST':
+        data = request.data
+        data['created_at'] = str(datetime.datetime.utcnow())
+        coll.insert_one(data)
+        return Response({'message': 'Task created'}, status=201)
+
+@api_view(['GET', 'POST'])
+def diagnostic_messages(request):
+    """GET/POST /api/research/diag/messages/ — Project communication."""
+    user = get_current_user(request)
+    if not user: return Response({'error': 'Unauthorized'}, status=401)
+    
+    from musb_backend.mongodb import get_diag_messages_collection
+    coll = get_diag_messages_collection()
+    
+    if request.method == 'GET':
+        project_id = request.GET.get('project_id')
+        query = {'project_id': project_id} if project_id else {}
+        docs = list(coll.find(query).sort('created_at', 1))
+        
+        if not docs and not project_id:
+            docs = [
+                {'project_id': 'VAL-9021', 'sender': 'MusB Admin', 'text': 'Received your preliminary assay data. Reviewing now.', 'created_at': '2026-04-12T10:00:00'},
+                {'project_id': 'VAL-9021', 'sender': 'Biotech Developer', 'text': 'Great, let me know if you need the raw CSVs.', 'created_at': '2026-04-12T11:30:00'}
+            ]
+        return Response([transform_doc(d) for d in docs])
+        
+    if request.method == 'POST':
+        data = request.data
+        data['sender'] = user['name']
+        data['created_at'] = str(datetime.datetime.utcnow())
+        coll.insert_one(data)
+        return Response({'message': 'Message sent'}, status=201)
+
+@api_view(['GET', 'POST'])
+def diagnostic_documents(request):
+    """GET/POST /api/research/diag/documents/ — Project documents."""
+    user = get_current_user(request)
+    if not user: return Response({'error': 'Unauthorized'}, status=401)
+    
+    from musb_backend.mongodb import get_diag_documents_collection
+    coll = get_diag_documents_collection()
+    
+    if request.method == 'GET':
+        project_id = request.GET.get('project_id')
+        query = {'project_id': project_id} if project_id else {}
+        docs = list(coll.find(query))
+        
+        if not docs and not project_id:
+            docs = [
+                {'project_id': 'VAL-9021', 'name': 'Technology_Brief.pdf', 'type': 'PDF', 'size': '2.4 MB', 'uploaded_by': 'Developer'},
+                {'project_id': 'VAL-9021', 'name': 'NDA_Signed_MusB.pdf', 'type': 'PDF', 'size': '1.1 MB', 'uploaded_by': 'MusB Admin'}
+            ]
+        return Response([transform_doc(d) for d in docs])
+        
+    if request.method == 'POST':
+        data = request.data
+        data['uploaded_by'] = user['name']
+        data['created_at'] = str(datetime.datetime.utcnow())
+        coll.insert_one(data)
+        return Response({'message': 'Document uploaded'}, status=201)
+
+@api_view(['GET', 'POST'])
+def diagnostic_invoices(request):
+    """GET/POST /api/research/diag/invoices/ — Billing & Milestones."""
+    user = get_current_user(request)
+    if not user: return Response({'error': 'Unauthorized'}, status=401)
+    
+    from musb_backend.mongodb import get_diag_invoices_collection
+    coll = get_diag_invoices_collection()
+    
+    if request.method == 'GET':
+        project_id = request.GET.get('project_id')
+        query = {'project_id': project_id} if project_id else {}
+        docs = list(coll.find(query))
+        
+        if not docs and not project_id:
+            docs = [
+                {'project_id': 'VAL-9021', 'milestone': 'Intake Completion', 'amount': '$2,500', 'status': 'Paid', 'due_date': '2026-03-30'},
+                {'project_id': 'VAL-9021', 'milestone': 'Feasibility Study', 'amount': '$5,000', 'status': 'Sent', 'due_date': '2026-04-25'}
+            ]
+        return Response([transform_doc(d) for d in docs])
+        
+    if request.method == 'POST':
+        if user['role'] != 'admin': return Response({'error': 'Admin only'}, status=403)
+        data = request.data
+        data['created_at'] = str(datetime.datetime.utcnow())
+        coll.insert_one(data)
+        return Response({'message': 'Invoice created'}, status=201)
+
+@api_view(['GET', 'PATCH'])
+def diagnostic_pipeline(request):
+    """GET/PATCH /api/research/diag/pipeline/ — Kanban Board (Admin)."""
+    user = get_current_user(request)
+    if not user or user['role'] != 'admin': return Response({'error': 'Unauthorized'}, status=401)
+    
+    from musb_backend.mongodb import get_research_validations_collection
+    coll = get_research_validations_collection()
+    
+    if request.method == 'GET':
+        docs = list(coll.find())
+        if not docs:
+            docs = [
+                {'project_id': 'VAL-9021', 'name': 'GLP-1 Biomarker Assay', 'status': 'Analytical Validation', 'progress': 75},
+                {'project_id': 'VAL-8842', 'name': 'Neuro-Pro G5 Panel', 'status': 'Feasibility', 'progress': 40},
+                {'project_id': 'VAL-7721', 'name': 'Early Oncology Screening', 'status': 'Intake', 'progress': 10}
+            ]
+        return Response([transform_doc(d) for d in docs])
+        
+    if request.method == 'PATCH':
+        project_id = request.data.get('project_id')
+        new_status = request.data.get('status')
+        new_progress = request.data.get('progress')
+        
+        update_data = {'status': new_status, 'last_updated': str(datetime.datetime.utcnow())}
+        if new_progress is not None:
+            update_data['progress'] = new_progress
+            
+        coll.update_one({'project_id': project_id}, {'$set': update_data})
+        return Response({'message': 'Pipeline updated'})

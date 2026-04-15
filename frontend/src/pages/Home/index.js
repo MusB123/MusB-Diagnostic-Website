@@ -259,7 +259,7 @@ const Home = () => {
               <span className="text-highlight">+ Research-Grade Quality</span>
             </h1>
             <p className="home-hero-subtitle">
-              {heroData?.subtitle || 'Self-pay, employer plans, physicians, facilities, research & biomarker validation.'}
+              {heroData?.subtitle || 'Self-pay, employer plans, physicians, facilities, diagnostic & biomarker validation.'}
             </p>
             
             <div className="home-hero-actions">

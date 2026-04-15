@@ -157,6 +157,30 @@ export const researchAPI = {
       method: 'POST',
       body: JSON.stringify({ email }),
     }),
+  submitValidation: (data) =>
+    request('/research/validation/submit/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getValidationTracker: () => request('/research/validation/tracker/'),
+};
+
+// ==================== DIAGNOSTIC PANEL ====================
+export const diagnosticAPI = {
+  getTasks: (projectId) => request(`/research/diag/tasks/${projectId ? '?project_id=' + projectId : ''}`),
+  createTask: (data) => request('/research/diag/tasks/', { method: 'POST', body: JSON.stringify(data) }),
+  
+  getMessages: (projectId) => request(`/research/diag/messages/${projectId ? '?project_id=' + projectId : ''}`),
+  sendMessage: (data) => request('/research/diag/messages/', { method: 'POST', body: JSON.stringify(data) }),
+  
+  getDocuments: (projectId) => request(`/research/diag/documents/${projectId ? '?project_id=' + projectId : ''}`),
+  uploadDocument: (data) => request('/research/diag/documents/', { method: 'POST', body: JSON.stringify(data) }),
+  
+  getInvoices: (projectId) => request(`/research/diag/invoices/${projectId ? '?project_id=' + projectId : ''}`),
+  createInvoice: (data) => request('/research/diag/invoices/', { method: 'POST', body: JSON.stringify(data) }),
+  
+  getPipeline: () => request('/research/diag/pipeline/'),
+  updatePipeline: (data) => request('/research/diag/pipeline/', { method: 'PATCH', body: JSON.stringify(data) }),
 };
 
 // ==================== SUPER ADMIN ====================

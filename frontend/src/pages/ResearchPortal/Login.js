@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Microscope, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../../api/api';
 import './ResearchPortal.css';
 
-const ResearchLoginModal = ({ isOpen, onClose }) => {
+const ResearchLoginModal = ({ isOpen, onClose, customTitle, customSubtitle }) => {
     const [isSignup, setIsSignup] = useState(false);
     const [credentials, setCredentials] = useState({
         email: '', password: '', name: '', lab_name: '', lab_location: '', lab_contact: ''
@@ -13,6 +13,14 @@ const ResearchLoginModal = ({ isOpen, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Check query params for branding if standalone
+    const query = new URLSearchParams(location.search);
+    const type = query.get('type');
+    
+    const displayTitle = customTitle || (type === 'diagnostic' ? 'Diagnostic Portal Login' : (isSignup ? 'Partner Registration' : 'Researcher Login'));
+    const displaySubtitle = customSubtitle || (type === 'diagnostic' ? 'Access your diagnostic validation projects' : (isSignup ? 'Join the MusB corporate wellness network' : 'Access laboratory & health systems'));
 
     const isStandalone = isOpen === undefined;
     if (!isOpen && !isStandalone) return null;
@@ -74,8 +82,8 @@ const ResearchLoginModal = ({ isOpen, onClose }) => {
             </div>
 
             <div className="text-center mb-4">
-                <h2 className="res-modal-title">{isSignup ? 'Partner Registration' : 'Researcher Login'}</h2>
-                <p className="res-modal-subtitle">{isSignup ? 'Join the MusB corporate wellness network' : 'Access laboratory & health systems'}</p>
+                <h2 className="res-modal-title">{displayTitle}</h2>
+                <p className="res-modal-subtitle">{displaySubtitle}</p>
             </div>
 
             {error && (

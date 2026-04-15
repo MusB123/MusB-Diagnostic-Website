@@ -211,6 +211,8 @@ main {
   margin-bottom: 3rem;
   color: var(--text-muted);
   font-size: 1.15rem;
+  text-align: center;
+  width: 100%;
 }
 
 /* Expert Hero Utilities - Global fixes for stretching and centering */
@@ -327,3 +329,27 @@ textarea:focus {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Spacing Utilities */
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 2rem; }
+.mt-5 { margin-top: 3.25rem; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3.25rem; }
+
+.w-100 { width: 100%; }
+.w-full { width: 100%; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.text-sm { font-size: 0.875rem; }
+.font-bold { font-weight: 700; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
