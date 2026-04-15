@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FileText, Download, Upload, Trash2, FileJson, FilePlus } from 'lucide-react';
 import { diagnosticAPI } from '../../../services/api';
 
@@ -6,16 +6,16 @@ const DocumentCenter = ({ projectId }) => {
     const [docs, setDocs] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchDocs();
-    }, [projectId]);
-
-    const fetchDocs = async () => {
+    const fetchDocs = useCallback(async () => {
         setLoading(true);
         const res = await diagnosticAPI.getDocuments(projectId);
         if (res.ok) setDocs(res.data);
         setLoading(false);
-    };
+    }, [projectId]);
+
+    useEffect(() => {
+        fetchDocs();
+    }, [fetchDocs]);
 
     return (
         <div className="diag-module-card">

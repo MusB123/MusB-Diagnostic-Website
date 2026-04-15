@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CheckCircle2, Circle, Clock, Plus } from 'lucide-react';
 import { diagnosticAPI } from '../../../services/api';
 
@@ -6,16 +6,16 @@ const Tasks = ({ projectId }) => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchTasks();
-    }, [projectId]);
-
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         setLoading(true);
         const res = await diagnosticAPI.getTasks(projectId);
         if (res.ok) setTasks(res.data);
         setLoading(false);
-    };
+    }, [projectId]);
+
+    useEffect(() => {
+        fetchTasks();
+    }, [fetchTasks]);
 
     return (
         <div className="diag-module-card">

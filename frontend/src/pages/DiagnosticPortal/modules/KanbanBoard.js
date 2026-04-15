@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { motion, Reorder } from 'framer-motion';
-import { ChevronRight, MoreVertical, Plus, ListFilter } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MoreVertical, Plus, ListFilter } from 'lucide-react';
 import { diagnosticAPI } from '../../../services/api';
 
 const KanbanBoard = () => {
     const columns = ['Intake', 'Feasibility', 'Analytical Validation', 'Pilot Clinical Testing'];
     const [projects, setProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchPipeline();
     }, []);
 
     const fetchPipeline = async () => {
-        setLoading(true);
+        // setLoading(true);
         const res = await diagnosticAPI.getPipeline();
         if (res.ok) setProjects(res.data);
-        setLoading(false);
+        // setLoading(false);
     };
 
     const handleStatusChange = async (projectId, newStatus) => {

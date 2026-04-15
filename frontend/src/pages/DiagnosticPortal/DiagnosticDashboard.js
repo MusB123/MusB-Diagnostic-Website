@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link, Routes, Route, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
     Activity, LayoutDashboard, FileText, Settings, 
     LogOut, Bell, ShieldCheck, Database, 
-    Plus, ArrowRight, RefreshCcw, Lock,
+    ArrowRight, RefreshCcw,
     Clock, MessageSquare, CreditCard, Inbox, Trello, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { researchAPI, diagnosticAPI } from '../../services/api';
+import { researchAPI } from '../../services/api';
 import './DiagnosticPortal.css';
 
 // Import newly created modules
@@ -22,7 +22,7 @@ import NDAWorkflow from './modules/NDAWorkflow';
 
 const DiagnosticDashboard = () => {
     const navigate = useNavigate();
-    const location = useLocation();
+    // const location = useLocation();
     const [user, setUser] = useState(null);
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);

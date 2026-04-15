@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+// import { motion } from 'framer-motion';
+import { CheckCircle, Clock } from 'lucide-react';
 
 const Timeline = ({ projects }) => {
     const phases = ['Intake', 'Feasibility', 'Analytical Validation', 'Pilot Clinical Testing'];

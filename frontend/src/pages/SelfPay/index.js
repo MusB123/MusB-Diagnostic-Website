@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext';
 import {
   Heart, Shield, DollarSign, Clock, CheckCircle, Search,
   ShoppingCart, Calendar, ArrowRight, CreditCard,
-  ChevronDown, ChevronUp, Droplet, FileWarning, Loader2, MessageCircle,
+  ChevronDown, ChevronUp, Droplet, Loader2, MessageCircle,
   BadgePercent, Users, Sparkles, AlertCircle
 } from 'lucide-react';
 import { catalogAPI } from '../../services/api';

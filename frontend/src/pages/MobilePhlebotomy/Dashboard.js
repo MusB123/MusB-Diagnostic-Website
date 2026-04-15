@@ -5,7 +5,7 @@ import {
   LogOut, MapPin, 
   ShieldCheck, TrendingUp, Truck, AlertCircle,
   Navigation, User, Info, ListChecks, Clock,
-  Calendar, Users, Map, Edit3, Save, X, Plus, Minus, Phone,
+  Calendar, Users, Edit3, Save, X, Plus, Minus, Phone,
   ChevronDown, ChevronUp, ClipboardList, Stethoscope, Building2,
   Wallet, Star, ArrowUpRight, CreditCard
 } from 'lucide-react';
@@ -227,7 +227,7 @@ const PhlebotomistDashboard = () => {
           .openPopup();
 
         // Aesthetic Grid Pulse
-        const circle = window.L.circle([lat, lng], {
+        window.L.circle([lat, lng], {
           color: '#6366f1',
           fillColor: '#6366f1',
           fillOpacity: 0.1,

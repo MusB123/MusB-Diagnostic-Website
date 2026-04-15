@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Loader2, AlertCircle, ArrowLeft, Microscope, Target } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertCircle, ArrowLeft, Microscope } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { researchAPI } from '../../services/api';
+// import { researchAPI } from '../../services/api';
 import './DiagnosticPortal.css';
 
 const DiagnosticLogin = () => {

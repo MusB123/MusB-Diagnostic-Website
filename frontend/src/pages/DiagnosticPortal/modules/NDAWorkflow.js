@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, FileText, Clock, CheckCircle, Download } from 'lucide-react';
+import { ShieldCheck, Clock, CheckCircle, Download } from 'lucide-react';
 
 const NDAWorkflow = () => {
     const ndaSteps = [

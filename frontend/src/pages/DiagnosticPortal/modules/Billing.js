@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { CreditCard, Download, CheckCircle, Clock, Receipt } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Download, CheckCircle, Clock, Receipt } from 'lucide-react';
 import { diagnosticAPI } from '../../../services/api';
 
 const Billing = ({ projectId }) => {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchInvoices();
-    }, [projectId]);
-
-    const fetchInvoices = async () => {
+    const fetchInvoices = useCallback(async () => {
         setLoading(true);
         const res = await diagnosticAPI.getInvoices(projectId);
         if (res.ok) setInvoices(res.data);
         setLoading(false);
-    };
+    }, [projectId]);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
 
     return (
         <div className="diag-module-card">

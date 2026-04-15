@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Shield } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send } from 'lucide-react';
 import { diagnosticAPI } from '../../../services/api';
 
 const Messenger = ({ projectId, currentUser }) => {
@@ -8,23 +8,23 @@ const Messenger = ({ projectId, currentUser }) => {
     const [loading, setLoading] = useState(true);
     const scrollRef = useRef();
 
+    const fetchMessages = useCallback(async () => {
+        const res = await diagnosticAPI.getMessages(projectId);
+        if (res.ok) setMessages(res.data);
+        setLoading(false);
+    }, [projectId]);
+
     useEffect(() => {
         fetchMessages();
         const interval = setInterval(fetchMessages, 10000); // Poll every 10s
         return () => clearInterval(interval);
-    }, [projectId]);
+    }, [fetchMessages]);
 
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages]);
-
-    const fetchMessages = async () => {
-        const res = await diagnosticAPI.getMessages(projectId);
-        if (res.ok) setMessages(res.data);
-        setLoading(false);
-    };
 
     const handleSend = async (e) => {
         e.preventDefault();

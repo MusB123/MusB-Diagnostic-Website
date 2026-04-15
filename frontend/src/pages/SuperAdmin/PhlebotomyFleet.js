@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Users, UserPlus, Star, ClipboardCheck, 
-  MapPin, Mail, Phone, ShieldCheck, 
+  MapPin, ShieldCheck, 
   Clock, TrendingUp, Search, Filter,
-  ChevronRight, X, Loader2, Sparkles,
-  Award, MessageSquare, Activity, Target,
+  ChevronRight, X, Loader2,
+  MessageSquare,
   Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
