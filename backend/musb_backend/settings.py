@@ -107,6 +107,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 # Explicitly trust the specific Netlify origin for CSRF if needed
 CSRF_TRUSTED_ORIGINS = [
+    "https://musblabs.com",
+    "https://www.musblabs.com",
+    "https://musb-diagnostic-website.vercel.app",
     "https://enchanting-treacle-c65bf1.netlify.app",
     "http://localhost:3000"
 ]
