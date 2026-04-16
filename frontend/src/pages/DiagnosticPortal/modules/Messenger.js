@@ -5,13 +5,11 @@ import { diagnosticAPI } from '../../../services/api';
 const Messenger = ({ projectId, currentUser }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    const [loading, setLoading] = useState(true);
     const scrollRef = useRef();
 
     const fetchMessages = useCallback(async () => {
         const res = await diagnosticAPI.getMessages(projectId);
         if (res.ok) setMessages(res.data);
-        setLoading(false);
     }, [projectId]);
 
     useEffect(() => {

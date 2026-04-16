@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { 
   Search, Droplet, Activity, Bone, Filter, Calendar, ShoppingCart, 
@@ -11,6 +11,7 @@ import './Catalog.css';
 const SAMPLE_TYPES = ['All', 'Blood', 'Urine', 'Swab'];
 
 const TestCatalog = () => {
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGoal, setSelectedGoal] = useState('All');
   const [selectedSample, setSelectedSample] = useState('All');
@@ -51,6 +52,15 @@ const TestCatalog = () => {
     };
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    // Expert Fix: Pulse search from URL params (e.g. redirected from Home)
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q');
+    if (q) {
+      setSearchQuery(q);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

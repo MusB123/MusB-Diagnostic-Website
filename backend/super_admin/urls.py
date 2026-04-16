@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import phleb_management_views as pm
 
 urlpatterns = [
     path('login/', views.super_admin_login, name='super-admin-login'),
@@ -23,8 +24,19 @@ urlpatterns = [
     path('bookings/<str:booking_id>/approve/', views.approve_booking, name='admin-approve-booking'),
     path('bookings/<str:booking_id>/geocode/', views.geocode_booking, name='admin-geocode-booking'),
 
-    # Fleet Management
+    # Fleet Management (legacy)
     path('fleet/', views.list_fleet_specialists, name='admin-fleet-list'),
     path('fleet/create/', views.create_phlebotomist, name='admin-fleet-create'),
     path('fleet/<str:specialist_id>/delete/', views.delete_phlebotomist, name='admin-fleet-delete'),
+
+    # ── Phlebotomy Management (New Admin Panel) ──
+    path('phleb-management/overview/', pm.phleb_overview, name='pm-overview'),
+    path('phleb-management/patients/', pm.phleb_patients, name='pm-patients'),
+    path('phleb-management/phlebotomists/', pm.phleb_phlebotomists, name='pm-phlebotomists'),
+    path('phleb-management/companies/', pm.phleb_companies, name='pm-companies'),
+    path('phleb-management/orders/', pm.phleb_orders, name='pm-orders'),
+    path('phleb-management/payments/', pm.phleb_payments, name='pm-payments'),
+    path('phleb-management/reviews/', pm.phleb_reviews, name='pm-reviews'),
+    path('phleb-management/marketing/', pm.phleb_marketing, name='pm-marketing'),
+    path('phleb-management/settings/', pm.phleb_settings, name='pm-settings'),
 ]

@@ -196,7 +196,7 @@ const SuperAdminDashboard = () => {
                                     { label: '➕ New Promo Offer', path: '/superadmin/offers' },
                                     { label: '👥 Onboard Physician', path: '/superadmin/crm' },
                                     { label: '🤝 Approve Affiliate', path: '/superadmin/portals' },
-                                    { label: '🛰️ LIVE Route Optic', path: '/superadmin/appointments' },
+                                    { label: '🩸 Phlebotomy Ops', path: '/superadmin/phlebotomy' },
                                     { label: '🧪 Audit LIS Link', path: '/superadmin/integrations' },
                                     { label: '📦 View Storage', path: '/superadmin/commerce' }
                                 ].map((action, i) => (

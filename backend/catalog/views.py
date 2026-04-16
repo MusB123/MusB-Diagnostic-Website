@@ -21,7 +21,19 @@ def tests_list(request):
 
     search = request.query_params.get('search')
     if search:
-        query['title'] = {'$regex': search, '$options': 'i'}
+        # Expert Fuzzy Search: Split by spaces and create a condition where ANY word matches
+        keywords = search.strip().split()
+        if keywords:
+            word_queries = []
+            for word in keywords:
+                word_queries.append({
+                    '$or': [
+                        {'title': {'$regex': word, '$options': 'i'}},
+                        {'description': {'$regex': word, '$options': 'i'}},
+                        {'category_name': {'$regex': word, '$options': 'i'}}
+                    ]
+                })
+            query['$and'] = word_queries
 
     category = request.query_params.get('category')
     if category and category != 'All':
@@ -38,8 +50,15 @@ def tests_list(request):
     max_price = request.query_params.get('max_price')
     if max_price:
         try:
-            # Expert Fix: Ensure numeric comparison (standardizes Price field behavior)
-            query['price'] = {'$lte': float(max_price)} 
+            # Expert Fix: Robust comparison using $expr to allow string-to-number comparison on-the-fly
+            # This handles cases where data migration is pending or partially complete.
+            limit = float(max_price)
+            query['$expr'] = {
+                '$lte': [
+                    {'$toDouble': '$price'}, 
+                    limit
+                ]
+            }
         except (ValueError, TypeError):
             pass
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   MapPin, Clock, Share2, ShoppingCart, Calendar, 
   Copy, Download, Check, CheckCircle,
@@ -18,8 +18,10 @@ const TYPE_CONFIG = {
 };
 
 const OffersHub = () => {
+  const location = useLocation();
   const [activeType, setActiveType] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -31,14 +33,23 @@ const OffersHub = () => {
     setLoading(true);
     const params = {
       type: activeType,
-      category: activeCategory
+      category: activeCategory,
+      search: searchQuery
     };
     const res = await offersAPI.getOffers(params);
     if (res.ok) {
       setOffers(res.data);
     }
     setLoading(false);
-  }, [activeType, activeCategory]);
+  }, [activeType, activeCategory, searchQuery]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q');
+    if (q) {
+      setSearchQuery(q);
+    }
+  }, [location.search]);
 
   const handleAddToCart = (offer, uniqueId) => {
     addToCart({
@@ -139,11 +150,16 @@ const OffersHub = () => {
             </select>
           </div>
 
-          <div className="oh-filter-group oh-filter-location">
-            <label className="oh-filter-label"><MapPin size={14}/> Location</label>
+          <div className="oh-filter-group oh-filter-search">
+            <label className="oh-filter-label"><Zap size={14}/> Search</label>
             <div className="oh-location-wrap">
-              <input type="text" placeholder="Zip or City..." className="oh-location-input"/>
-              <button className="oh-near-btn"><MapPin size={14}/> Near Me</button>
+              <input 
+                type="text" 
+                placeholder="Search deals..." 
+                className="oh-location-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </div>

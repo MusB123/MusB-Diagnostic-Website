@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
     Activity, LayoutDashboard, FileText, Settings, 
     LogOut, Bell, ShieldCheck, Database, 

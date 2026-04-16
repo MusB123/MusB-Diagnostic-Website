@@ -26,8 +26,7 @@ const SuperAdminLayout = () => {
             items: [
                 { path: '/superadmin/commerce', label: 'Catalog Mgt', icon: '🧪' },
                 { path: '/superadmin/offers', label: 'Offers Engine', icon: '🏷️' },
-                { path: '/superadmin/fleet', label: 'Phlebotomy Fleet', icon: '🚑' },
-                { path: '/superadmin/appointments', label: 'Dispatch Center', icon: '📅' },
+                { path: '/superadmin/phlebotomy', label: 'Phlebotomy Mgt', icon: '🩸' },
             ]
         },
         {

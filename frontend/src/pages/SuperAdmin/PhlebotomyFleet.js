@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Users, UserPlus, Star, ClipboardCheck, 
   MapPin, ShieldCheck, 
-  Clock, TrendingUp, Search, Filter,
+  TrendingUp, Search, Filter,
   ChevronRight, X, Loader2,
   MessageSquare,
   Trash2
@@ -520,6 +520,7 @@ const PhlebotomyFleet = () => {
                                 <div style={{ width: '100%', maxWidth: '500px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: '3rem', borderRadius: '3rem', position: 'relative', textAlign: 'center' }}>
                                     <h2 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#fff', margin: '0 0 0.5rem 0' }}>Register Unit</h2>
                                     <p style={{ color: '#64748b', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '3rem' }}>Initialize New Specialist Payload</p>
+                                    {error && <div style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '1rem', marginBottom: '1.5rem', fontSize: '11px', fontWeight: '700' }}>{error}</div>}
                                     <form onSubmit={handleOnboard} style={{ textAlign: 'left' }}>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                                             <input className="admin-input" placeholder="Unit ID" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value.toUpperCase()})} required style={{ padding: '1.25rem', borderRadius: '1rem' }} />

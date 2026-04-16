@@ -27,8 +27,7 @@ const SuperAdminLogin = lazy(() => import('./pages/SuperAdmin/Login.js'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/Dashboard.js'));
 const OffersEngine = lazy(() => import('./pages/SuperAdmin/OffersEngine.js'));
 const CatalogManager = lazy(() => import('./pages/SuperAdmin/CatalogManager.js'));
-const DispatchManager = lazy(() => import('./pages/SuperAdmin/DispatchManager.js'));
-const PhlebotomyFleet = lazy(() => import('./pages/SuperAdmin/PhlebotomyFleet.js'));
+const PhlebotomyManagement = lazy(() => import('./pages/SuperAdmin/PhlebotomyManagement.js'));
 const EmployeeEnrollment = lazy(() => import('./pages/EmployeeEnrollment/index.js'));
 const MobilePhlebotomy = lazy(() => import('./pages/MobilePhlebotomy/index.js'));
 const AssistedLiving = lazy(() => import('./pages/AssistedLiving/index.js'));
@@ -40,6 +39,12 @@ const PhlebotomistDashboard = lazy(() => import('./pages/MobilePhlebotomy/Dashbo
 const PhlebotomistLogin = lazy(() => import('./pages/MobilePhlebotomy/Login.js'));
 const DiagnosticLogin = lazy(() => import('./pages/DiagnosticPortal/DiagnosticLogin.js'));
 const DiagnosticDashboard = lazy(() => import('./pages/DiagnosticPortal/DiagnosticDashboard.js'));
+const PatientAuth = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/Auth.js'));
+const BookingWizard = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/BookingWizard.js'));
+const PatientDashboard = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/PatientDashboard.js'));
+const PatientTracking = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/Tracking.js'));
+const PhlebotomistProfilePage = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/PhlebotomistProfile.js'));
+const PatientRating = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/RatingScreen.js'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -82,8 +87,7 @@ function App() {
                   <Route path="cms" element={<PlaceholderPage title="Website/CMS Oversight" />} />
                   <Route path="commerce" element={<CatalogManager />} />
                   <Route path="offers" element={<OffersEngine />} />
-                  <Route path="fleet" element={<PhlebotomyFleet />} />
-                  <Route path="appointments" element={<DispatchManager />} />
+                  <Route path="phlebotomy" element={<PhlebotomyManagement />} />
                   <Route path="integrations" element={<PlaceholderPage title="Integrations" />} />
                   <Route path="crm" element={<PlaceholderPage title="CRM & Marketing" />} />
                   <Route path="portals" element={<PlaceholderPage title="Portals Management" />} />
@@ -102,6 +106,12 @@ function App() {
                 <Route path="/portal/diagnostic/*" element={<DiagnosticDashboard />} />
                 <Route path="/portal/phlebotomist/login" element={<PhlebotomistLogin isOpen={true} onClose={() => window.location.href='/mobile-phlebotomy'} />} />
                 <Route path="/portal/phlebotomist/dashboard" element={<PhlebotomistDashboard />} />
+                <Route path="/portal/patient/login" element={<PatientAuth />} />
+                <Route path="/portal/patient/book" element={<BookingWizard />} />
+                <Route path="/portal/patient/dashboard" element={<PatientDashboard />} />
+                <Route path="/portal/patient/tracking" element={<PatientTracking />} />
+                <Route path="/portal/patient/phlebotomist/:id" element={<PhlebotomistProfilePage />} />
+                <Route path="/portal/patient/rate" element={<PatientRating />} />
                 <Route path="/enroll/:token" element={<EmployeeEnrollment />} />
 
                 {/* Public Site Routes */}

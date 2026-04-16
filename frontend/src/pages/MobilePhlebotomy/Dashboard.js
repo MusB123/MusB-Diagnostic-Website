@@ -1,1291 +1,760 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  CheckCircle2, Droplets, 
-  LogOut, MapPin, 
-  ShieldCheck, TrendingUp, Truck, AlertCircle,
-  Navigation, User, Info, ListChecks, Clock,
-  Calendar, Users, Edit3, Save, X, Plus, Minus, Phone,
-  ChevronDown, ChevronUp, ClipboardList, Stethoscope, Building2,
-  Wallet, Star, ArrowUpRight, CreditCard
-} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../../api/api';
-import './Portal.css';
+import {
+  Droplets, Star, DollarSign, Calendar, Bell,
+  MapPin, Clock, FileText, User, Settings, LogOut,
+  CheckCircle, XCircle, AlertTriangle, Wallet,
+  Navigation, BarChart3, Shield, ChevronRight, Upload,
+  ArrowLeft, ArrowRight, Phone, Package, ClipboardList,
+  Camera, Globe, X, ShieldCheck, UserPlus
+} from 'lucide-react';
+import './SpecialistPortal/SpecialistPortal.css';
 
-const PhlebotomistDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dispatch');
-  const [data, setData] = useState(null);
-  const [workflowStatus, setWorkflowStatus] = useState('indigo'); 
-  const [checkedSpecimens, setCheckedSpecimens] = useState([]);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: '',
-    phone: '',
-    location: '',
-    company: ''
-  });
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('phleb_user')) || { name: 'Specialist', company: 'MusB Field Ops' });
-  const [isOnline, setIsOnline] = useState(false);
-  const [expandedStopIdx, setExpandedStopIdx] = useState(null);
-  const [activeAction, setActiveAction] = useState(null); // Tracking current processing button
-  const [notification, setNotification] = useState(null); // HUD feedback state
-  const [isReviewsOpen, setIsReviewsOpen] = useState(false); // Specialist reviews modal
-  const mapRef = useRef(null);
-  const navigate = useNavigate();
+/* ═══════════════════════════════════════════════
+   UNIFIED PHLEBOTOMIST DASHBOARD
+   All screens in one component — no separate routes.
+   "Staff Login" → Login modal → this dashboard.
+   ═══════════════════════════════════════════════ */
 
-  // --- Tactical Action Engine ---
-  const triggerTacticalAction = (actionId, label, successMsg, duration = 2000) => {
-    if (activeAction) return;
-    setActiveAction(actionId);
-    
-    setTimeout(() => {
-      setActiveAction(null);
-      setNotification({ label, message: successMsg });
-      setTimeout(() => setNotification(null), 4000);
-    }, duration);
-  };
+/* ── Mock Data ── */
+const MOCK_NOTIFICATIONS = [
+  { id: 1, type: 'urgent', title: 'New STAT Request', message: 'Urgent collection at 450 Park Ave.', time: '2 min ago' },
+  { id: 2, type: 'payment', title: 'Payout Processed', message: 'Weekly payout of $1,245.50 sent.', time: '1 hr ago' },
+  { id: 3, type: 'info', title: 'Route Optimized', message: 'Afternoon route updated for efficiency.', time: '3 hrs ago' },
+  { id: 4, type: 'success', title: 'New 5-Star Review', message: '"Professional and punctual" — Sarah J.', time: '5 hrs ago' }
+];
 
-  // --- Handlers ---
-  const handleStatusToggle = () => {
-    if (!isOnline) {
-      if ("geolocation" in navigator) {
-        // Explicitly request the native browser permission dialog
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            // Success: Permission granted and location detected
-            setIsOnline(true);
-          },
-          (error) => {
-            console.error("Geolocation Error:", error);
-            if (error.code === 1) {
-              alert("CRITICAL: Location access is RESTRICTED by your browser. \n\nTo go On Duty:\n1. Click the 'Lock' icon next to the website URL.\n2. Set 'Location' to 'Allow'.\n3. Refresh this page.");
-            } else if (error.code === 3) {
-              alert("Location Timeout: The system couldn't get a GPS fix in time. Are you inside a shielded building?");
-            } else {
-              alert(`Location Error: ${error.message}. Please check your GPS settings.`);
-            }
-          },
-          { 
-            enableHighAccuracy: true, 
-            timeout: 15000,
-            maximumAge: 0 
-          }
-        );
-      } else {
-        alert("Your browser does not support location detection.");
-      }
-    } else {
-      setIsOnline(false);
-    }
-  };
+const MOCK_JOB_REQUEST = {
+  patientName: 'Sarah J.',
+  distance: '2.4 mi',
+  address: '450 Park Avenue, Suite 12B',
+  time: '10:30 AM — 11:00 AM',
+  hasOrder: true,
+  hasInsurance: true,
+  isStat: false
+};
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const response = await api.get('/api/phleb/dashboard/');
-        setData(response.data);
-        
-        // Initialize profile data from response
-        if (response.data.specialist) {
-           setProfileData({
-             name: response.data.specialist.name,
-             phone: response.data.specialist.phone || '',
-             location: response.data.specialist.zone || '',
-             company: response.data.specialist.company
-           });
-        }
-        
-        if (response.data.active_case?.status) {
-           const s = response.data.active_case.status.toLowerCase();
-           setWorkflowStatus(s === 'completed' ? 'completed' : s);
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        if (err.response?.status === 401) {
-          localStorage.removeItem('phleb_token');
-          navigate('/mobile-phlebotomy');
-        }
-      } finally {
-        setTimeout(() => setLoading(false), 800);
-      }
-    };
-    fetchDashboard();
-  }, [navigate]);
+const MOCK_ACTIVE_JOB = {
+  patientName: 'Sarah J.',
+  appointmentTime: '10:30 AM — 11:00 AM',
+  address: '450 Park Avenue, Suite 12B, New York, NY 10022',
+  doctorOrder: 'CBC, CMP, Lipid Panel — Fasting Required',
+  insurance: 'Blue Cross Blue Shield — Member ID: XYZ-123456',
+  phone: '+1 (555) 012-3456'
+};
 
-  // --- Real-time Heartbeat & Location Sync ---
-  useEffect(() => {
-    let watchId = null;
+const ROUTE_JOBS = [
+  { id: 1, patient: 'Sarah J.', address: '450 Park Ave, Suite 12B', time: '10:30 AM', type: 'Routine Panel', status: 'enroute' },
+  { id: 2, patient: 'Michael R.', address: '220 W 42nd St, FL 8', time: '11:15 AM', type: 'Lipid Panel', status: 'upcoming' },
+  { id: 3, patient: 'Linda P.', address: '88 Greenwich St', time: '12:00 PM', type: 'CBC + CMP', status: 'upcoming' },
+  { id: 4, patient: 'David W.', address: '712 5th Avenue', time: '1:30 PM', type: 'Thyroid Panel', status: 'upcoming' },
+  { id: 5, patient: 'Emma K.', address: '55 Water St, Apt 14A', time: '2:45 PM', type: 'Glucose Fasting', status: 'completed' }
+];
 
-    if (isOnline) {
-      const sendHeartbeat = async (coords) => {
-        try {
-          await api.post('/api/phleb/heartbeat/', {
-            lat: coords.latitude,
-            lng: coords.longitude,
-            is_online: true
-          });
-        } catch (err) {
-          console.error('Heartbeat sync failed:', err);
-        }
-      };
+const STATUS_STEPS = [
+  { id: 'enroute', label: 'En Route', icon: <Navigation size={14} /> },
+  { id: 'arrived', label: 'Arrived', icon: <MapPin size={14} /> },
+  { id: 'collected', label: 'Collected', icon: <Package size={14} /> },
+  { id: 'completed', label: 'Completed', icon: <CheckCircle size={14} /> }
+];
 
-      if ("geolocation" in navigator) {
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            sendHeartbeat(position.coords);
-          },
-          (err) => console.error('Geolocation error:', err),
-          { enableHighAccuracy: true }
-        );
-      }
-    } else {
-      // Send one final heartbeat to go offline
-      const goOffline = async () => {
-        try {
-          await api.post('/api/phleb/heartbeat/', { is_online: false });
-        } catch (err) { }
-      };
-      goOffline();
-    }
+const ONBOARD_STEPS = [
+  { id: 1, name: 'Personal Info' },
+  { id: 2, name: 'Driving License' },
+  { id: 3, name: 'Certificate' },
+  { id: 4, name: 'Insurance' },
+  { id: 5, name: 'Service Area' },
+  { id: 6, name: 'Review' }
+];
 
-    return () => {
-      if (watchId) navigator.geolocation.clearWatch(watchId);
-    };
-  }, [isOnline]);
+/* ═══════════════════════════════════════════════
+   SUB-COMPONENTS (Defined first for hoisting safety)
+   ═══════════════════════════════════════════════ */
 
-  // Robust Tactical Map Initialization
-  useEffect(() => {
-    if (activeTab === 'dispatch' && !loading) {
-      const loadLeaflet = () => {
-        if (!window.L) {
-          const script = document.createElement('script');
-          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-          script.async = true;
-          document.body.appendChild(script);
-          
-          const style = document.createElement('link');
-          style.rel = "stylesheet";
-          style.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-          document.head.appendChild(style);
-
-          script.onload = () => initMapWithRetry();
-        } else {
-          initMapWithRetry();
-        }
-      };
-
-      const initMapWithRetry = (retries = 5) => {
-        const container = document.getElementById('tactical-map');
-        if (!container && retries > 0) {
-          setTimeout(() => initMapWithRetry(retries - 1), 200);
-          return;
-        }
-        if (!container || !window.L) return;
-        if (container._leaflet_id) return;
-
-        // Coordinates logic
-        const stop = data?.dispatch?.next_stop;
-        const lat = stop?.coordinates?.coordinates?.[1] || 40.7580;
-        const lng = stop?.coordinates?.coordinates?.[0] || -73.9855;
-
-        const map = window.L.map('tactical-map', {
-          zoomControl: false,
-          attributionControl: false,
-          fadeAnimation: true,
-          scrollWheelZoom: false,
-          dragging: true
-        }).setView([lat, lng], 13);
-
-        mapRef.current = map;
-
-        // Enable custom scroll-to-pan
-        const mapContainer = document.getElementById('tactical-map');
-        const handleWheel = (e) => {
-          e.preventDefault();
-          const speed = 1.2; // Adjust pan sensitivity
-          map.panBy([e.deltaX * speed, e.deltaY * speed], { animate: false });
-        };
-        mapContainer.addEventListener('wheel', handleWheel, { passive: false });
-
-        // Advanced Dark Tactical Tiles
-        window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-        // Specialist / Target Marker
-        const icon = window.L.divIcon({
-          className: 'tactical-ping-icon',
-          html: '<div class="radar-ping"></div>',
-          iconSize: [20, 20]
-        });
-
-        window.L.marker([lat, lng], { icon }).addTo(map)
-          .bindPopup(`<div class="p-2">
-            <h5 class="text-[10px] font-black uppercase text-indigo-400 mb-1">Active Target</h5>
-            <p class="text-xs font-bold text-white">${stop?.patient || 'Scanning Area...'}</p>
-          </div>`, { className: 'tactical-popup' })
-          .openPopup();
-
-        // Aesthetic Grid Pulse
-        window.L.circle([lat, lng], {
-          color: '#6366f1',
-          fillColor: '#6366f1',
-          fillOpacity: 0.1,
-          radius: 1000,
-          weight: 1
-        }).addTo(map);
-      };
-
-      loadLeaflet();
-    }
-  }, [activeTab, loading, data]);
-
-  const handleWorkflowChange = async (status) => {
-    const testId = data?.active_case?.id || data?.active_case?._id;
-    if (!testId) return;
-    
-    setWorkflowStatus(status);
-
-    try {
-      await api.post(`/api/phleb/test/${testId}/status/`, { status });
-      // Refresh data to get synced state
-      const response = await api.get('/api/phleb/dashboard/');
-      setData(response.data);
-    } catch (err) {
-      console.error('Workflow sync failed:', err);
-    }
-  };
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await api.put('/api/phleb/profile/', profileData);
-      const newUser = { ...user, ...profileData };
-      setUser(newUser);
-      localStorage.setItem('phleb_user', JSON.stringify(newUser));
-      setIsProfileModalOpen(false);
-      // Refresh dashboard to show updated data
-      const response = await api.get('/api/phleb/dashboard/');
-      setData(response.data);
-    } catch (err) {
-      console.error('Profile update failed:', err);
-    }
-  };
-
-  const toggleSpecimen = (id) => {
-    setCheckedSpecimens(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  if (loading) return (
-    <div className="phleb-dash-wrapper flex items-center justify-center">
-      <div className="stellar-mesh-container">
-        <div className="mesh-blob" style={{ top: '20%', left: '20%', background: '#6366f1' }}></div>
-        <div className="mesh-blob" style={{ bottom: '20%', right: '20%', background: '#4f46e5' }}></div>
-      </div>
-      <div className="text-center relative z-10">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full mb-6 mx-auto"
-        />
-        <p className="text-slate-200 font-bold tracking-widest text-xs uppercase">Initializing System...</p>
-      </div>
-    </div>
-  );
-
-  // --- Sub-Renders for Modules ---
-
-  // --- Phase 1: Phlebotomist Dashboard (Home) ---
-  const renderDispatch = () => (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }} 
-      animate={{ opacity: 1, scale: 1 }} 
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="space-y-10"
-    >
-      {/* 1. Today's Appointments List (Primary) */}
-      <motion.section 
-        whileHover={{ y: -5 }}
-        className="phleb-card !p-12"
-      >
-        <div className="flex justify-between items-center mb-12">
-          <h2 className="phleb-card-title !mb-0">
-            <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.2)]"><ListChecks size={20} /></div>
-            Today's Appointments List
-          </h2>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg">
-                <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></div>
-                <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">GPS {isOnline ? 'SIGNAL ACTIVE' : 'LOCKED'}</span>
-            </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{data?.dispatch?.today_route?.length} Field Tests Active</span>
+function OverviewTab({ onNavigate }) {
+  return (
+    <>
+      <div className="sp-kpi-grid">
+        {[
+          { label: "Today's Jobs", value: '6', icon: <Calendar size={20} />, bg: 'rgba(99,102,241,0.1)', color: '#818cf8' },
+          { label: 'Week Earnings', value: '$1,890', icon: <DollarSign size={20} />, bg: 'rgba(16,185,129,0.1)', color: '#34d399' },
+          { label: 'Star Rating', value: '4.95', icon: <Star size={20} />, bg: 'rgba(251,191,36,0.1)', color: '#fbbf24' },
+          { label: 'Completed', value: '234', icon: <CheckCircle size={20} />, bg: 'rgba(99,102,241,0.1)', color: '#818cf8' }
+        ].map((k, i) => (
+          <div key={i} className="sp-kpi-card">
+            <div className="sp-kpi-card-icon" style={{ background: k.bg, color: k.color }}>{k.icon}</div>
+            <h3>{k.value}</h3>
+            <p>{k.label}</p>
           </div>
+        ))}
+      </div>
+
+      <div className="sp-grid-2">
+        <div className="sp-card" style={{ cursor: 'pointer' }} onClick={() => onNavigate('job')}>
+          <div className="sp-card-title"><Calendar size={16} color="#818cf8" /> Next Appointment</div>
+          <div style={{ padding: '1rem', background: 'rgba(99,102,241,0.06)', borderRadius: 16, border: '1px solid rgba(99,102,241,0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>Sarah J.</span>
+              <span style={{ color: '#818cf8', fontWeight: 700, fontSize: '0.85rem' }}>10:30 AM</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+              <MapPin size={14} /> 450 Park Avenue, Suite 12B
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              <span className="sp-badge order"><FileText size={10} /> Lab Order</span>
+              <span className="sp-badge insurance"><Shield size={10} /> BCBS</span>
+            </div>
+          </div>
+          <p style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600, marginTop: '0.75rem', textAlign: 'center' }}>Click to open Active Job view →</p>
         </div>
-        <div className="grid grid-cols-1 gap-4">
-          {data?.dispatch?.today_route?.map((stop, idx) => (
-            <div 
-              key={idx} 
-              className="route-item-grid"
-              style={{ '--indicator-color': stop.status === 'Completed' ? '#10b981' : '#6366f1' }}
-            >
-              <div className="route-time-block">
-                <div className="route-time">{stop.preferred_time || '09:00 AM'}</div>
-                <span className={`status-chip ${stop.status === 'Completed' ? 'completed' : 'pending'}`}>
-                  {stop.status}
-                </span>
+
+        <div className="sp-card">
+          <div className="sp-card-title"><Bell size={16} color="#818cf8" /> Notifications</div>
+          {MOCK_NOTIFICATIONS.map(n => (
+            <div key={n.id} className="sp-notif-item">
+              <div className={`sp-notif-dot ${n.type}`} />
+              <div className="sp-notif-text">
+                <h4>{n.title}</h4>
+                <p>{n.message}</p>
               </div>
-              
-              <div className="route-info">
-                <div className="test-tag">{stop.test_name || "Laboratory Analysis"}</div>
-                <h5 className="text-white font-black text-sm mb-1">{stop.full_name || "Assigned Patient"}</h5>
-                <div className="address-line">
-                  <MapPin size={10} className="text-slate-400" />
-                  {stop.address}
-                </div>
-              </div>
-
-              <div className="route-actions">
-                <a href={`tel:${stop.phone}`} className="action-bubble primary">
-                  <Phone size={12} /> {stop.phone}
-                </a>
-                {stop.alt_phone && stop.alt_phone !== 'N/A' && (
-                  <a href={`tel:${stop.alt_phone}`} className="action-bubble">
-                    <Phone size={12} /> {stop.alt_phone} (Alt)
-                  </a>
-                )}
-              </div>
-
-              <button 
-                className="details-toggle"
-                onClick={() => setExpandedStopIdx(expandedStopIdx === idx ? null : idx)}
-              >
-                {expandedStopIdx === idx ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                {expandedStopIdx === idx ? 'CLOSE DOSSIER' : 'VIEW STOP DETAILS'}
-              </button>
-
-              <AnimatePresence>
-                {expandedStopIdx === idx && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="route-details-panel"
-                  >
-                    <div className="dossier-grid">
-                      {/* Mission Briefing - New Descriptive View */}
-                      <div className="dossier-section briefing-card">
-                        <h6><Info size={10} className="inline mr-1" /> Mission Briefing</h6>
-                        <div className="briefing-content">
-                          <p className="test-desc-long text-slate-300 font-medium">{stop.clinical_data?.test_info?.description}</p>
-                          <div className="mt-3 flex flex-col gap-2">
-                             <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                               <Clock size={10} className="text-indigo-400" />
-                               <span>Scheduled: <b className="text-white">{stop.clinical_data?.preferred_time}</b></span>
-                             </div>
-                             <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                               <Truck size={10} className="text-indigo-400" />
-                               <span>Protocol: <b className="text-white">{stop.clinical_data?.visit_type}</b></span>
-                             </div>
-                             <div className="mt-2 p-2 bg-emerald-500/5 border border-emerald-500/10 rounded-lg">
-                               <p className="text-[9px] font-black text-emerald-400 uppercase mb-1">Preparation</p>
-                               <p className="text-[10px] text-slate-300 font-medium italic">{stop.clinical_data?.test_info?.preparation}</p>
-                             </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="dossier-section">
-                        <h6><Users size={10} className="inline mr-1" /> Demographics</h6>
-                        <p className="dossier-val">{stop.clinical_data?.age}Y / {stop.clinical_data?.gender}</p>
-                        <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase">ID: {stop.patient_id}</p>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-4 flex items-center justify-center gap-2 py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black text-slate-300 hover:bg-white/10 transition-colors"
-                        >
-                          <Navigation size={10} /> LAUNCH NAVIGATION
-                        </a>
-                      </div>
-
-                      <div className="dossier-section">
-                        <h6><ClipboardList size={10} className="inline mr-1" /> Specimens Required</h6>
-                        <div className="specimen-list">
-                          {stop.clinical_data?.specimens?.map((spec, sidx) => (
-                            <span key={sidx} className="specimen-tag">{spec}</span>
-                          )) || <span className="text-slate-500 italic text-[10px]">No specimens listed</span>}
-                        </div>
-                      </div>
-
-                      <div className="dossier-section">
-                        <h6><Stethoscope size={10} className="inline mr-1" /> Command Intel</h6>
-                        <div className="flex items-center gap-2 mb-2">
-                           <Building2 size={10} className="text-indigo-400" />
-                           <span className="text-[10px] font-bold text-slate-300">{stop.clinical_data?.facility}</span>
-                        </div>
-                        <div className="instruction-block">
-                          {stop.clinical_data?.instructions}
-                        </div>
-                        <div className="mt-3 text-[10px] text-slate-500 font-bold uppercase">
-                          Ordering Physician: <span className="text-slate-300 ml-1">{stop.clinical_data?.doctor}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <span className="sp-notif-time">{n.time}</span>
             </div>
           ))}
         </div>
-      </motion.section>
+      </div>
+    </>
+  );
+}
 
-      <div className="dash-modules-grid">
-        {/* 2. Route Map and Optimized Route (Radar) */}
-        <motion.section 
-          whileHover={{ scale: 1.005 }}
-          className="phleb-card map-module full-bleed border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
-          style={{ height: '520px', position: 'relative' }}
-        >
-          {/* Map Container - Positioned to fill entire card background (including upper header area) */}
-          <div 
-            id="tactical-map" 
-            className="map-placeholder overflow-hidden absolute inset-0 z-0" 
-            style={{ height: '100%', width: '100%', top: 0, left: 0 }}
-          >
-             {/* Fallback/Loader Layer */}
-             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#020408] z-[5]">
-                <div className="w-12 h-12 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                <div className="text-slate-600 text-[8px] font-black uppercase tracking-[0.8em] animate-pulse">
-                   Syncing Grid...
-                </div>
-             </div>
-             
-             {/* HUD Vignette Overlay */}
-             <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] z-20"></div>
-             <div className="absolute inset-0 pointer-events-none border-black/20 z-10"></div>
+function RouteTab({ onNavigate }) {
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h3 style={{ fontWeight: 800, fontSize: '1.1rem' }}>Today&apos;s Route — {ROUTE_JOBS.length} Stops</h3>
+        <button className="sp-btn-secondary" style={{ padding: '10px 18px', fontSize: '0.8rem' }}>
+          <Navigation size={14} /> Reorder Route
+        </button>
+      </div>
+
+      {ROUTE_JOBS.map((j, idx) => (
+        <div key={j.id} className="sp-route-item" onClick={() => onNavigate('job')}>
+          <div className="sp-route-num">{idx + 1}</div>
+          <div className="sp-route-info">
+            <h4>{j.patient} — {j.type}</h4>
+            <p><MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />{j.address} · {j.time}</p>
           </div>
+          <span className={`sp-route-status ${j.status}`}>{j.status === 'enroute' ? 'En Route' : j.status}</span>
+          <ChevronRight size={18} color="#475569" />
+        </div>
+      ))}
 
-          {/* Enhanced HUD Header - Overlaid on top of map */}
-          <div className="absolute top-8 left-8 z-[1001] flex flex-col gap-1 pointer-events-none">
-             <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/5 py-2 px-4 rounded-full">
-               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
-               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Live Tactical Radar</h4>
-             </div>
-             <div className="flex items-center gap-2 pl-4 mt-2">
-               <MapPin size={12} className="text-slate-500" />
-               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Global Coverage Locked</span>
-             </div>
-          </div>
-
-
-          {/* Tactical Zoom Controls - FIXED VANILLA CSS VERSION */}
-          <div className="tactical-zoom-overlay">
-             <button 
-               onClick={() => mapRef.current?.zoomIn()}
-               className="zoom-btn-base zoom-btn-in"
-             >
-               <Plus size={18} strokeWidth={4} style={{ marginRight: '8px' }} /> Zoom In
-             </button>
-             <button 
-               onClick={() => mapRef.current?.zoomOut()}
-               className="zoom-btn-base zoom-btn-out"
-             >
-               <Minus size={18} strokeWidth={4} style={{ marginRight: '8px' }} /> Zoom Out
-             </button>
-          </div>
-        </motion.section>
-
-        {/* 3. Next Stop Details & 4. Status Buttons */}
-        <div className="space-y-6">
-          <motion.section 
-            whileHover={{ y: -5 }}
-            className="phleb-card next-stop-card !p-10"
-          >
-            <div className="flex justify-between items-center mb-10">
-               <div className="next-stop-badge">
-                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping"></div>
-                  {data?.dispatch?.next_stop ? 'Next Test Active' : 'System Standby'}
-               </div>
-               <span className="eta-label">{data?.dispatch?.next_stop ? 'ETA: 12 MINS' : 'Scanning...'}</span>
-            </div>
-
-            {data?.dispatch?.next_stop ? (
-              <>
-                <h3 className="text-4xl font-black text-white mb-3 tracking-tight">{data.dispatch.next_stop.time}</h3>
-                <div className="flex items-center gap-2 mb-10">
-                   <div className="w-10 h-[1px] bg-white/20"></div>
-                   <p className="text-sm font-bold text-slate-300">{data.dispatch.next_stop.patient} • {data.dispatch.next_stop.address}</p>
-                </div>
-
-                {/* Test Timeline Visualizer */}
-                <div className="mission-timeline-container">
-                   <div className="timeline-track"></div>
-                   <div 
-                      className="timeline-progress" 
-                      style={{ 
-                        width: workflowStatus === 'enroute' ? '15%' : 
-                               workflowStatus === 'arrived' ? '55%' : 
-                               workflowStatus === 'completed' ? '100%' : '5%' 
-                      }}
-                   ></div>
-                   
-                   {[
-                     { id: 'enroute', color: '#0ea5e9' },
-                     { id: 'arrived', color: '#f59e0b' },
-                     { id: 'completed', color: '#6366f1' }
-                   ].map((step, idx) => {
-                      const stages = ['enroute', 'arrived', 'completed'];
-                      const currentIdx = stages.indexOf(workflowStatus);
-                      const isCompleted = currentIdx > idx;
-                      const isActive = workflowStatus === step.id;
-                      
-                      return (
-                        <div 
-                          key={step.id} 
-                          className={`timeline-node ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                          style={{ '--node-color': step.color }}
-                        ></div>
-                      );
-                   })}
-                </div>
-              </>
-            ) : (
-              <div className="py-10 text-center">
-                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 animate-pulse">
-                    <Navigation size={24} className="text-slate-500" />
-                 </div>
-                 <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">No Active Tests Found</h4>
-                 <p className="text-[10px] font-bold text-slate-500 mt-2">Waiting for HQ to dispatch optimized route...</p>
-              </div>
-            )}
-            
-            <div className="workflow-actions border-t border-white/5 pt-10">
-              <button 
-                className={`workflow-btn btn-tactical ${workflowStatus === 'enroute' ? 'active' : ''}`} 
-                onClick={() => handleWorkflowChange('enroute')} 
-                style={{ '--btn-color': '#0ea5e9', '--btn-color-glow': 'rgba(2, 132, 199, 0.4)' }}
-              >
-                <Navigation size={18} /> Started
-              </button>
-              <button 
-                className={`workflow-btn btn-tactical ${workflowStatus === 'arrived' ? 'active' : ''}`} 
-                onClick={() => handleWorkflowChange('arrived')} 
-                style={{ '--btn-color': '#f59e0b', '--btn-color-glow': 'rgba(245, 158, 11, 0.4)' }}
-              >
-                <Truck size={18} /> Arrived
-              </button>
-              <button 
-                className={`workflow-btn btn-tactical ${workflowStatus === 'completed' ? 'active' : ''}`} 
-                onClick={() => handleWorkflowChange('completed')} 
-                style={{ '--btn-color': '#6366f1', '--btn-color-glow': 'rgba(99, 102, 241, 0.4)' }}
-              >
-                <CheckCircle2 size={18} /> Completed
-              </button>
-              <button 
-                className={`workflow-btn btn-tactical ${workflowStatus === 'issue' ? 'active' : ''}`} 
-                onClick={() => handleWorkflowChange('issue')} 
-                style={{ '--btn-color': '#ef4444', '--btn-color-glow': 'rgba(239, 68, 68, 0.4)' }}
-              >
-                <AlertCircle size={18} /> Issue
-              </button>
-            </div>
-          </motion.section>
+      <div className="sp-map-container" style={{ marginTop: '1.5rem' }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexDirection: 'column', gap: 8 }}>
+          <MapPin size={32} />
+          <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Map view — Leaflet integration ready</span>
         </div>
       </div>
-    </motion.div>
+    </>
   );
+}
 
-  const renderActiveCase = () => (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="case-file-grid"
-    >
-      <div className="case-profile-sidebar">
-        {/* 1. Patient Profile & 4. Associated Doctor/Facility/Employer */}
-        <motion.section 
-          whileHover={{ y: -5 }}
-          className="phleb-card case-profile-card"
-        >
-          <div className="patient-avatar-container">
-            <div className="avatar-ring"></div>
-            <div className="w-20 h-20 bg-indigo-500/10 rounded-[30px] flex items-center justify-center text-indigo-400 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-              <User size={40} strokeWidth={2.5} />
-            </div>
-          </div>
-          
-          <h3 className="text-2xl font-black text-white tracking-tight">{data?.active_case?.initials} • {data?.active_case?.patient_id}</h3>
-          
-          <div className="case-profile-stats mt-8">
-            <div className="stat-box"><h6>Age</h6><p>{data?.active_case?.age}Y</p></div>
-            <div className="stat-box"><h6>Gender</h6><p>{data?.active_case?.gender}</p></div>
-          </div>
+function JobExecutionTab({ onNavigate }) {
+  const [currentStatus, setCurrentStatus] = useState('enroute');
+  const [notes, setNotes] = useState('');
+  const [completed, setCompleted] = useState(false);
 
-          <div className="mt-8 space-y-4 border-t border-white/5 pt-6">
-            {[
-              { label: 'Facility', value: data?.active_case?.associated_facility, icon: Info },
-              { label: 'Clinician', value: data?.active_case?.doctor, icon: User },
-              { label: 'Employer', value: data?.active_case?.employer || 'Not Specified', icon: ShieldCheck }
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                   <item.icon size={14} className="text-indigo-400" />
-                   <span className="text-[10px] text-slate-200 font-bold uppercase tracking-wider">{item.label}</span>
-                </div>
-                <span className="text-[11px] font-black text-white">{item.value}</span>
-              </div>
-            ))}
-          </div>
-        </motion.section>
+  const getStatusIndex = (s) => STATUS_STEPS.findIndex(st => st.id === s);
 
-        {/* 6. Reschedule / report issue */}
-        <section className="action-stack mt-8">
-          <button 
-            onClick={() => triggerTacticalAction('resched', 'Satellite Link', 'Reschedule Request Transmitted to HQ', 2000)}
-            disabled={activeAction === 'resched'}
-            className={`btn-tactical !w-full !p-6 flex items-center justify-center gap-3 ${activeAction === 'resched' ? 'btn-processing' : ''}`}
-          >
-            {activeAction === 'resched' ? <div className="tactical-spinner"></div> : <Calendar size={18} />}
-            {activeAction === 'resched' ? 'Connecting...' : 'Reschedule Test'}
-          </button>
-          <button 
-            onClick={() => triggerTacticalAction('report', 'Uplinking Intel', 'Issue Logged: Field Specialist Contact Initiated', 2500)}
-            disabled={activeAction === 'report'}
-            className={`btn-danger !w-full !p-6 flex items-center justify-center gap-3 ${activeAction === 'report' ? 'btn-processing' : ''}`}
-          >
-            {activeAction === 'report' ? <div className="tactical-spinner"></div> : <AlertCircle size={18} />}
-            {activeAction === 'report' ? 'Uplinking...' : 'Report Issue'}
-          </button>
-        </section>
-      </div>
-
-      <div className="space-y-14">
-        {/* 2. Collection Instructions */}
-        <section className="phleb-card">
-          <h2 className="phleb-card-title mb-10">
-            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg"><Info size={20} /></div>
-            Collection Instructions
-          </h2>
-          <div className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl border-l-4">
-            <p className="text-sm font-bold text-amber-200/80 italic leading-relaxed">
-              "{data?.active_case?.instructions}"
-            </p>
-          </div>
-        </section>
-
-        {/* 3. Payment Collection */}
-        <section className="phleb-card !p-14 bg-gradient-to-br from-emerald-500/10 to-transparent">
-          <h2 className="phleb-card-title mb-12">
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><Droplets size={20} /></div>
-            Payment Collection
-          </h2>
-          <div className="flex items-center justify-between p-10 bg-black/20 rounded-2xl border border-white/5">
-             <div>
-                <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em] mb-1">Financial Status</p>
-                <h4 className="text-lg font-black text-white">{data?.active_case?.payment_status || 'Pending Verification'}</h4>
-             </div>
-             <button 
-              onClick={() => triggerTacticalAction('pay', 'Payment Gateway', 'Transaction ID: TX-882 Verified Successfully', 2000)}
-              disabled={activeAction === 'pay'}
-              className={`btn-success !px-8 !py-4 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center gap-2 ${activeAction === 'pay' ? 'btn-processing' : ''}`}
-             >
-                {activeAction === 'pay' ? <div className="tactical-spinner"></div> : 'Collect Payment'}
-             </button>
-          </div>
-        </section>
-
-        {/* 5. Notes + Specimen Checklist */}
-        <section className="phleb-card !p-14">
-          <div className="flex justify-between items-center mb-14">
-            <h2 className="phleb-card-title !mb-0">
-              <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg"><ListChecks size={20} /></div>
-              Notes + Specimen Checklist
-            </h2>
-            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-              {checkedSpecimens.length} / {data?.active_case?.specimens?.length} SECURED
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-10">
-            {data?.active_case?.specimens?.map((spec, idx) => (
-              <div key={idx} onClick={() => toggleSpecimen(spec)} className={`checklist-item ${checkedSpecimens.includes(spec) ? 'checked' : ''} p-5`}>
-                <div className={`w-6 h-6 rounded-md border-2 ${checkedSpecimens.includes(spec) ? 'bg-emerald-500 border-emerald-500' : 'border-slate-700'} flex items-center justify-center`}>
-                  <CheckCircle2 size={12} className="text-white" />
-                </div>
-                <span className="text-sm font-bold text-slate-200">{spec}</span>
-              </div>
-            ))}
-          </div>
-
-          <textarea 
-            className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-6 text-xs font-bold text-slate-200 focus:border-indigo-500 transition-all resize-none"
-            placeholder="Final clinic notes..."
-            defaultValue={data?.active_case?.notes}
-          />
-          
-          <button 
-            disabled={checkedSpecimens.length < (data?.active_case?.specimens?.length || 0) || activeAction === 'seal'}
-            onClick={() => triggerTacticalAction('seal', 'Submitting Lab Results', 'Mission Complete: Results Sealed & Transmitted', 2500)}
-            className={`btn-primary !w-full !mt-10 !p-8 shadow-[0_0_40px_rgba(99,102,241,0.4)] flex items-center justify-center gap-3 ${activeAction === 'seal' ? 'btn-processing' : ''} ${checkedSpecimens.length < (data?.active_case?.specimens?.length || 0) ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
-          >
-            {activeAction === 'seal' ? <div className="tactical-spinner"></div> : <ShieldCheck size={20} />}
-            {activeAction === 'seal' ? 'Sealing...' : checkedSpecimens.length < (data?.active_case?.specimens?.length || 0) ? 'Complete Checklist to Finalize' : 'Finalize & Seal Test'}
-          </button>
-        </section>
-      </div>
-    </motion.div>
-  );
-
-  // --- Phase 3: Specialist Performance Dossier ---
-  const renderPerformance = () => {
-    // Dynamic Mapping: Link to real-time backend data with high-fidelity mock fallback
-    const metrics = data?.admin?.detailed_metrics || {};
-    const stats = {
-      wallet: {
-        balance: "$1,248.50", // Mock for presentation (usually sensitive)
-        weekly: "+$420.00",
-        pending: "$150.00"
-      },
-      metrics: {
-        totalTests: metrics.completed_visits || 48,
-        goalTests: 60,
-        rating: 4.9,
-        successRate: metrics.completed_visits ? `${((metrics.completed_visits / (metrics.completed_visits + (metrics.no_shows || 0))) * 100).toFixed(1)}%` : "98.5%"
-      },
-      history: [
-        { id: 'TX-901', date: 'Oct 11', amount: '$45.00', status: 'Settled', patient: 'J. Doe' },
-        { id: 'TX-902', date: 'Oct 11', amount: '$60.00', status: 'Settled', patient: 'A. Smith' },
-        { id: 'TX-903', date: 'Oct 10', amount: '$45.00', status: 'Pending', patient: 'M. Ross' },
-      ]
-    };
-
-    // Mini Performance Chart Component (SVG)
-    const MiniChart = ({ color }) => (
-      <div className="metric-chart-container">
-        <svg viewBox="0 0 100 30" width="100%" height="100%" preserveAspectRatio="none">
-          <motion.path
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-            d="M0,25 C10,20 15,28 25,22 C35,16 45,25 55,18 C65,11 80,15 100,2"
-            fill="none"
-            stroke={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            className={`glow-${color === '#6366f1' ? 'indigo' : color === '#10b981' ? 'emerald' : 'amber'}`}
-          />
-        </svg>
-      </div>
-    );
-
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="space-y-12 pb-16"
-      >
-        {/* Optimized Header & Status Control */}
-        <header className="mb-12 relative z-10 flex justify-between items-center border-b border-white/5 pb-10">
-           <div className="flex-1">
-              <h1 className="phleb-title-main !text-5xl !mb-2">Specialist Dossier</h1>
-              <div className="flex items-center gap-4">
-                 <p className="text-[10px] text-indigo-400 font-black tracking-[0.4em] uppercase">Field Agent: {user.name} • Specialist ID: {data?.specialist?.id || "SF-77"}</p>
-                 <div className="h-2 w-2 rounded-full bg-white/10"></div>
-                 <p className="text-[10px] text-slate-500 font-black tracking-[0.4em] uppercase">Unit {user.location || 'Echo-1'}</p>
-              </div>
-           </div>
-           
-           <div className="flex items-center gap-6 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
-              <div className="text-right">
-                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 leading-none">Global Status</p>
-                 <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
-                    <span className="text-[11px] font-black text-white uppercase tracking-wider">Active Duty</span>
-                 </div>
-              </div>
-              <div className="w-[1px] h-10 bg-white/5"></div>
-              <div className="flex flex-col gap-1">
-                 <p className="text-[8px] font-black text-indigo-400/60 uppercase tracking-widest mb-0.5">Satellite Sync</p>
-                 <div className="flex gap-0.5">
-                    {[1,2,3,4].map(i => <div key={i} className={`w-3 h-1 rounded-full ${i <= 3 ? 'bg-indigo-500' : 'bg-white/10 animate-pulse'}`}></div>)}
-                 </div>
-              </div>
-           </div>
-        </header>
-
-        {/* Top Tier Metrics: Wallet & Analytics (FIXED GRID 12) */}
-        <div className="grid grid-cols-12 gap-10">
-           {/* Wallet Card - Premium Gradient */}
-           <motion.section 
-            whileHover={{ y: -5 }}
-            className="phleb-card col-span-5 !p-12 relative overflow-hidden group"
-           >
-              <div className="phleb-card-hud-border"></div>
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity scale-150 rotate-12">
-                 <Wallet size={160} strokeWidth={1} />
-              </div>
-              
-              <div className="relative z-10">
-                 <div className="flex items-center gap-3 mb-10">
-                    <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/10"><Wallet size={20} /></div>
-                    <h2 className="text-xs font-black text-white uppercase tracking-[0.2em]">Financial Command</h2>
-                 </div>
-
-                 <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Available Balance</p>
-                 <h3 className="text-6xl font-black text-white mb-8 tracking-tighter leading-none metric-value-glow">{stats.wallet.balance}</h3>
-                 
-                 <div className="flex items-center gap-8 mb-12">
-                    <div className="flex flex-col">
-                       <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Weekly Growth</p>
-                       <div className="flex items-center gap-2">
-                          <TrendingUp size={12} className="text-emerald-400" />
-                          <p className="text-base font-black text-emerald-400">{stats.wallet.weekly}</p>
-                       </div>
-                    </div>
-                    <div className="w-[1px] h-10 bg-white/10"></div>
-                    <div>
-                       <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Pending Settlements</p>
-                       <p className="text-base font-black text-slate-300">{stats.wallet.pending}</p>
-                    </div>
-                 </div>
-
-                 <button 
-                  onClick={() => triggerTacticalAction('payout', 'Account Verification', 'Secure Payout Process Initiated', 2500)}
-                  disabled={activeAction === 'payout'}
-                  className={`btn-success !w-full !p-6 flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-[0.98] ${activeAction === 'payout' ? 'btn-processing' : ''}`}
-                 >
-                    {activeAction === 'payout' ? <div className="tactical-spinner"></div> : <ArrowUpRight size={20} />}
-                    {activeAction === 'payout' ? 'Verifying Node...' : 'Request Secure Payout'}
-                 </button>
-              </div>
-           </motion.section>
-
-           {/* Metrics Grid */}
-           <div className="col-span-12 lg:col-span-7 grid grid-cols-2 gap-10">
-              <motion.div whileHover={{ scale: 1.02 }} className="phleb-card !p-10 flex flex-col relative group">
-                 <div className="phleb-card-hud-border"></div>
-                 <div className="flex justify-between items-start mb-10">
-                    <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/10"><CheckCircle2 size={20} /></div>
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] px-3 py-1 bg-indigo-500/5 rounded-full border border-indigo-500/10">Efficiency Index</span>
-                 </div>
-                 <div className="mt-2">
-                    <h4 className="text-5xl font-black text-white mb-3 tracking-tight metric-value-glow">{stats.metrics.totalTests}</h4>
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Completed Appointments</p>
-                    
-                    <div className="mt-8 w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                       <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.metrics.totalTests/stats.metrics.goalTests)*100}%` }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                          className="h-full bg-linear-to-r from-indigo-600 to-indigo-400 shadow-[0_0_15px_#6366f1]"
-                        ></motion.div>
-                    </div>
-                    <div className="flex justify-between items-center mt-3">
-                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dossier Goal: {stats.metrics.goalTests}</p>
-                       <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{Math.round((stats.metrics.totalTests/stats.metrics.goalTests)*100)}%</p>
-                    </div>
-                 </div>
-                 <MiniChart color="#6366f1" />
-              </motion.div>
-
-              <motion.div whileHover={{ scale: 1.02 }} className="phleb-card !p-10 flex flex-col relative group">
-                 <div className="phleb-card-hud-border"></div>
-                 <div className="flex justify-between items-start mb-10">
-                    <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/10"><Star size={20} /></div>
-                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em] px-3 py-1 bg-amber-500/5 rounded-full border border-amber-500/10">Client Sentiment</span>
-                 </div>
-                 <div className="mt-2">
-                    <div className="flex items-center gap-3 mb-3">
-                       <h4 className="text-5xl font-black text-white tracking-tight metric-value-glow">{stats.metrics.rating}</h4>
-                       <div className="flex gap-1.5">
-                          {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= 4 ? "#f59e0b" : "none"} className={s <= 4 ? "text-amber-500 glow-amber" : "text-white/10"} />)}
-                       </div>
-                    </div>
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Aggregate Specialist Score</p>
-                    <div className="mt-8 flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                          <TrendingUp size={16} className="text-emerald-400" />
-                          <span className="text-sm font-black text-emerald-400 uppercase tracking-widest">{stats.metrics.successRate} Success</span>
-                       </div>
-                       <div 
-                        onClick={() => setIsReviewsOpen(true)}
-                        className="text-[10px] font-black text-slate-500 uppercase tracking-widest underline cursor-pointer hover:text-white transition-colors"
-                      >View Feedback</div>
-                    </div>
-                 </div>
-                 <MiniChart color="#f59e0b" />
-              </motion.div>
-           </div>
-        </div>
-
-        {/* Transaction History & Test Logs - Full Width Optimized */}
-        <section className="phleb-card !p-12 relative overflow-hidden group">
-           <div className="phleb-card-hud-border"></div>
-           <div className="flex justify-between items-center mb-12 relative z-10">
-              <h2 className="phleb-card-title !mb-0 !text-xl group-hover:translate-x-1 transition-transform">
-                 <div className="p-3 bg-white/5 text-slate-300 rounded-2xl border border-white/10 group-hover:border-indigo-500/30 transition-colors"><CreditCard size={20} /></div>
-                 Operation Ledger Activity
-              </h2>
-              <div className="flex items-center gap-6">
-                 <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Sync Active</span>
-                 </div>
-                 <button 
-                  onClick={() => triggerTacticalAction('extract', 'Data Decryption', 'Performance Dossier Extracted Successfully', 3000)}
-                  disabled={activeAction === 'extract'}
-                  className={`text-[11px] font-black text-indigo-400 uppercase tracking-[0.2em] hover:text-white transition-all bg-indigo-500/10 hover:bg-indigo-500/20 px-6 py-2.5 rounded-full border border-indigo-500/20 flex items-center gap-2 ${activeAction === 'extract' ? 'btn-processing' : ''}`}
-                 >
-                    {activeAction === 'extract' && <div className="tactical-spinner !w-3 !h-3"></div>}
-                    {activeAction === 'extract' ? 'Syncing...' : 'Extract Statement'}
-                 </button>
-              </div>
-           </div>
-
-           <div className="space-y-5 relative z-10">
-              {stats.history.map((tx, idx) => (
-                 <div key={idx} className="flex items-center justify-between p-8 bg-white/[0.02] border border-white/5 rounded-[32px] group/item hover:bg-white/[0.04] hover:border-white/20 transition-all hover:translate-x-2">
-                    <div className="flex items-center gap-8">
-                       <div className="w-14 h-14 bg-black/40 rounded-2xl flex items-center justify-center border border-white/5 group-hover/item:border-indigo-500/20 transition-all">
-                          <CheckCircle2 size={24} className={tx.status === 'Settled' ? 'text-emerald-400 glow-emerald' : 'text-amber-400 glow-amber'} />
-                       </div>
-                       <div>
-                          <p className="text-base font-black text-white tracking-tight mb-1">{tx.patient}</p>
-                          <div className="flex items-center gap-3">
-                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{tx.id}</p>
-                             <div className="w-1 h-1 rounded-full bg-white/10"></div>
-                             <p className="text-[10px] font-bold text-indigo-400/80 uppercase tracking-widest">{tx.date}</p>
-                          </div>
-                       </div>
-                    </div>
-                    <div className="text-right flex items-center gap-10">
-                       <div className="hidden sm:block">
-                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Collection Status</p>
-                          <p className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border ${tx.status === 'Settled' ? 'bg-emerald-500/5 text-emerald-500 border-emerald-500/10' : 'bg-amber-500/5 text-amber-400 border-amber-500/10'}`}>
-                             {tx.status}
-                          </p>
-                       </div>
-                       <div className="min-w-[100px]">
-                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Net Settlement</p>
-                          <p className="text-xl font-black text-white">{tx.amount}</p>
-                       </div>
-                       <div className="p-2.5 bg-white/5 rounded-full opacity-0 group-hover/item:opacity-100 transition-all cursor-pointer hover:bg-white/10">
-                          <ArrowUpRight size={18} className="text-indigo-400" />
-                       </div>
-                    </div>
-                 </div>
-              ))}
-           </div>
-        </section>
-      </motion.div>
-    );
+  const advanceStatus = (statusId) => {
+    const clickIndex = getStatusIndex(statusId);
+    const currentIndex = getStatusIndex(currentStatus);
+    if (clickIndex <= currentIndex + 1) {
+      setCurrentStatus(statusId);
+      if (statusId === 'completed') setTimeout(() => setCompleted(true), 800);
+    }
   };
 
+  if (completed) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <CheckCircle size={72} color="#10b981" style={{ margin: '0 auto 1.5rem', display: 'block' }} />
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem' }}>Collection Complete</h2>
+          <p style={{ color: '#94a3b8', lineHeight: 1.6, marginBottom: '2rem' }}>
+            Specimen secured and chain-of-custody documented. Great work!
+          </p>
+          <button className="sp-btn-primary" onClick={() => { setCompleted(false); setCurrentStatus('enroute'); onNavigate('overview'); }} style={{ maxWidth: 300, margin: '0 auto' }}>
+            Return to Dashboard
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`phleb-dash-wrapper state-${workflowStatus}`}>
-      {/* Sidebar Navigation */}
-      <aside className="phleb-sidebar">
-        <div className="sidebar-logo">
-          <motion.div 
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="sidebar-logo-icon"
-          >
-            <Droplets size={20} />
-          </motion.div>
-          <h2>MusB Phlebotomy</h2>
+    <>
+      <button className="sp-job-exec-back" onClick={() => onNavigate('route')}>
+        <ArrowLeft size={18} /> Back to Route Queue
+      </button>
+
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Active Collection</h2>
+      <p style={{ color: '#64748b', fontWeight: 600, marginBottom: '2rem' }}>{MOCK_ACTIVE_JOB.patientName} — {MOCK_ACTIVE_JOB.appointmentTime}</p>
+
+      <div className="sp-status-steps">
+        {STATUS_STEPS.map((s, i) => {
+          const ci = getStatusIndex(currentStatus);
+          let cls = '';
+          if (i < ci) cls = 'done';
+          else if (i === ci) cls = 'active';
+          return (
+            <button key={s.id} className={`sp-status-step ${cls}`} onClick={() => advanceStatus(s.id)}>
+              {s.icon} {s.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="sp-card">
+        <div className="sp-card-title"><ClipboardList size={16} color="#818cf8" /> Patient Details</div>
+        <div className="sp-job-meta">
+          <div className="sp-job-meta-row"><span>Patient</span><span>{MOCK_ACTIVE_JOB.patientName}</span></div>
+          <div className="sp-job-meta-row"><span>Time</span><span><Clock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />{MOCK_ACTIVE_JOB.appointmentTime}</span></div>
+          <div className="sp-job-meta-row"><span>Address</span><span><MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />{MOCK_ACTIVE_JOB.address}</span></div>
+        </div>
+      </div>
+
+      <div className="sp-card">
+        <div className="sp-card-title"><FileText size={16} color="#818cf8" /> Doctor&apos;s Order</div>
+        <div style={{ padding: '1rem', background: 'rgba(99,102,241,0.06)', borderRadius: 14, border: '1px solid rgba(99,102,241,0.15)' }}>
+          <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>{MOCK_ACTIVE_JOB.doctorOrder}</p>
+        </div>
+      </div>
+
+      <div className="sp-card">
+        <div className="sp-card-title"><Shield size={16} color="#34d399" /> Insurance</div>
+        <p style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.9rem' }}>{MOCK_ACTIVE_JOB.insurance}</p>
+      </div>
+
+      <a href={`tel:${MOCK_ACTIVE_JOB.phone}`} className="sp-call-btn" style={{ textDecoration: 'none', marginBottom: '1.5rem', display: 'flex' }}>
+        <Phone size={18} /> Call Patient — {MOCK_ACTIVE_JOB.phone}
+      </a>
+
+      <div className="sp-card">
+        <div className="sp-card-title"><ClipboardList size={16} color="#818cf8" /> Specimen Notes</div>
+        <div className="sp-form-group">
+          <textarea rows={4} placeholder="Enter specimen handling notes, vein used, collection time, etc." value={notes} onChange={e => setNotes(e.target.value)} style={{ width: '100%' }} />
+        </div>
+      </div>
+
+      {currentStatus !== 'completed' && (
+        <button className="sp-btn-primary" onClick={() => { const ci = getStatusIndex(currentStatus); if (ci < STATUS_STEPS.length - 1) advanceStatus(STATUS_STEPS[ci + 1].id); }} style={{ marginTop: '0.5rem' }}>
+          Mark as {STATUS_STEPS[Math.min(getStatusIndex(currentStatus) + 1, STATUS_STEPS.length - 1)].label}
+        </button>
+      )}
+    </>
+  );
+}
+
+function EarningsTab() {
+  const daysUntilFriday = () => {
+    const day = new Date().getDay();
+    return day <= 5 ? 5 - day : 6;
+  };
+
+  const HISTORY = [
+    { date: 'Apr 11, 2026', jobs: 8, gross: '$360.00', fee: '30%', net: '$252.00' },
+    { date: 'Apr 4, 2026', jobs: 7, gross: '$315.00', fee: '30%', net: '$220.50' },
+    { date: 'Mar 28, 2026', jobs: 9, gross: '$405.00', fee: '30%', net: '$283.50' },
+    { date: 'Mar 21, 2026', jobs: 6, gross: '$270.00', fee: '30%', net: '$189.00' }
+  ];
+
+  return (
+    <>
+      <div className="sp-earnings-summary">
+        <div className="sp-earnings-card">
+          <h3 style={{ color: '#34d399' }}>$1,890</h3>
+          <p>Gross This Week</p>
+        </div>
+        <div className="sp-earnings-card">
+          <h3 style={{ color: '#f87171' }}>-$567</h3>
+          <p>Platform Fee (30%)</p>
+        </div>
+        <div className="sp-earnings-card">
+          <h3>$1,323</h3>
+          <p>Net Payout</p>
+        </div>
+      </div>
+
+      <div className="sp-payout-countdown">
+        <Clock size={20} color="#818cf8" />
+        <span>Next payout in</span>
+        <strong>{daysUntilFriday()} days</strong>
+        <span>(Friday)</span>
+      </div>
+
+      <div className="sp-card">
+        <div className="sp-card-title"><Wallet size={16} color="#818cf8" /> Payment History</div>
+        <table className="sp-table">
+          <thead>
+            <tr><th>Date</th><th>Jobs</th><th>Gross</th><th>Fee</th><th>Net Paid</th></tr>
+          </thead>
+          <tbody>
+            {HISTORY.map((h, i) => (
+              <tr key={i}>
+                <td>{h.date}</td>
+                <td>{h.jobs}</td>
+                <td>{h.gross}</td>
+                <td style={{ color: '#f87171' }}>{h.fee}</td>
+                <td style={{ fontWeight: 800, color: 'white' }}>{h.net}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function ReviewsTab() {
+  const BREAKDOWN = [
+    { stars: 5, count: 198, pct: 85 },
+    { stars: 4, count: 24, pct: 10 },
+    { stars: 3, count: 8, pct: 3 },
+    { stars: 2, count: 3, pct: 1 },
+    { stars: 1, count: 1, pct: 0.4 }
+  ];
+
+  const REVIEWS = [
+    { id: 1, stars: 5, text: 'Incredibly professional and quick. Best phlebotomy experience I\'ve had.', author: 'Sarah J.', date: 'Apr 12, 2026' },
+    { id: 2, stars: 5, text: 'Arrived promptly, very gentle with the draw. Will request again!', author: 'Michael R.', date: 'Apr 10, 2026' },
+    { id: 3, stars: 4, text: 'Great service overall. Minor difficulty finding the vein but handled it well.', author: 'Linda P.', date: 'Apr 8, 2026' }
+  ];
+
+  return (
+    <>
+      <div className="sp-grid-2">
+        <div className="sp-card" style={{ textAlign: 'center' }}>
+          <h3 style={{ fontSize: '4rem', fontWeight: 900, color: '#fbbf24', margin: '1rem 0 0.5rem' }}>4.95</h3>
+          <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: '0.5rem' }}>
+            {[1,2,3,4,5].map(i => <Star key={i} size={20} fill="#fbbf24" color="#fbbf24" />)}
+          </div>
+          <p style={{ color: '#64748b', fontWeight: 700, fontSize: '0.85rem' }}>Based on 234 reviews</p>
         </div>
 
-        <nav className="sidebar-nav">
-          <div 
-            className={`nav-item btn-tactical ${activeTab === 'dispatch' ? 'active' : ''} !p-4 !justify-start !border-none`}
-            onClick={() => setActiveTab('dispatch')}
-          >
-            <Navigation size={20} /> Dashboard
+        <div className="sp-card">
+          <div className="sp-card-title">Rating Breakdown</div>
+          <div className="sp-rating-breakdown">
+            {BREAKDOWN.map(b => (
+              <div key={b.stars} className="sp-rating-bar-row">
+                <span className="sp-rating-bar-label">{b.stars} ★</span>
+                <div className="sp-rating-bar"><div className="sp-rating-bar-fill" style={{ width: `${b.pct}%` }} /></div>
+                <span className="sp-rating-bar-count">{b.count}</span>
+              </div>
+            ))}
           </div>
-          <div 
-            className={`nav-item btn-tactical ${activeTab === 'case' ? 'active' : ''} !p-4 !justify-start !border-none`}
-            onClick={() => setActiveTab('case')}
-          >
-            <div className="relative">
-               <ListChecks size={20} />
-               {checkedSpecimens.length > 0 && checkedSpecimens.length < (data?.active_case?.specimens?.length || 0) && (
-                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
-               )}
-            </div>
-            Appointment Detail
-          </div>
-          <div 
-            className={`nav-item btn-tactical ${activeTab === 'admin' ? 'active' : ''} !p-4 !justify-start !border-none`}
-            onClick={() => setActiveTab('admin')}
-          >
-            <ShieldCheck size={20} /> Performance Dossier
-          </div>
+        </div>
+      </div>
 
-        </nav>
-
-        <div className="sidebar-footer">
-          <div 
-             className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl mb-4 border border-white/5 group hover:border-white/20 transition-all cursor-pointer"
-             onClick={() => setIsProfileModalOpen(true)}
-          >
-            <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 font-black group-hover:scale-105 transition-all">
-              {user.name.charAt(0)}
+      <div className="sp-card" style={{ marginTop: '1.5rem' }}>
+        <div className="sp-card-title"><Star size={16} color="#fbbf24" /> Recent Reviews</div>
+        {REVIEWS.map(r => (
+          <div key={r.id} className="sp-review-item">
+            <div className="sp-review-item-header">
+              <div className="sp-review-item-stars">
+                {Array.from({ length: r.stars }, (_, i) => <Star key={i} size={14} fill="#fbbf24" color="#fbbf24" />)}
+              </div>
+              <span className="sp-review-item-date">{r.date}</span>
             </div>
-            <div className="flex-1">
-              <p className="text-[11px] font-black text-white">{user.name}</p>
-              <p className="text-[9px] font-bold text-slate-200 uppercase">{user.location || 'Field Unit'}</p>
-            </div>
-            <Edit3 size={14} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-all" />
+            <p>{r.text}</p>
+            <p className="sp-review-item-author">— {r.author}</p>
           </div>
-          <button 
-            onClick={() => { localStorage.removeItem('phleb_token'); localStorage.removeItem('phleb_user'); window.location.reload(); }}
-            className="btn-tactical !w-full !p-4 !justify-start !text-rose-400 !border-rose-500/10 hover:!bg-rose-500/5 transition-all"
-          >
-            <LogOut size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Full Log Off</span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ProfileTab() {
+  const [available, setAvailable] = useState(true);
+
+  const DOCS = [
+    { name: 'Driving License', status: 'valid', expires: 'Dec 2027', icon: <User size={20} />, bg: 'rgba(99,102,241,0.1)', color: '#818cf8' },
+    { name: 'Phlebotomy Certificate', status: 'valid', expires: 'Jun 2028', icon: <Shield size={20} />, bg: 'rgba(16,185,129,0.1)', color: '#34d399' },
+    { name: 'Liability Insurance', status: 'pending', expires: 'Renewal Pending', icon: <FileText size={20} />, bg: 'rgba(245,158,11,0.1)', color: '#fbbf24' }
+  ];
+
+  return (
+    <>
+      <div className="sp-avail-toggle">
+        <button className={`sp-toggle-switch ${available ? 'on' : ''}`} onClick={() => setAvailable(!available)} />
+        <div className="sp-avail-text">
+          <h4>{available ? 'On Duty' : 'Off Duty'}</h4>
+          <p>{available ? 'You are accepting new job requests' : 'You are not receiving job requests'}</p>
+        </div>
+      </div>
+
+      <div className="sp-grid-2">
+        <div className="sp-card">
+          <div className="sp-card-title"><User size={16} color="#818cf8" /> Personal Information</div>
+          <div className="sp-form" style={{ gap: '1rem' }}>
+            <div className="sp-form-group"><label>Full Name</label><input type="text" defaultValue="Mishra (Mission Control)" /></div>
+            <div className="sp-form-group"><label>Email</label><input type="email" defaultValue="phleb@musb.com" readOnly style={{ opacity: 0.6 }} /></div>
+            <div className="sp-form-group"><label>Phone</label><input type="tel" defaultValue="+1 (555) 000-0000" /></div>
+            <div className="sp-form-group"><label>Service Zones</label><input type="text" defaultValue="Manhattan, Brooklyn, Queens" /></div>
+            <button className="sp-btn-primary" style={{ marginTop: '0.5rem' }}>Save Changes</button>
+          </div>
+        </div>
+
+        <div className="sp-card">
+          <div className="sp-card-title"><FileText size={16} color="#818cf8" /> Documents</div>
+          {DOCS.map((d, i) => (
+            <div key={i} className="sp-doc-item">
+              <div className="sp-doc-icon" style={{ background: d.bg, color: d.color }}>{d.icon}</div>
+              <div className="sp-doc-info"><h4>{d.name}</h4><p>{d.expires}</p></div>
+              <span className={`sp-doc-status ${d.status}`}>{d.status}</span>
+            </div>
+          ))}
+          <button className="sp-btn-secondary" style={{ marginTop: '1rem', width: '100%' }}>
+            <Upload size={16} /> Re-upload Documents
           </button>
         </div>
-      </aside>
+      </div>
+    </>
+  );
+}
 
-      {/* Profile Edit Modal */}
-      <AnimatePresence>
-        {isProfileModalOpen && (
-          <div className="phleb-portal-overlay" style={{ zindex: 2000 }}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="phleb-card !p-10 w-full max-w-md bg-[#0d1117] border-white/10"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-8">
-                 <h2 className="text-xl font-black text-white">Edit Specialist Profile</h2>
-                 <button onClick={() => setIsProfileModalOpen(false)} className="text-slate-400 hover:text-white"><X size={20}/></button>
-              </div>
-              
-              <form onSubmit={handleProfileUpdate} className="space-y-6">
-                 <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Display Name</label>
-                    <input 
-                      className="phleb-input !bg-white/5 w-full !p-4"
-                      value={profileData.name}
-                      onChange={e => setProfileData({...profileData, name: e.target.value})}
-                      required
-                    />
-                 </div>
-                 <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Operating Zone</label>
-                    <input 
-                      className="phleb-input !bg-white/5 w-full !p-4"
-                      value={profileData.location}
-                      placeholder="e.g. Manhattan, NY"
-                      onChange={e => setProfileData({...profileData, location: e.target.value})}
-                      required
-                    />
-                 </div>
-                 <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Contact Phone</label>
-                    <input 
-                      className="phleb-input !bg-white/5 w-full !p-4"
-                      value={profileData.phone}
-                      placeholder="+1 (555) 000-0000"
-                      onChange={e => setProfileData({...profileData, phone: e.target.value})}
-                    />
-                 </div>
-                 <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Organization / Company</label>
-                    <input 
-                      className="phleb-input !bg-white/5 w-full !p-4"
-                      value={profileData.company}
-                      onChange={e => setProfileData({...profileData, company: e.target.value})}
-                    />
-                 </div>
+function OnboardingTab({ onNavigate }) {
+  const [step, setStep] = useState(1);
+  const [data, setData] = useState({
+    fullName: '', address: '', phone: '', email: '', website: '',
+    dlFront: null, dlBack: null, certificate: null, insuranceDoc: null,
+    zipCodes: []
+  });
+  const [zipInput, setZipInput] = useState('');
 
-                 <button type="submit" className="btn-primary !w-full !p-6 mt-4">
-                    <Save size={18} /> Sync Account Details
-                 </button>
-              </form>
-            </motion.div>
+  const update = (f, v) => setData(prev => ({ ...prev, [f]: v }));
+  const addZip = () => {
+    const z = zipInput.trim();
+    if (z && /^\d{5}$/.test(z) && !data.zipCodes.includes(z)) {
+      update('zipCodes', [...data.zipCodes, z]);
+      setZipInput('');
+    }
+  };
+  const removeZip = (z) => update('zipCodes', data.zipCodes.filter(x => x !== z));
+  const handleZipKey = (e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addZip(); } };
+
+  const canNext = () => {
+    switch (step) {
+      case 1: return data.fullName.trim() && data.email.trim() && data.phone.trim();
+      case 5: return data.zipCodes.length > 0;
+      default: return true;
+    }
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case 1: return (
+        <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Personal Information</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Tell us about yourself to set up your specialist account.</p>
+          <div className="sp-form">
+            <div className="sp-form-group"><label>Full Name *</label><input type="text" placeholder="John A. Doe" value={data.fullName} onChange={e => update('fullName', e.target.value)} /></div>
+            <div className="sp-form-group"><label>Street Address</label><input type="text" placeholder="123 Main St, New York, NY" value={data.address} onChange={e => update('address', e.target.value)} /></div>
+            <div className="sp-form-row">
+              <div className="sp-form-group"><label>Phone *</label><input type="tel" placeholder="+1 (555) 000-0000" value={data.phone} onChange={e => update('phone', e.target.value)} /></div>
+              <div className="sp-form-group"><label>Email *</label><input type="email" placeholder="name@specialist.com" value={data.email} onChange={e => update('email', e.target.value)} /></div>
+            </div>
+            <div className="sp-form-group"><label><Globe size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />Website (Optional)</label><input type="url" placeholder="https://yourportfolio.com" value={data.website} onChange={e => update('website', e.target.value)} /></div>
+          </div>
+        </motion.div>
+      );
+      case 2: return (
+        <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Driving License</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload front and back of your valid driving license.</p>
+          <div className="sp-upload-row">
+            <label className={`sp-upload-zone ${data.dlFront ? 'has-file' : ''}`}>
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => update('dlFront', e.target.files[0]?.name || null)} />
+              <div className="sp-upload-icon"><Upload size={22} /></div>
+              <p>{data.dlFront || 'Front Side'}</p><span>JPG, PNG or PDF</span>
+            </label>
+            <label className={`sp-upload-zone ${data.dlBack ? 'has-file' : ''}`}>
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => update('dlBack', e.target.files[0]?.name || null)} />
+              <div className="sp-upload-icon"><Camera size={22} /></div>
+              <p>{data.dlBack || 'Back Side'}</p><span>Or use camera capture</span>
+            </label>
+          </div>
+        </motion.div>
+      );
+      case 3: return (
+        <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Phlebotomy Certificate</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your phlebotomist certification or state license.</p>
+          <label className={`sp-upload-zone ${data.certificate ? 'has-file' : ''}`} style={{ padding: '3rem' }}>
+            <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => update('certificate', e.target.files[0]?.name || null)} />
+            <div className="sp-upload-icon"><ShieldCheck size={24} /></div>
+            <p>{data.certificate || 'Upload Certificate / License'}</p>
+            <span>ASCP, NCA, or state-issued phlebotomy license</span>
+          </label>
+        </motion.div>
+      );
+      case 4: return (
+        <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Liability Insurance</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your professional liability or malpractice insurance.</p>
+          <label className={`sp-upload-zone ${data.insuranceDoc ? 'has-file' : ''}`} style={{ padding: '3rem' }}>
+            <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => update('insuranceDoc', e.target.files[0]?.name || null)} />
+            <div className="sp-upload-icon"><Upload size={24} /></div>
+            <p>{data.insuranceDoc || 'Upload Insurance Document'}</p>
+            <span>Professional liability / malpractice coverage proof</span>
+          </label>
+        </motion.div>
+      );
+      case 5: return (
+        <motion.div key="s5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Service Area</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Enter the ZIP codes you are willing to serve. Press Enter after each.</p>
+          <div className="sp-form-group">
+            <label><MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />ZIP Codes Served</label>
+            <div className="sp-zip-tags">
+              {data.zipCodes.map(z => (
+                <span key={z} className="sp-zip-tag">{z}<button onClick={() => removeZip(z)}><X size={12} /></button></span>
+              ))}
+              <input className="sp-zip-input" type="text" placeholder="Enter 5-digit ZIP" value={zipInput}
+                onChange={e => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                onKeyDown={handleZipKey} maxLength={5}
+              />
+            </div>
+          </div>
+          {data.zipCodes.length > 0 && <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '1rem' }}>{data.zipCodes.length} ZIP code{data.zipCodes.length !== 1 ? 's' : ''} added</p>}
+        </motion.div>
+      );
+      case 6: return (
+        <motion.div key="s6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <div className="sp-pending-screen">
+            <div className="sp-pending-icon"><Clock size={44} /></div>
+            <h2>Account Under Review</h2>
+            <p>Your application has been submitted. Our team will verify your credentials within 24-48 hours.</p>
+            <div className="sp-pending-steps">
+              <div className="sp-pending-step"><div className="sp-pending-step-icon done"><CheckCircle size={16} /></div><span>Personal information submitted</span></div>
+              <div className="sp-pending-step"><div className="sp-pending-step-icon done"><CheckCircle size={16} /></div><span>Documents uploaded</span></div>
+              <div className="sp-pending-step"><div className="sp-pending-step-icon waiting"><Clock size={16} /></div><span>Admin verification in progress</span></div>
+            </div>
+            <div style={{ marginTop: '2rem' }}>
+              <button className="sp-btn-primary" onClick={() => onNavigate('overview')} style={{ maxWidth: 300, margin: '0 auto' }}>Go to Dashboard</button>
+            </div>
+          </div>
+        </motion.div>
+      );
+      default: return null;
+    }
+  };
+
+  return (
+    <>
+      {step < 6 && (
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Specialist Onboarding</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Complete your registration to start accepting jobs</p>
+          </div>
+
+          <div className="sp-progress" style={{ marginBottom: '0.5rem' }}>
+            {ONBOARD_STEPS.slice(0, 5).map(s => (
+              <div key={s.id} className={`sp-progress-dot ${s.id === step ? 'active' : ''} ${s.id < step ? 'done' : ''}`} />
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2rem' }}>
+            Step {step} of 5 — {ONBOARD_STEPS[step - 1].name}
+          </p>
+        </div>
+      )}
+
+      <div style={{ maxWidth: step === 6 ? 600 : 640, margin: '0 auto' }}>
+        <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
+
+        {step < 6 && (
+          <div className="sp-btn-row" style={{ marginTop: '2rem' }}>
+            {step > 1 && <button className="sp-btn-secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={18} /> Back</button>}
+            <button className="sp-btn-primary" onClick={() => setStep(step + 1)} disabled={!canNext()}>
+              {step === 5 ? (<><CheckCircle size={18} /> Submit Application</>) : (<>Continue <ArrowRight size={18} /></>)}
+            </button>
           </div>
         )}
-      </AnimatePresence>
+      </div>
+    </>
+  );
+}
 
-      {/* Specialist Reviews Modal */}
-      <AnimatePresence>
-        {isReviewsOpen && (
-          <div className="phleb-portal-overlay" style={{ zIndex: 10001 }}>
-             <motion.div 
-               initial={{ opacity: 0, y: 50 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: 50 }}
-               className="phleb-card !p-12 w-full max-w-2xl bg-[#0d1117] border-white/10"
-             >
-                <div className="flex justify-between items-center mb-10">
-                   <h2 className="text-2xl font-black text-white">Specialist Case Reviews</h2>
-                   <button onClick={() => setIsReviewsOpen(false)} className="text-slate-400 hover:text-white"><X size={24}/></button>
-                </div>
-                
-                <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
-                   {[
-                      { patient: "J. Doe", rating: 5, date: "2 days ago", comment: "Agent Situn was extremely professional and arrived exactly on time. Minimal pain during collection." },
-                      { patient: "A. Smith", rating: 4, date: "5 days ago", comment: "Very quick and efficient. Clean setup." },
-                      { patient: "M. Ross", rating: 5, date: "1 week ago", comment: "The most professional mobile service I've used. Detailed briefing provided." }
-                   ].map((rev, i) => (
-                      <div key={i} className="review-item">
-                         <div className="flex justify-between items-start mb-4">
-                            <div>
-                               <p className="text-sm font-black text-white mb-1">{rev.patient}</p>
-                               <p className="text-[10px] font-bold text-slate-500 uppercase">{rev.date}</p>
-                            </div>
-                            <div className="flex gap-1">
-                               {[1,2,3,4,5].map(s => <Star key={s} size={10} fill={s <= rev.rating ? "#f59e0b" : "none"} className={s <= rev.rating ? "text-amber-500" : "text-white/10"} />)}
-                            </div>
-                         </div>
-                         <p className="text-xs text-slate-300 italic leading-relaxed">"{rev.comment}"</p>
-                      </div>
-                   ))}
-                </div>
-                
-                <button 
-                  onClick={() => setIsReviewsOpen(false)}
-                  className="btn-tactical !w-full !p-6 mt-10"
+/* ═══════════════════════════════════════════════
+   MAIN DASHBOARD COMPONENT
+   ═══════════════════════════════════════════════ */
+
+function PhlebotomistDashboard() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showJobRequest, setShowJobRequest] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(120);
+  const [jobAccepted, setJobAccepted] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem('phleb_user') || '{}');
+
+  useEffect(() => {
+    const token = localStorage.getItem('phleb_token');
+    if (!token) navigate('/mobile-phlebotomy');
+  }, [navigate]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowJobRequest(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!showJobRequest || timerSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setTimerSeconds(prev => {
+        if (prev <= 1) { setShowJobRequest(false); return 120; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showJobRequest, timerSeconds]);
+
+  const handleAcceptJob = () => {
+    setJobAccepted(true);
+    setTimeout(() => { setShowJobRequest(false); setJobAccepted(false); setTimerSeconds(120); }, 2000);
+  };
+
+  const handleDeclineJob = () => {
+    setShowJobRequest(false);
+    setTimerSeconds(120);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('phleb_token');
+    localStorage.removeItem('phleb_user');
+    navigate('/mobile-phlebotomy');
+  };
+
+  const formatTimer = useCallback((s) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }, []);
+
+  const TABS = [
+    { id: 'overview', label: 'Dashboard', icon: <BarChart3 size={18} /> },
+    { id: 'route', label: 'Route Queue', icon: <Navigation size={18} /> },
+    { id: 'job', label: 'Active Job', icon: <ClipboardList size={18} /> },
+    { id: 'earnings', label: 'Earnings', icon: <Wallet size={18} /> },
+    { id: 'reviews', label: 'Reviews', icon: <Star size={18} /> },
+    { id: 'profile', label: 'Profile', icon: <User size={18} /> },
+    { id: 'onboarding', label: 'Onboarding', icon: <UserPlus size={18} /> }
+  ];
+
+  return (
+    <div className="sp-wrapper">
+      <div className="sp-mesh-bg">
+        <div className="sp-mesh-blob b1" />
+        <div className="sp-mesh-blob b2" />
+      </div>
+      <div className="sp-content">
+        <div className="sp-dashboard">
+          <aside className="sp-sidebar">
+            <div className="sp-sidebar-logo">
+              <div className="sp-sidebar-logo-icon"><Droplets size={20} /></div>
+              <h3>SPECIALIST HQ</h3>
+            </div>
+            <nav className="sp-sidebar-nav">
+              {TABS.map(t => (
+                <button
+                  key={t.id}
+                  className={`sp-nav-item ${activeTab === t.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(t.id)}
                 >
-                   Close Dossier Feedback
+                  {t.icon} {t.label}
                 </button>
-             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              ))}
+            </nav>
+            <div className="sp-sidebar-footer">
+              <button className="sp-nav-item" onClick={handleLogout}>
+                <LogOut size={18} /> Logout
+              </button>
+            </div>
+          </aside>
 
-      {/* Global Tactical Notification Overlay */}
+          <main className="sp-main">
+            <div className="sp-main-header">
+              <div>
+                <h1>Welcome, {user.name || 'Specialist'}</h1>
+                <p className="sp-main-header-sub">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+              </div>
+              <button className="sp-btn-secondary" onClick={() => setShowJobRequest(true)}>
+                <Bell size={16} /> Simulate Job
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
+                {activeTab === 'overview' && <OverviewTab onNavigate={setActiveTab} />}
+                {activeTab === 'route' && <RouteTab onNavigate={setActiveTab} />}
+                {activeTab === 'job' && <JobExecutionTab onNavigate={setActiveTab} />}
+                {activeTab === 'earnings' && <EarningsTab />}
+                {activeTab === 'reviews' && <ReviewsTab />}
+                {activeTab === 'profile' && <ProfileTab />}
+                {activeTab === 'onboarding' && <OnboardingTab onNavigate={setActiveTab} />}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+
       <AnimatePresence>
-        {notification && (
-          <motion.div 
-            initial={{ opacity: 0, y: -100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            className="tactical-notification"
-          >
-             <div className="tactical-notification-icon">
-                <CheckCircle2 size={24} />
-             </div>
-             <div>
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">{notification.label}</p>
-                <p className="text-sm font-black text-white">{notification.message}</p>
-             </div>
+        {showJobRequest && (
+          <motion.div className="sp-job-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className="sp-job-card" initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}>
+              {jobAccepted ? (
+                <div style={{ padding: '2rem' }}>
+                  <CheckCircle size={64} color="#10b981" style={{ margin: '0 auto 1rem', display: 'block' }} />
+                  <h2>Job Accepted!</h2>
+                  <p style={{ color: '#94a3b8' }}>Added to your route queue.</p>
+                </div>
+              ) : (
+                <>
+                  <h2>Incoming Job Request</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Respond within the time limit</p>
+
+                  <div className="sp-job-timer-bar">
+                    <div className="sp-job-timer-fill" style={{ width: `${(timerSeconds / 120) * 100}%` }} />
+                  </div>
+                  <div className="sp-job-timer-text">{formatTimer(timerSeconds)}</div>
+
+                  <div className="sp-job-badges">
+                    {MOCK_JOB_REQUEST.hasOrder && <span className="sp-badge order"><FileText size={10} /> Doctor Order</span>}
+                    {MOCK_JOB_REQUEST.hasInsurance && <span className="sp-badge insurance"><Shield size={10} /> Insured</span>}
+                    {MOCK_JOB_REQUEST.isStat && <span className="sp-badge stat"><AlertTriangle size={10} /> STAT</span>}
+                  </div>
+
+                  <div className="sp-job-meta">
+                    <div className="sp-job-meta-row"><span>Patient</span><span>{MOCK_JOB_REQUEST.patientName}</span></div>
+                    <div className="sp-job-meta-row"><span>Distance</span><span>{MOCK_JOB_REQUEST.distance}</span></div>
+                    <div className="sp-job-meta-row"><span>Address</span><span>{MOCK_JOB_REQUEST.address}</span></div>
+                    <div className="sp-job-meta-row"><span>Time Window</span><span>{MOCK_JOB_REQUEST.time}</span></div>
+                  </div>
+
+                  <div className="sp-btn-row">
+                    <button className="sp-btn-danger" onClick={handleDeclineJob}><XCircle size={18} /> Decline</button>
+                    <button className="sp-btn-primary" onClick={handleAcceptJob}><CheckCircle size={18} /> Accept</button>
+                  </div>
+                </>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Main Content Area */}
-      <main className="phleb-main-content">
-        <div className="stellar-mesh-container">
-          <div className="mesh-blob" style={{ top: '-10%', right: '-5%' }}></div>
-          <div className="mesh-blob" style={{ bottom: '-10%', left: '-5%' }}></div>
-          <div className="mesh-blob" style={{ top: '40%', left: '30%', width: '400px', height: '400px', opacity: 0.05 }}></div>
-        </div>
-
-        {/* Global Summary Metrics (Visible only in Dispatch) */}
-        {activeTab === 'dispatch' && (
-          <header className="mb-16 relative z-10 border-b border-white/5 pb-12 flex justify-between items-end">
-             <div>
-                <h1 className="phleb-title-main">Phlebotomist Dashboard</h1>
-                <p className="text-xs text-slate-300 font-black tracking-[0.2em] uppercase mt-4 shadow-text">Active Shift Modules & Tactical Radar</p>
-             </div>
-             
-             {/* Tactical Duty Toggle (Theme-Aligned Control) */}
-             <div style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '32px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                minWidth: '280px',
-                overflow: 'hidden',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-             }}>
-                <div style={{
-                   background: 'rgba(255, 255, 255, 0.02)',
-                   padding: '12px 24px',
-                   borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                }}>
-                   <h4 style={{
-                      fontSize: '10px',
-                      fontWeight: '900',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.3em',
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0
-                   }}>Operational Status</h4>
-                </div>
-                
-                <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                         <div style={{ 
-                            width: '8px', height: '8px', borderRadius: '50%',
-                            background: isOnline ? '#10b981' : '#f43f5e',
-                            boxShadow: isOnline ? '0 0 12px #10b981' : '0 0 12px #f43f5e'
-                         }}></div>
-                         <span style={{ 
-                            fontSize: '18px', fontWeight: '900', letterSpacing: '-0.02em',
-                            color: isOnline ? 'white' : 'rgba(255,255,255,0.4)'
-                         }}>
-                            Status: <span style={{ color: isOnline ? '#10b981' : '#f43f5e' }}>{isOnline ? 'ON' : 'OFF'}</span>
-                         </span>
-                      </div>
-                      <span style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                         {isOnline ? 'Satellite Sync Active' : 'System Standby Mode'}
-                      </span>
-                   </div>
-                   
-                   {/* Mechanical Switch Toggle */}
-                   <div 
-                      onClick={handleStatusToggle}
-                      style={{
-                         width: '64px', height: '32px',
-                         background: isOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                         borderRadius: '100px',
-                         border: `1px solid ${isOnline ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                         position: 'relative',
-                         cursor: 'pointer',
-                         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                   >
-                      <div style={{
-                         position: 'absolute',
-                         top: '3px',
-                         left: isOnline ? '35px' : '3px',
-                         width: '24px', height: '24px',
-                         background: isOnline ? '#10b981' : '#475569',
-                         borderRadius: '50%',
-                         transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                         boxShadow: '0 4px 8px rgba(0,0,0,0.4)'
-                      }}></div>
-                   </div>
-                </div>
-             </div>
-          </header>
-        )}
-
-        {/* Dynamic Module Render */}
-        <div className="relative z-10">
-          <AnimatePresence mode="wait">
-            {activeTab === 'dispatch' && renderDispatch()}
-            {activeTab === 'case' && renderActiveCase()}
-            {activeTab === 'admin' && renderPerformance()}
-          </AnimatePresence>
-        </div>
-      </main>
     </div>
   );
-};
+}
 
 export default PhlebotomistDashboard;

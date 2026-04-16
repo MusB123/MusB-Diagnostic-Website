@@ -9,6 +9,13 @@ def offers_list(request):
     coll = get_offers_collection()
     query = {}
 
+    search = request.query_params.get('search')
+    if search:
+        query['$or'] = [
+            {'title': {'$regex': search, '$options': 'i'}},
+            {'includes': {'$regex': search, '$options': 'i'}}
+        ]
+
     offer_type = request.query_params.get('type')
     if offer_type and offer_type != 'All':
         query['offer_type'] = offer_type

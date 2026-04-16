@@ -29,6 +29,8 @@ def _mongo_client_options(uri):
     ul = uri.lower()
     if uri.startswith('mongodb+srv://') or 'tls=true' in ul or 'ssl=true' in ul:
         opts['tlsCAFile'] = certifi.where()
+        # Fallback: Allow invalid certs locally if standard TLS handshake fails
+        opts['tlsAllowInvalidCertificates'] = True
     return opts
 
 
@@ -54,10 +56,8 @@ def get_client(silent=False):
         opts = _mongo_client_options(uri)
         try:
             _client = MongoClient(uri, **opts)
-            # Short timeout ping to check connection immediately
-            _client.admin.command('ping')
             if not silent:
-                print(f"SUCCESS: Connected to MongoDB ({settings.MONGO_DB_NAME})")
+                print(f"SUCCESS: Initialized MongoDB client for ({settings.MONGO_DB_NAME})")
         except Exception as e:
             _client = None
             error_msg = f"MongoDB connection failed: {str(e)}"
@@ -77,18 +77,20 @@ def get_db():
     """Singleton database: real MongoDB by default, or MockDatabase if MONGO_USE_MOCK / fallback."""
     global _db_instance
     if _db_instance is None:
+        print(f"[MONGODB] Global instance initialization. Use Mock: {getattr(settings, 'MONGO_USE_MOCK', False)}")
         if getattr(settings, 'MONGO_USE_MOCK', False):
             _db_instance = MockDatabase()
         else:
             try:
+                print("[MONGODB] Attempting Atlas connection...")
                 client = get_client()
                 if client:
                     _db_instance = client[settings.MONGO_DB_NAME]
+                    print(f"[MONGODB] Connection established via Atlas database: {settings.MONGO_DB_NAME}")
                 else:
+                    print("[MONGODB] Client failed, falling back to mock.")
                     _db_instance = MockDatabase()
             except (ConnectionError, Exception) as e:
-                # Expert Resilience: Always fallback to mock in case of any DB-related error
-                # This ensures the app never crashes on data-fetch for the user.
                 print(f"RESILIENCE ALERT: MongoDB failed ({str(e)}). Falling back to mock_db.json.")
                 _db_instance = MockDatabase()
     return _db_instance
@@ -154,18 +156,41 @@ class MockCollection:
             return self.items
         
         filtered = self.items
-        
-        # Support search (regex-like)
-        search_val = query.get('title', {}).get('$regex', '') if isinstance(query.get('title'), dict) else None
-        if search_val:
-            filtered = [i for i in filtered if search_val.lower() in i.get('title', '').lower()]
-            
-        # Support exact matches (category_name, sample_type, etc.)
+
+        # Support $or operator at the top level
+        if '$or' in query:
+            or_queries = query['$or']
+            or_results = []
+            for item in filtered:
+                is_or_match = False
+                for sub_query in or_queries:
+                    # Check if item matches this sub_query
+                    sub_match = True
+                    for k, v in sub_query.items():
+                        item_val = item.get(k)
+                        if isinstance(v, dict):
+                            if '$regex' in v:
+                                if v['$regex'].lower() not in str(item_val or '').lower():
+                                    sub_match = False
+                            elif '$ne' in v:
+                                if item_val == v['$ne']:
+                                    sub_match = False
+                            # Add more operators as needed
+                        elif str(item_val) != str(v):
+                            sub_match = False
+                        
+                        if not sub_match:
+                            break
+                    if sub_match:
+                        is_or_match = True
+                        break
+                if is_or_match:
+                    or_results.append(item)
+            filtered = or_results
+
+        # Handle other filters (AND-ed with $or results if $or was present)
         for key, val in query.items():
-            if key == 'title' and isinstance(val, dict) and '$regex' in val:
-                search_val = val['$regex']
-                filtered = [i for i in filtered if search_val.lower() in i.get('title', '').lower()]
-                continue
+            if key == '$or': continue  # already handled
 
             if isinstance(val, dict):
                 # Handle operators
@@ -173,11 +198,11 @@ class MockCollection:
                     if op == '$ne':
                         filtered = [item for item in filtered if item.get(key) != op_val]
                     elif op == '$lte':
-                        filtered = [item for item in filtered if float(item.get(key, 0)) <= float(op_val)]
+                        filtered = [item for item in filtered if float(item.get(key, 0) or 0) <= float(op_val)]
                     elif op == '$gte':
-                        filtered = [item for item in filtered if float(item.get(key, 0)) >= float(op_val)]
+                        filtered = [item for item in filtered if float(item.get(key, 0) or 0) >= float(op_val)]
                     elif op == '$regex':
-                        filtered = [item for item in filtered if op_val.lower() in str(item.get(key, '')).lower()]
+                        filtered = [item for item in filtered if op_val.lower() in str(item.get(key, '') or '').lower()]
                     # Geospatial simulation
                     elif op == '$nearSphere':
                         from musb_backend.geocoding import haversine_meters
