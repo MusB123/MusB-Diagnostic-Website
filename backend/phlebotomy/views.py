@@ -279,3 +279,62 @@ def heartbeat(request):
         'is_online': is_online,
         'location_tracked': 'current_location' in update_fields
     })
+
+@api_view(['POST'])
+def submit_application(request):
+    """POST /api/phleb/apply/ — Submit a phlebotomist onboarding application."""
+    from musb_backend.mongodb import get_phlebotomists_collection
+    import datetime
+    
+    coll = get_phlebotomists_collection()
+    data = request.data
+    
+    # Check if email already registered
+    email = data.get('email', '').strip().lower()
+    if not email:
+        return Response({'error': 'Email is required for application.'}, status=400)
+    
+    if coll.find_one({'email': email}):
+        return Response({'error': 'This email is already registered or has a pending application.'}, status=400)
+    
+    # Generate a professional Specialist ID (PHL-XXX style)
+    # Get count of existing phlebs to determine next ID
+    count = coll.count_documents({})
+    display_id = f"PHL-{str(count + 1).zfill(3)}"
+    
+    application_data = {
+        'id': display_id,
+        'name': data.get('fullName'),
+        'email': email,
+        'phone': data.get('phone'),
+        'address': data.get('address'),
+        'website': data.get('website'),
+        'type': 'independent', # Default for web applications
+        'status': 'pending',   # Verification status
+        'compliance': {
+            'dl': 'pending',
+            'certificate': 'pending',
+            'insurance': 'pending'
+        },
+        'docs': {
+            'dl_front': data.get('dlFront'),
+            'dl_back': data.get('dlBack'),
+            'certificate': data.get('certificate'),
+            'insurance': data.get('insuranceDoc')
+        },
+        'zip_codes': data.get('zipCodes', []),
+        'rating': 0,
+        'total_jobs': 0,
+        'is_online': False,
+        'created_at': datetime.datetime.utcnow().isoformat()
+    }
+    
+    coll.insert_one(application_data)
+    
+    logger.info(f"Phleb application received: {display_id} for {email}")
+    
+    return Response({
+        'message': 'Application submitted successfully',
+        'specialist_id': display_id,
+        'status': 'pending'
+    }, status=status.HTTP_201_CREATED)

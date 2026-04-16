@@ -121,6 +121,9 @@ const MobilePhlebotomy = () => {
             <Link to="/portal/patient/book" className="btn btn-primary btn-lg">
               <Calendar size={20} /> Book Now
             </Link>
+            <Link to="/mobile-phlebotomy/onboarding" className="btn btn-accent btn-lg" style={{ background: 'var(--admin-accent)', borderColor: 'var(--admin-accent)' }}>
+              <ShieldCheck size={20} /> Become a Specialist
+            </Link>
             <Link to="/portal/patient/login" className="btn btn-outline-white btn-lg">
               Patient Portal
             </Link>

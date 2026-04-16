@@ -45,6 +45,7 @@ const PatientDashboard = lazy(() => import('./pages/MobilePhlebotomy/PatientPort
 const PatientTracking = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/Tracking.js'));
 const PhlebotomistProfilePage = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/PhlebotomistProfile.js'));
 const PatientRating = lazy(() => import('./pages/MobilePhlebotomy/PatientPortal/RatingScreen.js'));
+const SpecialistOnboarding = lazy(() => import('./pages/MobilePhlebotomy/SpecialistPortal/Onboarding.js'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -112,6 +113,7 @@ function App() {
                 <Route path="/portal/patient/tracking" element={<PatientTracking />} />
                 <Route path="/portal/patient/phlebotomist/:id" element={<PhlebotomistProfilePage />} />
                 <Route path="/portal/patient/rate" element={<PatientRating />} />
+                <Route path="/mobile-phlebotomy/onboarding" element={<SpecialistOnboarding />} />
                 <Route path="/enroll/:token" element={<EmployeeEnrollment />} />
 
                 {/* Public Site Routes */}

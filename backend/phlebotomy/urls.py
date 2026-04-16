@@ -8,4 +8,5 @@ urlpatterns = [
     path('test/<str:test_id>/status/', views.update_test_status, name='phleb-test-status'),
     path('profile/', views.update_profile, name='phleb-profile-update'),
     path('heartbeat/', views.heartbeat, name='phleb-heartbeat'),
+    path('apply/', views.submit_application, name='phleb-apply'),
 ]

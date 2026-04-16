@@ -5,7 +5,7 @@ import {
   Droplets, Star, DollarSign, Calendar, Bell,
   MapPin, Clock, FileText, User, Settings, LogOut,
   CheckCircle, XCircle, AlertTriangle, Wallet,
-  Navigation, BarChart3, Shield, ChevronRight, Upload,
+  Navigation, BarChart as BarChart3, Shield, ChevronRight, Upload,
   ArrowLeft, ArrowRight, Phone, Package, ClipboardList,
   Camera, Globe, X, ShieldCheck, UserPlus
 } from 'lucide-react';
@@ -98,7 +98,7 @@ function OverviewTab({ onNavigate }) {
               <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>Sarah J.</span>
               <span style={{ color: '#818cf8', fontWeight: 700, fontSize: '0.85rem' }}>10:30 AM</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fbbf24', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               <MapPin size={14} /> 450 Park Avenue, Suite 12B
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
@@ -106,7 +106,7 @@ function OverviewTab({ onNavigate }) {
               <span className="sp-badge insurance"><Shield size={10} /> BCBS</span>
             </div>
           </div>
-          <p style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600, marginTop: '0.75rem', textAlign: 'center' }}>Click to open Active Job view →</p>
+          <p style={{ color: '#fbbf24', fontSize: '0.75rem', fontWeight: 600, marginTop: '0.75rem', textAlign: 'center', opacity: 0.8 }}>Click to open Active Job view →</p>
         </div>
 
         <div className="sp-card">
@@ -131,7 +131,7 @@ function RouteTab({ onNavigate }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h3 style={{ fontWeight: 800, fontSize: '1.1rem' }}>Today&apos;s Route — {ROUTE_JOBS.length} Stops</h3>
+        <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: '#ffffff' }}>Today&apos;s Route — {ROUTE_JOBS.length} Stops</h3>
         <button className="sp-btn-secondary" style={{ padding: '10px 18px', fontSize: '0.8rem' }}>
           <Navigation size={14} /> Reorder Route
         </button>
@@ -150,7 +150,7 @@ function RouteTab({ onNavigate }) {
       ))}
 
       <div className="sp-map-container" style={{ marginTop: '1.5rem' }}>
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexDirection: 'column', gap: 8 }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', flexDirection: 'column', gap: 8 }}>
           <MapPin size={32} />
           <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Map view — Leaflet integration ready</span>
         </div>
@@ -181,7 +181,7 @@ function JobExecutionTab({ onNavigate }) {
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           <CheckCircle size={72} color="#10b981" style={{ margin: '0 auto 1.5rem', display: 'block' }} />
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem' }}>Collection Complete</h2>
-          <p style={{ color: '#94a3b8', lineHeight: 1.6, marginBottom: '2rem' }}>
+          <p style={{ color: '#fbbf24', lineHeight: 1.6, marginBottom: '2rem' }}>
             Specimen secured and chain-of-custody documented. Great work!
           </p>
           <button className="sp-btn-primary" onClick={() => { setCompleted(false); setCurrentStatus('enroute'); onNavigate('overview'); }} style={{ maxWidth: 300, margin: '0 auto' }}>
@@ -198,8 +198,8 @@ function JobExecutionTab({ onNavigate }) {
         <ArrowLeft size={18} /> Back to Route Queue
       </button>
 
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Active Collection</h2>
-      <p style={{ color: '#64748b', fontWeight: 600, marginBottom: '2rem' }}>{MOCK_ACTIVE_JOB.patientName} — {MOCK_ACTIVE_JOB.appointmentTime}</p>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: '#ffffff' }}>Active Collection</h2>
+      <p style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '2rem' }}>{MOCK_ACTIVE_JOB.patientName} — {MOCK_ACTIVE_JOB.appointmentTime}</p>
 
       <div className="sp-status-steps">
         {STATUS_STEPS.map((s, i) => {
@@ -233,7 +233,7 @@ function JobExecutionTab({ onNavigate }) {
 
       <div className="sp-card">
         <div className="sp-card-title"><Shield size={16} color="#34d399" /> Insurance</div>
-        <p style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.9rem' }}>{MOCK_ACTIVE_JOB.insurance}</p>
+        <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.9rem' }}>{MOCK_ACTIVE_JOB.insurance}</p>
       </div>
 
       <a href={`tel:${MOCK_ACTIVE_JOB.phone}`} className="sp-call-btn" style={{ textDecoration: 'none', marginBottom: '1.5rem', display: 'flex' }}>
@@ -339,7 +339,7 @@ function ReviewsTab() {
           <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: '0.5rem' }}>
             {[1,2,3,4,5].map(i => <Star key={i} size={20} fill="#fbbf24" color="#fbbf24" />)}
           </div>
-          <p style={{ color: '#64748b', fontWeight: 700, fontSize: '0.85rem' }}>Based on 234 reviews</p>
+          <p style={{ color: '#fbbf24', fontWeight: 700, fontSize: '0.85rem' }}>Based on 234 reviews</p>
         </div>
 
         <div className="sp-card">
@@ -436,7 +436,7 @@ function OnboardingTab({ onNavigate }) {
   const update = (f, v) => setData(prev => ({ ...prev, [f]: v }));
   const addZip = () => {
     const z = zipInput.trim();
-    if (z && /^\d{5}$/.test(z) && !data.zipCodes.includes(z)) {
+    if (z && !data.zipCodes.includes(z)) {
       update('zipCodes', [...data.zipCodes, z]);
       setZipInput('');
     }
@@ -444,10 +444,19 @@ function OnboardingTab({ onNavigate }) {
   const removeZip = (z) => update('zipCodes', data.zipCodes.filter(x => x !== z));
   const handleZipKey = (e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addZip(); } };
 
+  const handleNext = () => {
+    if (step === 5 && zipInput.trim()) {
+      addZip();
+      setStep(6);
+      return;
+    }
+    if (step < 6) setStep(step + 1);
+  };
+
   const canNext = () => {
     switch (step) {
       case 1: return data.fullName.trim() && data.email.trim() && data.phone.trim();
-      case 5: return data.zipCodes.length > 0;
+      case 5: return data.zipCodes.length > 0 || zipInput.trim().length > 0;
       default: return true;
     }
   };
@@ -457,7 +466,7 @@ function OnboardingTab({ onNavigate }) {
       case 1: return (
         <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
           <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Personal Information</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Tell us about yourself to set up your specialist account.</p>
+          <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Tell us about yourself to set up your specialist account.</p>
           <div className="sp-form">
             <div className="sp-form-group"><label>Full Name *</label><input type="text" placeholder="John A. Doe" value={data.fullName} onChange={e => update('fullName', e.target.value)} /></div>
             <div className="sp-form-group"><label>Street Address</label><input type="text" placeholder="123 Main St, New York, NY" value={data.address} onChange={e => update('address', e.target.value)} /></div>
@@ -472,7 +481,7 @@ function OnboardingTab({ onNavigate }) {
       case 2: return (
         <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
           <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Driving License</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload front and back of your valid driving license.</p>
+          <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload front and back of your valid driving license.</p>
           <div className="sp-upload-row">
             <label className={`sp-upload-zone ${data.dlFront ? 'has-file' : ''}`}>
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => update('dlFront', e.target.files[0]?.name || null)} />
@@ -490,7 +499,7 @@ function OnboardingTab({ onNavigate }) {
       case 3: return (
         <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
           <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Phlebotomy Certificate</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your phlebotomist certification or state license.</p>
+          <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your phlebotomist certification or state license.</p>
           <label className={`sp-upload-zone ${data.certificate ? 'has-file' : ''}`} style={{ padding: '3rem' }}>
             <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => update('certificate', e.target.files[0]?.name || null)} />
             <div className="sp-upload-icon"><ShieldCheck size={24} /></div>
@@ -502,7 +511,7 @@ function OnboardingTab({ onNavigate }) {
       case 4: return (
         <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
           <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Liability Insurance</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your professional liability or malpractice insurance.</p>
+          <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your professional liability or malpractice insurance.</p>
           <label className={`sp-upload-zone ${data.insuranceDoc ? 'has-file' : ''}`} style={{ padding: '3rem' }}>
             <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => update('insuranceDoc', e.target.files[0]?.name || null)} />
             <div className="sp-upload-icon"><Upload size={24} /></div>
@@ -514,20 +523,20 @@ function OnboardingTab({ onNavigate }) {
       case 5: return (
         <motion.div key="s5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
           <h3 style={{ fontWeight: 800, marginBottom: '0.5rem' }}>Service Area</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Enter the ZIP codes you are willing to serve. Press Enter after each.</p>
+          <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Enter the ZIP codes you are willing to serve. Press Enter after each.</p>
           <div className="sp-form-group">
             <label><MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />ZIP Codes Served</label>
             <div className="sp-zip-tags">
               {data.zipCodes.map(z => (
                 <span key={z} className="sp-zip-tag">{z}<button onClick={() => removeZip(z)}><X size={12} /></button></span>
               ))}
-              <input className="sp-zip-input" type="text" placeholder="Enter 5-digit ZIP" value={zipInput}
-                onChange={e => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                onKeyDown={handleZipKey} maxLength={5}
+              <input className="sp-zip-input" type="text" placeholder="Enter ZIP/Postal Code" value={zipInput}
+                onChange={e => setZipInput(e.target.value)}
+                onKeyDown={handleZipKey}
               />
             </div>
           </div>
-          {data.zipCodes.length > 0 && <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '1rem' }}>{data.zipCodes.length} ZIP code{data.zipCodes.length !== 1 ? 's' : ''} added</p>}
+          {data.zipCodes.length > 0 && <p style={{ color: '#fbbf24', fontSize: '0.8rem', marginTop: '1rem' }}>{data.zipCodes.length} ZIP code{data.zipCodes.length !== 1 ? 's' : ''} added</p>}
         </motion.div>
       );
       case 6: return (
@@ -557,7 +566,7 @@ function OnboardingTab({ onNavigate }) {
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Specialist Onboarding</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Complete your registration to start accepting jobs</p>
+            <p style={{ color: '#fbbf24', fontSize: '0.85rem' }}>Complete your registration to start accepting jobs</p>
           </div>
 
           <div className="sp-progress" style={{ marginBottom: '0.5rem' }}>
@@ -565,7 +574,7 @@ function OnboardingTab({ onNavigate }) {
               <div key={s.id} className={`sp-progress-dot ${s.id === step ? 'active' : ''} ${s.id < step ? 'done' : ''}`} />
             ))}
           </div>
-          <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2rem' }}>
+          <p style={{ textAlign: 'center', color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2rem' }}>
             Step {step} of 5 — {ONBOARD_STEPS[step - 1].name}
           </p>
         </div>
@@ -577,7 +586,7 @@ function OnboardingTab({ onNavigate }) {
         {step < 6 && (
           <div className="sp-btn-row" style={{ marginTop: '2rem' }}>
             {step > 1 && <button className="sp-btn-secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={18} /> Back</button>}
-            <button className="sp-btn-primary" onClick={() => setStep(step + 1)} disabled={!canNext()}>
+            <button className="sp-btn-primary" onClick={handleNext} disabled={!canNext()}>
               {step === 5 ? (<><CheckCircle size={18} /> Submit Application</>) : (<>Continue <ArrowRight size={18} /></>)}
             </button>
           </div>
@@ -718,12 +727,12 @@ function PhlebotomistDashboard() {
                 <div style={{ padding: '2rem' }}>
                   <CheckCircle size={64} color="#10b981" style={{ margin: '0 auto 1rem', display: 'block' }} />
                   <h2>Job Accepted!</h2>
-                  <p style={{ color: '#94a3b8' }}>Added to your route queue.</p>
+                  <p style={{ color: '#fbbf24' }}>Added to your route queue.</p>
                 </div>
               ) : (
                 <>
                   <h2>Incoming Job Request</h2>
-                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Respond within the time limit</p>
+                  <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Respond within the time limit</p>
 
                   <div className="sp-job-timer-bar">
                     <div className="sp-job-timer-fill" style={{ width: `${(timerSeconds / 120) * 100}%` }} />

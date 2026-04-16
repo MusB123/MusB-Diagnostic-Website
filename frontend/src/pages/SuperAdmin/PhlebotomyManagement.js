@@ -126,7 +126,7 @@ function PhlebotomyManagement() {
           <motion.div key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
             {activeTab === 'overview' && <OverviewTab data={data.overview} />}
             {activeTab === 'patients' && <PatientsTab data={data.patients} />}
-            {activeTab === 'phlebotomists' && <PhlebotomistsTab data={data.phlebotomists} />}
+            {activeTab === 'phlebotomists' && <PhlebotomistsTab data={data.phlebotomists} setData={setData} />}
             {activeTab === 'companies' && <CompaniesTab data={data.companies} />}
             {activeTab === 'orders' && <OrdersTab data={data.orders} />}
             {activeTab === 'payments' && <PaymentsTab data={data.payments} />}
@@ -317,7 +317,7 @@ function PatientsTab({ data }) {
 /* ═══════════════════════════════════════════
    TAB 3 — PHLEBOTOMISTS
    ═══════════════════════════════════════════ */
-function PhlebotomistsTab({ data }) {
+function PhlebotomistsTab({ data, setData }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selected, setSelected] = useState(null);
@@ -328,8 +328,63 @@ function PhlebotomistsTab({ data }) {
     return matchSearch && matchStatus;
   });
 
+  const pendingPhlebs = (data?.phlebotomists || []).filter(p => p.status === 'pending');
+
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      await api.post(`${API_BASE}/phlebotomists/${id}/status/`, { status });
+      // Refresh only the phlebotomists tab data
+      const res = await api.get(`${API_BASE}/phlebotomists/`);
+      setData(prev => ({ ...prev, phlebotomists: res.data }));
+      setSelected(null);
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      alert("Error updating phlebotomist status.");
+    }
+  };
+
   return (
     <>
+      {/* Verification Queue Section (NEW) */}
+      {pendingPhlebs.length > 0 && (
+        <div style={{ marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            <span style={{ fontSize: '1.2rem' }}>🛡️</span>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'white' }}>Onboarding Verification Queue</h2>
+            <span style={{ background: '#f59e0b', color: '#000', padding: '0.1rem 0.6rem', borderRadius: '1rem', fontSize: '0.7rem', fontWeight: 900 }}>
+              {pendingPhlebs.length} PENDING
+            </span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            {pendingPhlebs.map(p => (
+              <CardBox key={p.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid #f59e0b' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'white' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{p.email}</div>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#818cf8' }}>{p.id}</span>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {p.zip_codes && p.zip_codes.slice(0, 3).map(z => (
+                    <span key={z} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.5rem', borderRadius: '0.4rem', color: '#64748b' }}>{z}</span>
+                  ))}
+                  {p.zip_codes?.length > 3 && <span style={{ fontSize: '0.65rem', color: '#64748b' }}>+{p.zip_codes.length - 3} more</span>}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.6rem', marginTop: 'auto' }}>
+                  <button className="action-btn" style={{ flex: 1 }} onClick={() => setSelected(p)}>Review Docs</button>
+                  <button className="action-btn" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', borderColor: 'rgba(16,185,129,0.3)' }} onClick={() => handleStatusUpdate(p.id, 'active')}>✓ Approve</button>
+                  <button className="action-btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => handleStatusUpdate(p.id, 'rejected')}>✕</button>
+                </div>
+              </CardBox>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="admin-toolbar">
         <div className="admin-input-group">
           <span className="admin-input-icon">🔍</span>
@@ -369,8 +424,8 @@ function PhlebotomistsTab({ data }) {
                 <td style={tdStyle}>
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <button style={actionBtnStyle} onClick={() => setSelected(p)}>View</button>
-                    {p.status === 'pending' && <button style={{ ...actionBtnStyle, background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>✓</button>}
-                    {p.status === 'pending' && <button style={{ ...actionBtnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>✕</button>}
+                    {p.status === 'pending' && <button style={{ ...actionBtnStyle, background: 'rgba(16,185,129,0.15)', color: '#10b981' }} onClick={() => handleStatusUpdate(p.id, 'active')}>✓</button>}
+                    {p.status === 'pending' && <button style={{ ...actionBtnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }} onClick={() => handleStatusUpdate(p.id, 'rejected')}>✕</button>}
                   </div>
                 </td>
               </tr>
@@ -440,9 +495,9 @@ function PhlebotomistsTab({ data }) {
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                {selected.status === 'pending' && <button className="action-btn" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', borderColor: 'rgba(16,185,129,0.3)' }}>✓ Approve Signup</button>}
-                {selected.status === 'pending' && <button className="action-btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}>✕ Reject Signup</button>}
-                {selected.status === 'active' && <button className="action-btn" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', borderColor: 'rgba(245,158,11,0.3)' }}>⚠ Disqualify</button>}
+                {selected.status === 'pending' && <button className="action-btn" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', borderColor: 'rgba(16,185,129,0.3)' }} onClick={() => handleStatusUpdate(selected.id, 'active')}>✓ Approve Signup</button>}
+                {selected.status === 'pending' && <button className="action-btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => handleStatusUpdate(selected.id, 'rejected')}>✕ Reject Signup</button>}
+                {selected.status === 'active' && <button className="action-btn" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', borderColor: 'rgba(245,158,11,0.3)' }} onClick={() => handleStatusUpdate(selected.id, 'disqualified')}>⚠ Disqualify</button>}
                 <button className="action-btn">📍 Override ZIP Codes</button>
               </div>
             </motion.div>

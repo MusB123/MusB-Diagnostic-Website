@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from datetime import datetime, timedelta
 import random
+from musb_backend.mongodb import get_phlebotomists_collection, transform_doc
+from bson import ObjectId
 
 
 # ===================== OVERVIEW =====================
@@ -78,16 +80,66 @@ def phleb_patients(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_phlebotomists(request):
-    """GET /api/superadmin/phleb-management/phlebotomists/ — All phlebotomist accounts."""
-    phlebotomists = [
-        {'id': 'PHL-001', 'name': 'Marcus Thompson', 'type': 'independent', 'status': 'active', 'rating': 4.95, 'total_jobs': 234, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'valid'}, 'zip_codes': ['10001', '10013', '10022'], 'email': 'marcus.t@musb.com', 'phone': '(555) 111-2222', 'joined': 'Nov 2025'},
-        {'id': 'PHL-002', 'name': 'Angela Davis', 'type': 'company-linked', 'company': 'MedDraw LLC', 'status': 'active', 'rating': 4.88, 'total_jobs': 189, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'expiring'}, 'zip_codes': ['11201', '11215', '11217'], 'email': 'angela.d@meddraw.com', 'phone': '(555) 222-3333', 'joined': 'Dec 2025'},
-        {'id': 'PHL-003', 'name': 'Carlos Mendez', 'type': 'independent', 'status': 'pending', 'rating': 0, 'total_jobs': 0, 'compliance': {'dl': 'pending', 'certificate': 'pending', 'insurance': 'pending'}, 'zip_codes': ['10003', '10009'], 'email': 'carlos.m@email.com', 'phone': '(555) 333-4444', 'joined': 'Apr 2026'},
-        {'id': 'PHL-004', 'name': 'Priya Sharma', 'type': 'independent', 'status': 'active', 'rating': 4.72, 'total_jobs': 156, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'valid'}, 'zip_codes': ['10001', '10003', '10010'], 'email': 'priya.s@musb.com', 'phone': '(555) 444-5555', 'joined': 'Jan 2026'},
-        {'id': 'PHL-005', 'name': 'Robert Lee', 'type': 'company-linked', 'company': 'HomeBlood Inc.', 'status': 'disqualified', 'rating': 2.8, 'total_jobs': 42, 'compliance': {'dl': 'expired', 'certificate': 'valid', 'insurance': 'expired'}, 'zip_codes': ['10022'], 'email': 'robert.l@homeblood.com', 'phone': '(555) 555-6666', 'joined': 'Feb 2026'},
-        {'id': 'PHL-006', 'name': 'Fatima Al-Hassan', 'type': 'independent', 'status': 'active', 'rating': 4.98, 'total_jobs': 310, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'valid'}, 'zip_codes': ['10001', '10013', '10007', '10038'], 'email': 'fatima.h@musb.com', 'phone': '(555) 666-7777', 'joined': 'Oct 2025'},
-    ]
+    """GET /api/superadmin/phleb-management/phlebotomists/ — Fetch real phlebotomist accounts from MongoDB."""
+    coll = get_phlebotomists_collection()
+    
+    # Fetch all records, sort by newest first
+    docs = list(coll.find().sort('created_at', -1))
+    phlebotomists = [transform_doc(d) for d in docs]
+    
+    # Expert UI Fix: If DB is empty, provide the demo records for the initial layout presentation
+    if not phlebotomists:
+        phlebotomists = [
+            {'id': 'PHL-001', 'name': 'Marcus Thompson', 'type': 'independent', 'status': 'active', 'rating': 4.95, 'total_jobs': 234, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'valid'}, 'zip_codes': ['10001', '10013', '10022'], 'email': 'marcus.t@musb.com', 'phone': '(555) 111-2222', 'joined': 'Nov 2025'},
+            {'id': 'PHL-002', 'name': 'Angela Davis', 'type': 'company-linked', 'company': 'MedDraw LLC', 'status': 'active', 'rating': 4.88, 'total_jobs': 189, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'expiring'}, 'zip_codes': ['11201', '11215', '11217'], 'email': 'angela.d@meddraw.com', 'phone': '(555) 222-3333', 'joined': 'Dec 2025'},
+            {'id': 'PHL-003', 'name': 'Carlos Mendez', 'type': 'independent', 'status': 'pending', 'rating': 0, 'total_jobs': 0, 'compliance': {'dl': 'pending', 'certificate': 'pending', 'insurance': 'pending'}, 'zip_codes': ['10003', '10009'], 'email': 'carlos.m@email.com', 'phone': '(555) 333-4444', 'joined': 'Apr 2026'},
+        ]
+        
     return Response({'phlebotomists': phlebotomists, 'total': len(phlebotomists), 'rating_threshold': 3.5})
+
+
+@api_view(['POST', 'PATCH'])
+@permission_classes([AllowAny])
+def update_phleb_status(request, phleb_id):
+    """POST/PATCH /api/superadmin/phleb-management/phlebotomists/<id>/status/ — Approve/Reject/Update status."""
+    coll = get_phlebotomists_collection()
+    new_status = request.data.get('status')
+    
+    if not new_status:
+        return Response({'error': 'Status field is required.'}, status=400)
+    
+    # Try finding by display ID (PHL-001) or MongoDB ObjectID
+    query = {'id': phleb_id}
+    if len(phleb_id) == 24:
+        try: query = {'_id': ObjectId(phleb_id)}
+        except: pass
+        
+    update_data = {'status': new_status}
+    
+    # If approving, we might want to also validate compliance toggles
+    if new_status == 'active':
+        update_data['compliance'] = {
+            'dl': 'valid',
+            'certificate': 'valid',
+            'insurance': 'valid'
+        }
+    elif new_status == 'disqualified' or new_status == 'rejected':
+        update_data['compliance'] = {
+            'dl': 'expired',
+            'certificate': 'expired',
+            'insurance': 'expired'
+        }
+        
+    result = coll.update_one(query, {'$set': update_data})
+    
+    if result.matched_count == 0:
+        return Response({'error': 'Phlebotomist not found.'}, status=404)
+        
+    return Response({
+        'message': f'Phlebotomist status updated to {new_status}',
+        'phleb_id': phleb_id,
+        'new_status': new_status
+    })
 
 
 # ===================== COMPANIES =====================

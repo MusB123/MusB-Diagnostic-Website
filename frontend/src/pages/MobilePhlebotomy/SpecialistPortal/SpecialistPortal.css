@@ -54,10 +54,11 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 0.5rem;
+  color: #ffffff;
 }
 
 .sp-onboard-header p {
-  color: #94a3b8;
+  color: #fbbf24;
   font-size: 0.9rem;
 }
 
@@ -86,13 +87,7 @@
 
 .sp-form-group { display: flex; flex-direction: column; gap: 6px; }
 
-.sp-form-group label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #94a3b8;
-}
+.sp-form-group label { display: block; font-size: 0.7rem; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px; }
 
 .sp-form-group input, .sp-form-group textarea {
   padding: 14px 16px;
@@ -157,7 +152,7 @@
 }
 
 .sp-upload-zone p { font-weight: 700; font-size: 0.85rem; }
-.sp-upload-zone span { color: #64748b; font-size: 0.7rem; font-weight: 600; }
+.sp-upload-zone span { color: #fbbf24; font-size: 0.7rem; font-weight: 600; }
 
 /* Zip Tag Input */
 .sp-zip-tags {
@@ -236,7 +231,7 @@
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px;
-  color: #94a3b8;
+  color: #fbbf24;
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
@@ -286,7 +281,7 @@
 }
 
 .sp-pending-screen h2 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.75rem; }
-.sp-pending-screen p { color: #94a3b8; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+.sp-pending-screen p { color: #fbbf24; line-height: 1.6; max-width: 400px; margin: 0 auto; }
 
 .sp-pending-steps {
   display: flex;
@@ -361,7 +356,7 @@
   color: white;
 }
 
-.sp-sidebar-logo h3 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+.sp-sidebar-logo h3 { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.02em; color: #ffffff; }
 
 .sp-sidebar-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
 
@@ -373,7 +368,7 @@
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s;
-  color: #94a3b8;
+  color: #fbbf24;
   font-weight: 600;
   font-size: 0.9rem;
   border: none;
@@ -405,8 +400,8 @@
   margin-bottom: 2.5rem;
 }
 
-.sp-main-header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
-.sp-main-header-sub { color: #64748b; font-size: 0.9rem; font-weight: 600; margin-top: 0.25rem; }
+.sp-main-header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
+.sp-main-header-sub { color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-top: 0.25rem; opacity: 0.8; }
 
 /* KPI Cards */
 .sp-kpi-grid {
@@ -418,10 +413,9 @@
 
 .sp-kpi-card {
   padding: 1.5rem;
-  background: rgba(13,17,23,0.5);
+  background: #0d1117;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 24px;
-  backdrop-filter: blur(16px);
   transition: all 0.3s;
 }
 
@@ -444,33 +438,35 @@
   font-size: 2rem;
   font-weight: 900;
   margin-bottom: 0.25rem;
+  color: #ffffff;
 }
 
 .sp-kpi-card p {
-  color: #64748b;
+  color: #fbbf24;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  opacity: 0.8;
 }
 
 /* Generic Card */
 .sp-card {
-  background: rgba(13,17,23,0.5);
+  background: #0d1117;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 24px;
   padding: 2rem;
-  backdrop-filter: blur(16px);
   margin-bottom: 1.5rem;
 }
 
 .sp-card-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 1rem;
   font-weight: 800;
   margin-bottom: 1.5rem;
+  color: #ffffff;
 }
 
 /* Grid helpers */
@@ -505,9 +501,9 @@
 .sp-notif-dot.success { background: #10b981; }
 .sp-notif-dot.payment { background: #f59e0b; }
 
-.sp-notif-text h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; }
-.sp-notif-text p { color: #64748b; font-size: 0.8rem; font-weight: 600; }
-.sp-notif-time { color: #475569; font-size: 0.7rem; font-weight: 600; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+.sp-notif-text h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; color: #ffffff; }
+.sp-notif-text p { color: #fbbf24; font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
+.sp-notif-time { color: #fbbf24; font-size: 0.7rem; font-weight: 600; margin-left: auto; white-space: nowrap; flex-shrink: 0; opacity: 0.6; }
 
 /* Job Request Overlay */
 .sp-job-overlay {
@@ -525,12 +521,11 @@
 .sp-job-card {
   width: 100%;
   max-width: 480px;
-  background: rgba(13,17,23,0.95);
+  background: #0d1117;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 32px;
   padding: 2.5rem;
   text-align: center;
-  backdrop-filter: blur(24px);
 }
 
 .sp-job-card h2 { font-size: 1.35rem; font-weight: 800; margin-bottom: 0.5rem; }
@@ -575,7 +570,7 @@
   border-radius: 12px;
 }
 
-.sp-job-meta-row span:first-child { color: #94a3b8; font-size: 0.8rem; font-weight: 600; }
+.sp-job-meta-row span:first-child { color: #fbbf24; font-size: 0.8rem; font-weight: 600; opacity: 0.9; }
 .sp-job-meta-row span:last-child { font-weight: 700; font-size: 0.9rem; }
 
 .sp-job-badges { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -630,8 +625,8 @@
 }
 
 .sp-route-info { flex: 1; }
-.sp-route-info h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 3px; }
-.sp-route-info p { color: #64748b; font-size: 0.8rem; font-weight: 600; }
+.sp-route-info h4 { font-size: 0.9rem; font-weight: 800; margin-bottom: 3px; color: #ffffff; }
+.sp-route-info p { color: #fbbf24; font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
 
 .sp-route-status {
   padding: 6px 14px;
@@ -666,7 +661,8 @@
   gap: 0.5rem;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: #fbbf24;
+  opacity: 0.8;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
@@ -737,14 +733,14 @@
 
 .sp-earnings-card {
   padding: 2rem;
-  background: rgba(13,17,23,0.5);
+  background: #0d1117;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 24px;
   text-align: center;
 }
 
 .sp-earnings-card h3 { font-size: 2.25rem; font-weight: 900; margin-bottom: 0.25rem; }
-.sp-earnings-card p { color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.sp-earnings-card p { color: #fbbf24; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8; }
 
 .sp-payout-countdown {
   display: flex;
@@ -770,7 +766,8 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: #fbbf24;
+  opacity: 0.8;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
@@ -798,7 +795,7 @@
   gap: 12px;
 }
 
-.sp-rating-bar-label { width: 50px; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-align: right; }
+.sp-rating-bar-label { width: 50px; font-size: 0.8rem; font-weight: 700; color: #fbbf24; text-align: right; }
 
 .sp-rating-bar {
   flex: 1;
@@ -814,7 +811,7 @@
   border-radius: 99px;
 }
 
-.sp-rating-bar-count { width: 30px; font-size: 0.75rem; color: #64748b; font-weight: 700; }
+.sp-rating-bar-count { width: 30px; font-size: 0.75rem; color: #fbbf24; font-weight: 700; opacity: 0.8; }
 
 .sp-review-item {
   padding: 1.25rem;
@@ -831,9 +828,9 @@
 }
 
 .sp-review-item-stars { display: flex; gap: 3px; color: #fbbf24; }
-.sp-review-item-date { color: #64748b; font-size: 0.75rem; font-weight: 600; }
+.sp-review-item-date { color: #fbbf24; font-size: 0.75rem; font-weight: 600; opacity: 0.7; }
 .sp-review-item p { color: #cbd5e1; font-size: 0.9rem; line-height: 1.5; }
-.sp-review-item-author { color: #64748b; font-size: 0.8rem; font-weight: 700; margin-top: 0.5rem; }
+.sp-review-item-author { color: #fbbf24; font-size: 0.8rem; font-weight: 700; margin-top: 0.5rem; opacity: 0.9; }
 
 /* Profile / Document Management */
 .sp-doc-item {
@@ -857,8 +854,8 @@
 }
 
 .sp-doc-info { flex: 1; }
-.sp-doc-info h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
-.sp-doc-info p { color: #64748b; font-size: 0.75rem; font-weight: 600; }
+.sp-doc-info h4 { font-size: 0.85rem; font-weight: 800; margin-bottom: 2px; color: #ffffff; }
+.sp-doc-info p { color: #fbbf24; font-size: 0.75rem; font-weight: 600; opacity: 0.8; }
 
 .sp-doc-status {
   padding: 5px 12px;
@@ -912,8 +909,8 @@
 
 .sp-toggle-switch.on::after { left: 27px; }
 
-.sp-avail-text h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
-.sp-avail-text p { color: #64748b; font-size: 0.8rem; font-weight: 600; }
+.sp-avail-text h4 { font-size: 0.95rem; font-weight: 800; margin-bottom: 2px; color: #ffffff; }
+.sp-avail-text p { color: #fbbf24; font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
 
 /* Spinner */
 .sp-spinner {

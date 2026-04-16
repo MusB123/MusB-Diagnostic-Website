@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../../../api/api';
 import {
   ArrowLeft, ArrowRight, Upload, Camera, CheckCircle,
   Clock, ShieldCheck, MapPin, X, Globe
@@ -32,7 +33,7 @@ const Onboarding = () => {
 
   const addZip = () => {
     const z = zipInput.trim();
-    if (z && /^\d{5}$/.test(z) && !data.zipCodes.includes(z)) {
+    if (z && !data.zipCodes.includes(z)) {
       update('zipCodes', [...data.zipCodes, z]);
       setZipInput('');
     }
@@ -55,7 +56,24 @@ const Onboarding = () => {
     }
   };
 
-  const handleNext = () => { if (step < 6) setStep(step + 1); };
+  const handleNext = async () => { 
+    if (step === 5) {
+      await submitApplication();
+    } else if (step < 6) {
+      setStep(step + 1); 
+    }
+  };
+
+  const submitApplication = async () => {
+    try {
+      await api.post('/api/phleb/apply/', data);
+      setStep(6);
+    } catch (err) {
+      console.error("Application submission failed:", err);
+      alert("Failed to submit application. Please check your network or try a different email.");
+    }
+  };
+
   const handleBack = () => { if (step > 1) setStep(step - 1); };
 
   const renderStep = () => {
@@ -63,8 +81,8 @@ const Onboarding = () => {
       case 1:
         return (
           <motion.div key="s1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Personal Information</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Tell us about yourself so we can set up your specialist account.</p>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#ffffff' }}>Personal Information</h2>
+            <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}>Tell us about yourself so we can set up your specialist account.</p>
             <div className="sp-form">
               <div className="sp-form-group">
                 <label>Full Name *</label>
@@ -95,8 +113,8 @@ const Onboarding = () => {
       case 2:
         return (
           <motion.div key="s2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Driving License</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload front and back of your valid driving license.</p>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#ffffff' }}>Driving License</h2>
+            <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}>Upload front and back of your valid driving license.</p>
             <div className="sp-upload-row">
               <label className={`sp-upload-zone ${data.dlFront ? 'has-file' : ''}`}>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => update('dlFront', e.target.files[0]?.name || null)} />
@@ -117,8 +135,8 @@ const Onboarding = () => {
       case 3:
         return (
           <motion.div key="s3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Phlebotomy Certificate</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your phlebotomist certification or state license document.</p>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#ffffff' }}>Phlebotomy Certificate</h2>
+            <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}>Upload your phlebotomist certification or state license document.</p>
             <div className="sp-upload-row" style={{ gridTemplateColumns: '1fr' }}>
               <label className={`sp-upload-zone ${data.certificate ? 'has-file' : ''}`} style={{ padding: '3rem' }}>
                 <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => update('certificate', e.target.files[0]?.name || null)} />
@@ -133,8 +151,8 @@ const Onboarding = () => {
       case 4:
         return (
           <motion.div key="s4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Liability Insurance</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Upload your professional liability or malpractice insurance document.</p>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#ffffff' }}>Liability Insurance</h2>
+            <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}>Upload your professional liability or malpractice insurance document.</p>
             <div className="sp-upload-row" style={{ gridTemplateColumns: '1fr' }}>
               <label className={`sp-upload-zone ${data.insuranceDoc ? 'has-file' : ''}`} style={{ padding: '3rem' }}>
                 <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => update('insuranceDoc', e.target.files[0]?.name || null)} />
@@ -149,8 +167,8 @@ const Onboarding = () => {
       case 5:
         return (
           <motion.div key="s5" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Service Area</h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>Enter the ZIP codes you are willing to serve. Press Enter after each.</p>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: '#ffffff' }}>Service Area</h2>
+            <p style={{ color: '#fbbf24', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}>Enter the ZIP codes you are willing to serve. Press Enter after each.</p>
             <div className="sp-form-group">
               <label><MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />ZIP Codes Served</label>
               <div className="sp-zip-tags">
@@ -163,11 +181,10 @@ const Onboarding = () => {
                 <input
                   className="sp-zip-input"
                   type="text"
-                  placeholder="Enter 5-digit ZIP"
+                  placeholder="Enter ZIP/Postal Code"
                   value={zipInput}
-                  onChange={e => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                  onChange={e => setZipInput(e.target.value)}
                   onKeyDown={handleZipKey}
-                  maxLength={5}
                 />
               </div>
             </div>
@@ -237,7 +254,7 @@ const Onboarding = () => {
                     />
                   ))}
                 </div>
-                <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2rem' }}>
+                <p style={{ textAlign: 'center', color: '#fbbf24', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2rem' }}>
                   Step {step} of 5 — {STEPS[step - 1].name}
                 </p>
               </>
