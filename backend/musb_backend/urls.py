@@ -32,4 +32,5 @@ urlpatterns = [
     path('api/research/', include('research.urls')),
     path('api/superadmin/', include('super_admin.urls')),
     path('api/phleb/', include('phlebotomy.urls')),
+    path('api/patients/', include('patients.urls')),
 ]

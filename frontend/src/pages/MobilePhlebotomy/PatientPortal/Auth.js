@@ -8,6 +8,7 @@ const PatientAuth = () => {
   const [mode, setMode] = useState('login'); // login | signup | otp | forgot
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [verifyMethod, setVerifyMethod] = useState('email'); 
   const [showPassword, setShowPassword] = useState(false);
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const [otpTimer, setOtpTimer] = useState(59);
@@ -55,43 +56,114 @@ const PatientAuth = () => {
     }, 1500);
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone || !form.password) {
       setError('Please fill in all fields.');
       return;
     }
     setLoading(true);
-    // Simulate OTP send
-    setTimeout(() => {
-      setLoading(false);
-      setMode('otp');
-      setOtpTimer(59);
-      const interval = setInterval(() => {
-        setOtpTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }, 1500);
+    setError('');
+
+    // Automatically trigger email OTP after signup
+    handleMethodSelect('email');
   };
 
-  const handleOtpVerify = () => {
+  const handleMethodSelect = async (method) => {
+    setVerifyMethod(method);
+    setLoading(true);
+    setError('');
+
+    try {
+      if (method === 'email') {
+        const response = await fetch('http://localhost:8000/api/patients/request-otp/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to send email code.');
+        
+        setMode('otp');
+        startOtpTimer();
+        setLoading(false);
+      }
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
+  };
+
+  const startOtpTimer = () => {
+    setOtpTimer(59);
+    const interval = setInterval(() => {
+      setOtpTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleOtpVerify = async () => {
     const code = otpValues.join('');
     if (code.length < 6) {
       setError('Please enter the complete 6-digit code.');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:8000/api/patients/verify-otp/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: form.phone,
+          email: form.email,
+          token: code,
+          method: verifyMethod,
+          name: form.name
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Invalid verification code.');
+
       setLoading(false);
-      localStorage.setItem('patient_token', 'demo_token');
-      localStorage.setItem('patient_user', JSON.stringify({ name: form.name, email: form.email }));
+      localStorage.setItem('patient_token', data.token);
+      localStorage.setItem('patient_user', JSON.stringify(data.user));
       navigate('/portal/patient/dashboard');
-    }, 1500);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const payload = verifyMethod === 'email' ? { email: form.email } : { phone: form.phone };
+      const response = await fetch('http://localhost:8000/api/patients/request-otp/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to resend code.');
+      }
+
+      setLoading(false);
+      startOtpTimer();
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
   };
 
   const handleForgotPassword = (e) => {
@@ -109,6 +181,7 @@ const PatientAuth = () => {
 
   const renderContent = () => {
     switch (mode) {
+
       case 'otp':
         return (
           <motion.div
@@ -121,8 +194,8 @@ const PatientAuth = () => {
               <div className="pp-auth-logo-icon">
                 <Droplets size={28} />
               </div>
-              <h2>Verify Your Phone</h2>
-              <p>We sent a 6-digit code to {form.phone}</p>
+              <h2>{verifyMethod === 'email' ? 'Verify Email' : 'Verify App Code'}</h2>
+              <p>{verifyMethod === 'email' ? `We sent a code to ${form.email}` : 'Enter the 6-digit code from your app'}</p>
             </div>
 
             {error && (
@@ -146,13 +219,15 @@ const PatientAuth = () => {
               ))}
             </div>
 
-            <div className="pp-otp-timer">
-              {otpTimer > 0 ? (
-                <span>Resend code in 0:{otpTimer.toString().padStart(2, '0')}</span>
-              ) : (
-                <button type="button" onClick={() => setOtpTimer(59)}>Resend Code</button>
-              )}
-            </div>
+            {verifyMethod === 'email' && (
+              <div className="pp-otp-timer">
+                {otpTimer > 0 ? (
+                  <span>Resend code in 0:{otpTimer.toString().padStart(2, '0')}</span>
+                ) : (
+                  <button type="button" onClick={handleResendOtp} disabled={loading}>Resend Code</button>
+                )}
+              </div>
+            )}
 
             <button
               className="pp-btn-primary"
@@ -165,7 +240,7 @@ const PatientAuth = () => {
 
             <div className="pp-auth-footer">
               <p>
-                Wrong number?{' '}
+                Wrong email?{' '}
                 <button type="button" onClick={() => { setMode('signup'); setError(''); }}>Go Back</button>
               </p>
             </div>

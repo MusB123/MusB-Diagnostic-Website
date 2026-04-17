@@ -56,6 +56,13 @@ def login_phleb(email, password):
         user = coll.find_one({'email': email})
         
         if user:
+            # Check Verification Status
+            status = user.get('status', 'pending')
+            if status != 'active':
+                logger.warning(f"Auth denied: Account status is {status} for {email}")
+                # We return a dict structured to indicate the specific reason for denial
+                return {'error': 'Verification Pending', 'status': status, 'message': 'Your specialist account is currently under review by our medical board. Please allow 24-48 hours for verification.'}
+
             # Defensive field access
             db_password = user.get('password')
             if db_password == password:

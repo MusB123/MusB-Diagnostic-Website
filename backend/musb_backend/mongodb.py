@@ -487,6 +487,9 @@ def get_diag_invoices_collection():
 def get_phlebotomists_collection():
     return get_db()['phlebotomists']
 
+def get_phlebotomy_hubs_collection():
+    return get_db()['phlebotomy_hubs']
+
 
 
 # --- Home & Marketing Specific Helpers ---

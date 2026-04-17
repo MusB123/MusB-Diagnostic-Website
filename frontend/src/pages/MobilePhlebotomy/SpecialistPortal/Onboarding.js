@@ -22,6 +22,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [data, setData] = useState({
     fullName: '', address: '', phone: '', email: '', website: '',
+    password: '',
     dlFront: null, dlBack: null,
     certificate: null,
     insuranceDoc: null,
@@ -47,7 +48,7 @@ const Onboarding = () => {
 
   const canNext = () => {
     switch (step) {
-      case 1: return data.fullName.trim() && data.email.trim() && data.phone.trim();
+      case 1: return data.fullName.trim() && data.email.trim() && data.phone.trim() && data.password.trim();
       case 2: return true;
       case 3: return true;
       case 4: return true;
@@ -101,6 +102,10 @@ const Onboarding = () => {
                   <label>Email Address *</label>
                   <input type="email" placeholder="name@specialist.com" value={data.email} onChange={e => update('email', e.target.value)} />
                 </div>
+              </div>
+              <div className="sp-form-group">
+                <label>Secure Password *</label>
+                <input type="password" placeholder="••••••••" value={data.password} onChange={e => update('password', e.target.value)} />
               </div>
               <div className="sp-form-group">
                 <label><Globe size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />Website (Optional)</label>
@@ -218,8 +223,8 @@ const Onboarding = () => {
                 </div>
               </div>
               <div style={{ marginTop: '2rem' }}>
-                <button className="sp-btn-secondary" onClick={() => navigate('/mobile-phlebotomy')}>
-                  Return to Home
+                <button className="sp-btn-secondary" onClick={() => navigate('/portal/phlebotomist/login')}>
+                  Go to Staff Portal
                 </button>
               </div>
             </div>

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ShieldCheck, Lock, X, CheckCircle, Loader2,
-  Star, ChevronDown, Calendar, MapPin, Droplets
+  Star, ChevronDown, Calendar, MapPin, Droplets, Building2, Users
 } from 'lucide-react';
 import './MobilePhlebotomy.css';
 import PhlebotomistLogin from './Login.js';
@@ -121,19 +121,18 @@ const MobilePhlebotomy = () => {
             <Link to="/portal/patient/book" className="btn btn-primary btn-lg">
               <Calendar size={20} /> Book Now
             </Link>
-            <Link to="/mobile-phlebotomy/onboarding" className="btn btn-accent btn-lg" style={{ background: 'var(--admin-accent)', borderColor: 'var(--admin-accent)' }}>
-              <ShieldCheck size={20} /> Become a Specialist
-            </Link>
             <Link to="/portal/patient/login" className="btn btn-outline-white btn-lg">
-              Patient Portal
+              <Users size={20} /> Patient Portal
             </Link>
             <button
               className="btn btn-outline-white btn-lg"
               onClick={() => setIsLoginOpen(true)}
-              style={{ opacity: 0.7, fontSize: '0.95rem', padding: '0.85rem 1.5rem' }}
             >
-              <Lock size={16} /> Staff Login
+              <Lock size={20} /> Staff Login
             </button>
+            <Link to="/portal/phlebotomy-hub" className="btn btn-outline-white btn-lg">
+              <Building2 size={20} /> Company Hub
+            </Link>
           </div>
         </motion.div>
       </section>

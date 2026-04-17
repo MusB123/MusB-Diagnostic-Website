@@ -1071,5 +1071,67 @@
             "institution": "Black Mesa Diagnostics",
             "_id": "69d4d39c7cd301b7982d0489"
         }
+    ],
+    "admin_users": [
+        {
+            "name": "Master Admin",
+            "email": "admin@musb.com",
+            "password": "admin123",
+            "role": "SUPER_ADMIN",
+            "created_at": "2026-04-17T00:00:00Z",
+            "_id": "69e217ae3b7653509582ef36"
+        }
+    ],
+    "system_config": [
+        {
+            "platform_fee_percent": 30,
+            "distance_fee_base": 25.0,
+            "distance_fee_mile": 1.5,
+            "cancellation_window_hours": 4,
+            "payout_day": "Friday",
+            "rating_disqualify_threshold": 3.5,
+            "max_dispatch_radius_miles": 125,
+            "updated_at": "2026-04-17T00:00:00Z",
+            "_id": "69e217ae3b7653509582ef37"
+        }
+    ],
+    "global_config": [
+        {
+            "id": "system_wide",
+            "pricing": {
+                "base_phleb_fee": 35.0,
+                "distance_fee_per_mile": 1.5,
+                "rush_fee": 15.0,
+                "discount_first_time": 10.0
+            },
+            "commission": {
+                "independent_payout_rate": 0.7,
+                "company_payout_rate": 0.85
+            },
+            "policies": {
+                "cancellation_window_hours": 4,
+                "cancellation_fee": 25.0,
+                "auto_flag_rating_threshold": 3.0
+            },
+            "last_updated": "2026-04-17T18:33:52.251017",
+            "updated_by": "System Initializer",
+            "_id": "69e22fb88ace30113f6fdbaf"
+        }
+    ],
+    "audit_log": [
+        {
+            "admin": "Master Admin",
+            "action": "System Initialized",
+            "timestamp": "2026-04-17T18:33:52.254418",
+            "details": "Initial setup of global configuration.",
+            "_id": "69e22fb88ace30113f6fdbb0"
+        },
+        {
+            "admin": "Master Admin",
+            "action": "Pricing Rule Update",
+            "timestamp": "2026-04-17T18:33:52.254425",
+            "details": "Set base phleb fee to $35.00",
+            "_id": "69e22fb88ace30113f6fdbb1"
+        }
     ]
 }

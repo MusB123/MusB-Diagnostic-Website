@@ -31,8 +31,9 @@ api.interceptors.request.use((config) => {
     const employerToken = localStorage.getItem('token');
     const researchToken = localStorage.getItem('research_token');
     const superAdminToken = localStorage.getItem('super_admin_token');
+    const hubToken = localStorage.getItem('hub_token');
 
-    const token = phlebToken || employerToken || researchToken || superAdminToken;
+    const token = phlebToken || employerToken || researchToken || superAdminToken || hubToken;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

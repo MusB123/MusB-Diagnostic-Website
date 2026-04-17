@@ -45,6 +45,8 @@ def login_view(request):
         password = request.data.get('password')
         login_data = login_phleb(email, password)
         if login_data:
+            if 'error' in login_data:
+                return Response(login_data, status=status.HTTP_403_FORBIDDEN)
             return Response(login_data)
         return Response({'error': 'Invalid phlebotomist credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
@@ -316,6 +318,7 @@ def submit_application(request):
             'certificate': 'pending',
             'insurance': 'pending'
         },
+        'password': data.get('password'),
         'docs': {
             'dl_front': data.get('dlFront'),
             'dl_back': data.get('dlBack'),
