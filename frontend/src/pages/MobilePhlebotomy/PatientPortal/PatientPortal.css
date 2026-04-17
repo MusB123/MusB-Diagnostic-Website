@@ -11,7 +11,8 @@
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip; /* Using clip instead of hidden to allow better child overflow control */
+  width: 100vw;
 }
 
 .pp-wrapper *,
@@ -998,9 +999,10 @@
   background: rgba(13, 17, 23, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 24px;
-  padding: 2rem;
+  padding: 1.5rem; /* Reduced from 2rem to save space */
   backdrop-filter: blur(16px);
   transition: all 0.3s;
+  min-width: 300px; /* Ensure cards don't get crushed too much */
 }
 
 .pp-dash-card:hover {
@@ -2065,7 +2067,24 @@
 
   .pp-dash-main {
     margin-left: 0;
-    padding: 1.5rem;
+    padding: 1rem;
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scrolling for the main content */
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Modern scrollbar for mobile dashboard */
+  .pp-dash-main::-webkit-scrollbar {
+    height: 4px;
+  }
+  .pp-dash-main::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .pp-dash-main::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 10px;
   }
   .pp-dash-grid-2 {
     grid-template-columns: 1fr;
@@ -2110,9 +2129,51 @@
   .pp-cancel-modal-actions {
     flex-direction: column;
   }
+  /* Optimized Dashboard Content for Mobile */
   .pp-dash-grid-3 {
-    grid-template-columns: 1fr;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-right: -1.5rem;
+    padding-right: 1.5rem;
+    -webkit-overflow-scrolling: touch;
   }
+  
+  .pp-dash-grid-3::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pp-stat-card {
+    min-width: 240px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    padding: 1.25rem;
+  }
+  .pp-appt-item {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .pp-appt-date-block {
+    min-width: 50px;
+    padding: 0.5rem;
+  }
+
+  .pp-appt-date-block .pp-appt-day {
+    font-size: 1.25rem;
+  }
+
+  .pp-appt-info h4 {
+    font-size: 0.85rem;
+  }
+
+  .pp-appt-actions button {
+    padding: 6px 12px !important;
+    font-size: 0.7rem !important;
+  }
+
   .pp-progress-step-name {
     display: none;
   }

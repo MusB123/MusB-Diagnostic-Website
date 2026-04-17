@@ -9,7 +9,8 @@
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
+  width: 100vw;
 }
 
 .sp-mesh-bg {
@@ -496,8 +497,9 @@
   background: #0d1117;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 24px;
-  padding: 2rem;
+  padding: 1.5rem; /* Reduced from 2rem to save space */
   margin-bottom: 1.5rem;
+  min-width: 300px; /* Ensure cards don't get crushed too much */
 }
 
 .sp-card-title {
@@ -981,8 +983,29 @@
     transform: translateX(0);
   }
   .sp-menu-toggle { display: flex; }
-  .sp-main { margin-left: 0; padding: 1.5rem; }
-  .sp-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .sp-main { 
+    margin-left: 0; 
+    padding: 1rem; 
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Modern scrollbar for mobile dashboard */
+  .sp-main::-webkit-scrollbar {
+    height: 4px;
+  }
+  .sp-main::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .sp-main::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 10px;
+  }
+  .sp-kpi-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 1rem;
+  }
   .sp-grid-2 { grid-template-columns: 1fr; }
   .sp-main-header h1 { font-size: 1.5rem; }
 }
@@ -991,8 +1014,46 @@
   .sp-onboard-card { padding: 2rem; border-radius: 20px; }
   .sp-form-row { grid-template-columns: 1fr; }
   .sp-upload-row { grid-template-columns: 1fr; }
-  .sp-kpi-grid { grid-template-columns: 1fr; }
-  .sp-earnings-summary { grid-template-columns: 1fr; }
+  
+  /* Horizontal Scroll for KPIs on mobile */
+  .sp-kpi-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-right: -1rem;
+    padding-right: 1.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sp-kpi-grid::-webkit-scrollbar { display: none; }
+  .sp-kpi-card {
+    min-width: 220px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    padding: 1.25rem;
+  }
+  .sp-kpi-card h3 { font-size: 1.75rem; }
+
+  /* Horizontal Scroll for Earnings cards */
+  .sp-earnings-summary {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-right: -1rem;
+    padding-right: 1.5rem;
+  }
+  .sp-earnings-summary::-webkit-scrollbar { display: none; }
+  .sp-earnings-card {
+    min-width: 240px;
+    flex-shrink: 0;
+    padding: 1.5rem;
+  }
+
+  .sp-route-item { gap: 0.75rem; padding: 1rem; }
+  .sp-notif-item { padding: 0.75rem; }
+
   .sp-status-steps { flex-direction: column; }
   .sp-btn-row { flex-direction: column; }
   .sp-grid-3 { grid-template-columns: 1fr; }
