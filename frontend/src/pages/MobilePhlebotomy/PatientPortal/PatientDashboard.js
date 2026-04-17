@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Droplets, CalendarDays, Clock, FileText, CreditCard,
-  Settings, LogOut, Star, ChevronRight, Plus, MapPin, User
+  Settings, LogOut, Star, ChevronRight, Plus, MapPin, User, Menu, X
 } from 'lucide-react';
 import './PatientPortal.css';
 
@@ -40,6 +40,7 @@ const PAYMENT_METHODS = [
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem('patient_user') || '{"name":"John Doe","email":"john@example.com"}');
 
   const handleLogout = () => {
@@ -342,9 +343,12 @@ const PatientDashboard = () => {
         <div className="pp-mesh-blob blob-2" />
       </div>
       <div className="pp-content">
-        <div className="pp-dashboard">
+        <div className={`pp-dashboard ${sidebarOpen ? 'sidebar-active' : ''}`}>
+          {/* Mobile Overlay */}
+          {sidebarOpen && <div className="pp-dash-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
           {/* Sidebar */}
-          <aside className="pp-dash-sidebar">
+          <aside className={`pp-dash-sidebar ${sidebarOpen ? 'active' : ''}`}>
             <div className="pp-dash-sidebar-logo">
               <div className="pp-dash-sidebar-logo-icon">
                 <Droplets size={20} />
@@ -357,7 +361,10 @@ const PatientDashboard = () => {
                 <button
                   key={item.id}
                   className={`pp-dash-nav-item ${activeTab === item.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setSidebarOpen(false);
+                  }}
                 >
                   <item.icon size={18} />
                   {item.label}
@@ -376,9 +383,14 @@ const PatientDashboard = () => {
           {/* Main Content */}
           <main className="pp-dash-main">
             <div className="pp-dash-header">
-              <div>
-                <h1>{TAB_TITLES[activeTab]}</h1>
-                <p className="pp-dash-header-subtitle">Welcome back, {user.name}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button className="pp-dash-menu-toggle" onClick={() => setSidebarOpen(true)}>
+                  <Menu size={24} />
+                </button>
+                <div>
+                  <h1>{TAB_TITLES[activeTab]}</h1>
+                  <p className="pp-dash-header-subtitle">Welcome back, {user.name}</p>
+                </div>
               </div>
               <button
                 className="pp-btn-primary"
