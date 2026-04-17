@@ -311,13 +311,15 @@
 
   .nav-item {
     width: 100%;
+    height: auto !important; /* Prevent desktop 100% height from stretching items */
   }
 
   .nav-link {
     font-size: 1.1rem;
-    padding: 1rem 0;
+    padding: 0.8rem 0;
     width: 100%;
     border-bottom: 1px solid rgba(0,0,0,0.05);
+    height: auto !important;
   }
 
   .nav-actions {
