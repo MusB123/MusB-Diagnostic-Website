@@ -476,6 +476,115 @@
   margin-top: 0.4rem;
 }
 
+/* Sidebar Toggle Button (Hidden on Desktop) */
+.res-sidebar-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  z-index: 110;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.res-sidebar-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background-color: white;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.res-sidebar-toggle span::before,
+.res-sidebar-toggle span::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.res-sidebar-toggle span::before { transform: translateY(-7px); }
+.res-sidebar-toggle span::after { transform: translateY(7px); }
+
+.res-sidebar-toggle.active span { background-color: transparent; }
+.res-sidebar-toggle.active span::before { transform: rotate(45deg); }
+.res-sidebar-toggle.active span::after { transform: rotate(-45deg); }
+
+/* Mobile Overlay */
+.res-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 95;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .res-sidebar {
+    position: fixed;
+    left: -100%;
+    z-index: 1000;
+    width: 280px;
+    height: 100vh;
+    transition: left 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+
+  .res-sidebar.active {
+    left: 0;
+  }
+
+  .res-content {
+    margin-left: 0;
+  }
+
+  .res-header, .res-main-viewport {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .res-sidebar-toggle {
+    display: flex;
+  }
+
+  .res-search-wrapper {
+    display: none; /* Hide for space on tablet header */
+  }
+}
+
+@media (max-width: 640px) {
+  .res-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .res-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .res-user-info {
+    display: none;
+  }
+  
+  .res-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .res-stats-card {
+    padding: 1.5rem;
+  }
+}
+
 /* --- Module Navigation & Headers --- */
 .res-module-header {
   display: flex;

@@ -41,6 +41,8 @@ function StatusBadge({ status }) {
     expiring: { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
     complete: { bg: 'rgba(16,185,129,0.15)', color: '#10b981' },
     paused: { bg: 'rgba(107,114,128,0.15)', color: '#6b7280' },
+    pending_approval: { bg: 'rgba(245,158,11,0.2)', color: '#f59e0b' },
+    rejected: { bg: 'rgba(239,68,68,0.15)', color: '#ef4444' },
   };
   const s = (status || '').toLowerCase().replace(/\s/g, '_');
   const c = colors[s] || { bg: 'rgba(255,255,255,0.05)', color: '#94a3b8' };
@@ -154,7 +156,7 @@ function PhlebotomyManagement() {
             {activeTab === 'patients' && <PatientsTab data={data.patients} />}
             {activeTab === 'phlebotomists' && <PhlebotomistsTab data={data.phlebotomists} setData={setData} />}
             {activeTab === 'companies' && <CompaniesTab data={data.companies} />}
-            {activeTab === 'orders' && <OrdersTab data={data.orders} />}
+            {activeTab === 'orders' && <OrdersTab data={data.orders} setData={setData} />}
             {activeTab === 'payments' && <PaymentsTab data={data.payments} />}
             {activeTab === 'reviews' && <ReviewsTab data={data.reviews} />}
             {activeTab === 'marketing' && <MarketingTab data={data.marketing} />}
@@ -162,6 +164,7 @@ function PhlebotomyManagement() {
           </motion.div>
         </AnimatePresence>
       )}
+
     </div>
   );
 }
@@ -615,10 +618,41 @@ function CompaniesTab({ data }) {
 /* ═══════════════════════════════════════════
    TAB 5 — ORDERS
    ═══════════════════════════════════════════ */
-function OrdersTab({ data }) {
+function OrdersTab({ data, setData }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selected, setSelected] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [reason, setReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  
   const orders = (data?.orders || []).filter(o => statusFilter === 'all' || o.status === statusFilter);
+
+  const handleStatusUpdate = async (orderId, newStatus, rejectionReason = '') => {
+    setActionLoading(true);
+    try {
+      const res = await api.post(`/api/superadmin/phleb-management/orders/${orderId}/status/`, {
+        status: newStatus,
+        reason: rejectionReason
+      });
+      
+      // Update local state to reflect change immediately
+      setData(prev => ({
+        ...prev,
+        orders: {
+          ...prev.orders,
+          orders: prev.orders.orders.map(o => o.id === orderId ? { ...o, status: res.data.status } : o)
+        }
+      }));
+      
+      setRejectingId(null);
+      setReason('');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Action failed - Potential System Outage';
+      alert(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <>
@@ -631,10 +665,11 @@ function OrdersTab({ data }) {
           <span>📊</span>
           <select className="admin-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="all">All Status</option>
+            <option value="pending_approval">Pending Approval</option>
+            <option value="pending">Approved (Pending Dispatch)</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="disputed">Disputed</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
         <button className="action-btn" onClick={() => exportCSV('orders.csv', ['id','patient','phlebotomist','date','status','charge'], orders)}>📥 Export CSV</button>
@@ -658,9 +693,49 @@ function OrdersTab({ data }) {
                 <td style={tdStyle}><span style={{ fontWeight: 800, color: '#10b981' }}>{o.charge}</span></td>
                 <td style={tdStyle}><StatusBadge status={o.status} /></td>
                 <td style={tdStyle}>
-                  <div style={{ display: 'flex', gap: '0.4rem' }}>
-                    <button style={actionBtnStyle} onClick={() => setSelected(o)}>View</button>
-                    {!o.phlebotomist && <button style={{ ...actionBtnStyle, background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>Assign</button>}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                      <button style={actionBtnStyle} onClick={() => setSelected(o)}>View</button>
+                      
+                      {o.status === 'pending_approval' && (
+                        <>
+                          <button 
+                            style={{ ...actionBtnStyle, background: 'rgba(16,185,129,0.15)', color: '#10b981' }}
+                            onClick={() => handleStatusUpdate(o.id, 'approved')}
+                            disabled={actionLoading}
+                          >
+                            ✓ Approve
+                          </button>
+                          <button 
+                            style={{ ...actionBtnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
+                            onClick={() => setRejectingId(o.id === rejectingId ? null : o.id)}
+                            disabled={actionLoading}
+                          >
+                            ✕ Reject
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {rejectingId === o.id && (
+                      <div style={{ marginTop: '0.5rem', background: 'rgba(239,68,68,0.05)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(239,68,68,0.2)' }}>
+                        <label style={{ ...labelStyle, fontSize: '0.65rem', marginBottom: '0.25rem' }}>Rejection Reason (Sent to Patient)</label>
+                        <textarea 
+                          style={{ ...inputStyle, fontSize: '0.75rem', padding: '0.4rem', minHeight: '60px' }} 
+                          placeholder="Type reason here..."
+                          value={reason}
+                          onChange={e => setReason(e.target.value)}
+                        />
+                        <button 
+                          className="action-btn" 
+                          style={{ marginTop: '0.5rem', width: '100%', background: '#ef4444', color: '#fff' }}
+                          onClick={() => handleStatusUpdate(o.id, 'rejected', reason)}
+                          disabled={!reason || actionLoading}
+                        >
+                          Confirm Rejection
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>

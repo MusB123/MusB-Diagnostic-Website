@@ -27,6 +27,12 @@ const DiagnosticDashboard = () => {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
+    const [sidebarActive, setSidebarActive] = useState(false);
+
+    // Close sidebar on tab change (mobile)
+    useEffect(() => {
+        setSidebarActive(false);
+    }, [activeTab]);
 
     useEffect(() => {
         const token = localStorage.getItem('diag_token');
@@ -80,9 +86,11 @@ const DiagnosticDashboard = () => {
     ];
 
     return (
-        <div className="diag-portal-container">
-            {/* Navigation Sidebar */}
-            <aside className="diag-sidebar">
+        <div className={`diag-portal-container ${sidebarActive ? 'sidebar-active' : ''}`}>
+            {/* Mobile Sidebar Overlay */}
+            {sidebarActive && <div className="diag-sidebar-overlay" onClick={() => setSidebarActive(false)}></div>}
+
+            <aside className={`diag-sidebar ${sidebarActive ? 'active' : ''}`}>
                 <div className="diag-logo">
                     <ShieldCheck size={28} className="text-primary" />
                     <h2>DIAGNOSTIC HUB</h2>
@@ -116,6 +124,12 @@ const DiagnosticDashboard = () => {
             {/* Main Workspace */}
             <main className="diag-main-content">
                 <header className="diag-header">
+                    <button 
+                        className={`diag-sidebar-toggle ${sidebarActive ? 'active' : ''}`}
+                        onClick={() => setSidebarActive(!sidebarActive)}
+                    >
+                        <span></span>
+                    </button>
                     <div className="diag-header-left">
                         <h1 className="capitalize">{activeTab} View</h1>
                         <p className="breadcrumb">Diagnostic Portal » {isAdmin ? 'Internal Admin' : 'Client Panel'}</p>

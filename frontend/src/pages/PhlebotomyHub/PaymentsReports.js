@@ -2,30 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Download, FileText, BarChart3, 
-  ArrowDownToLine, Calendar, DollarSign
+  ArrowDownToLine, Calendar
 } from 'lucide-react';
 import api from '../../api/api';
 import './HubPortal.css';
 
 const PaymentsReports = () => {
   const [reports, setReports] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchReports = async () => {
+    const fetchAllData = async () => {
       try {
-        const res = await api.get('/api/phleb/hubs/reports/');
-        setReports(res.data);
+        const [reportsRes, statsRes] = await Promise.all([
+          api.get('/api/phleb/hubs/reports/'),
+          api.get('/api/phleb/hubs/dashboard/')
+        ]);
+        setReports(reportsRes.data);
+        setStats(statsRes.data);
       } catch (err) {
-        console.error("Failed to fetch reports", err);
+        console.error("Failed to fetch data", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchReports();
+    fetchAllData();
   }, []);
 
   if (loading) return <div style={{ color: '#818cf8', fontWeight: 800 }}>UPLOADING FINANCIAL DATA...</div>;
+
+  const grossRevenue = stats?.metrics?.revenue || '$0.00';
+  const revValue = parseFloat(grossRevenue.replace('$', '').replace(',', '')) || 0;
+  const commission = revValue * 0.3;
+  const payouts = revValue * 0.7;
 
   return (
     <div className="hub-reports">
@@ -47,17 +57,21 @@ const PaymentsReports = () => {
       <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
         <div className="stat-card-custom" style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '24px', padding: '1.5rem' }}>
           <div style={{ color: '#10b981', fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Available Commission</div>
-          <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>$4,626</div>
-          <div style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 800 }}>READY FOR WITHDRAWAL</div>
+          <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>
+            ${commission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 800 }}>MUSB ALLOCATION SETTLED</div>
         </div>
         <div className="stat-card-custom" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '1.5rem' }}>
           <div style={{ color: '#94a3b8', fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Fleet Payouts (MTD)</div>
-          <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>$10,794</div>
-          <div style={{ color: '#818cf8', fontSize: '0.85rem', fontWeight: 800 }}>8 OPERATIVES PAID</div>
+          <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>
+            ${payouts.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div style={{ color: '#818cf8', fontSize: '0.85rem', fontWeight: 800 }}>{stats?.metrics?.active_phlebs || 0} OPERATIVES SETTLED</div>
         </div>
         <div className="stat-card-custom" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '1.5rem' }}>
           <div style={{ color: '#94a3b8', fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Gross Revenue</div>
-          <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>$15,420</div>
+          <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>{grossRevenue}</div>
           <div style={{ color: '#6366f1', fontSize: '0.85rem', fontWeight: 800 }}>TOTAL HUB VOLUME</div>
         </div>
       </div>

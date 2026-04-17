@@ -199,35 +199,61 @@ def hub_dashboard_stats(request):
     
     token = auth_header.split(' ')[1]
     payload = verify_token(token)
+    if not payload: return Response(status=401)
     hub_id = payload.get('hub_id')
     
     app_coll = get_appointments_collection()
     phleb_coll = get_phlebotomists_collection()
     
     hub_filter = {'hub_id': hub_id} if hub_id != 'HUB-DEMO-001' else {}
+    
+    # 1. Fleet Stats
     total_fleet = phleb_coll.count_documents(hub_filter)
     online_fleet = phleb_coll.count_documents({**hub_filter, 'is_online': True})
     
-    pipeline = list(app_coll.find({}))
-    total_orders = len(pipeline)
-    revenue = sum([float(str(o.get('price', 0)).replace('$', '').replace(',', '')) for o in pipeline if o.get('price')])
+    # 2. Identify Hub's Fleet IDs
+    phlebs = list(phleb_coll.find(hub_filter))
+    fleet_ids = [p.get('id', str(p.get('_id'))) for p in phlebs]
+    
+    # 3. Calculate Metrics for THIS Hub
+    # Count orders already assigned to this fleet
+    assigned_orders = list(app_coll.find({'assigned_phlebotomist_id': {'$in': fleet_ids}}))
+    
+    total_hub_revenue = 0
+    for o in assigned_orders:
+        price_str = str(o.get('price', '0')).replace('$', '').replace(',', '').strip()
+        try:
+            total_hub_revenue += float(price_str)
+        except:
+            pass
+            
+    # 4. Pipeline Data (Pending orders + Hub's assigned orders)
+    pending_orders = list(app_coll.find({'status': 'Pending'}))
+    combined_pipeline = pending_orders + assigned_orders
+    
+    # Create name map for phlebs
+    phleb_name_map = {p.get('id', str(p.get('_id'))): p.get('name') for p in phlebs}
     
     pipeline_data = []
-    for item in pipeline[:10]:
+    for item in combined_pipeline[:20]: # Limit to 20 for dashboard
         d = transform_doc(item)
+        pid = d.get('assigned_phlebotomist_id')
         pipeline_data.append({
-            'id': d.get('id', str(d.get('_id', 'APP-UNKNOWN'))),
-            'patient': d.get('patient', d.get('patient_name', 'Patient Access')),
+            'id': d.get('id', d.get('_id', 'APP-UNKNOWN')),
+            'patient': d.get('full_name', d.get('patient', d.get('patient_name', 'Patient Access'))),
             'location': d.get('location', d.get('address', d.get('addr', 'Hub Sector'))),
-            'status': d.get('status', 'Pending')
+            'status': d.get('status', 'Pending'),
+            'price': d.get('price', '$0.00'),
+            'type': d.get('test_type', 'Medical Case'),
+            'phlebotomist_name': phleb_name_map.get(pid, 'Request ID: ' + d.get('id', 'NEW')) if pid else 'Unassigned'
         })
     
     stats = {
         'metrics': {
-            'total_orders': total_orders,
+            'total_orders': len(assigned_orders),
             'active_phlebs': online_fleet,
-            'revenue': f"${revenue:,.2f}",
-            'growth': '+14%'
+            'revenue': f"${total_hub_revenue:,.2f}",
+            'growth': '+12%' if len(assigned_orders) > 0 else '0%'
         },
         'pipeline': pipeline_data,
         'fleet_summary': {'total': total_fleet, 'online': online_fleet}
@@ -236,10 +262,39 @@ def hub_dashboard_stats(request):
 
 @api_view(['GET'])
 def hub_reports(request):
-    """GET /api/phleb/hubs/reports/"""
+    """GET /api/phleb/hubs/reports/ — Real-time operational summaries."""
+    auth_header = request.headers.get('Authorization')
+    if not auth_header: return Response(status=401)
+    
+    token = auth_header.split(' ')[1]
+    payload = verify_token(token)
+    hub_id = payload.get('hub_id')
+    
+    app_coll = get_appointments_collection()
+    phleb_coll = get_phlebotomists_collection()
+    
+    hub_filter = {'hub_id': hub_id} if hub_id != 'HUB-DEMO-001' else {}
+    phlebs = list(phleb_coll.find(hub_filter))
+    fleet_ids = [p.get('id', str(p.get('_id'))) for p in phlebs]
+    
+    total_assigned = app_coll.count_documents({'assigned_phlebotomist_id': {'$in': fleet_ids}})
+    completed = app_coll.count_documents({'assigned_phlebotomist_id': {'$in': fleet_ids}, 'status': 'Completed'})
+    
     today = datetime.date.today()
     reports = [
-        {'id': f'REP-{today.strftime("%m%d")}-01', 'name': f'Operational Audit - {today.strftime("%B")}', 'date': today.isoformat(), 'size': '2.4MB'},
-        {'id': 'REP-HIST-02', 'name': 'Fleet Performance Q3', 'date': '2026-03-15', 'size': '4.1MB'},
+        {
+            'id': f'REP-{today.strftime("%m%d")}-LIVE', 
+            'name': 'Live Operational Summary', 
+            'date': today.isoformat(), 
+            'description': f'Fleet coverage: {len(phlebs)} specialists. Assignments: {total_assigned}.',
+            'status': 'Generated'
+        },
+        {
+            'id': 'REP-PERF-Q2', 
+            'name': 'Fleet Conversion Report', 
+            'date': today.isoformat(), 
+            'description': f'Completion Rate: {(completed/total_assigned*100) if total_assigned > 0 else 0:.1f}%',
+            'status': 'Ready'
+        }
     ]
     return Response(reports)

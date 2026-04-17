@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  CheckCircle, AlertCircle, User, 
-  MapPin, Clock, ArrowRight, Zap, Target
+  CheckCircle, User, 
+  MapPin, Clock, Zap, Target
 } from 'lucide-react';
 import api from '../../api/api';
 import './HubPortal.css';
@@ -49,7 +49,19 @@ const OrderAllocation = () => {
           <h2 className="hub-heading" style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: 0 }}>Dispatch Center</h2>
           <p className="hub-subheading" style={{ color: '#94a3b8', fontWeight: 700, marginTop: '8px' }}>Allocating Patient Requests to Field Operatives</p>
         </div>
-        <button className="hub-btn" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button 
+          className="hub-btn" 
+          onClick={async () => {
+            try {
+              await api.post('/api/phleb/hubs/auto-allocate/');
+              const res = await api.get('/api/phleb/hubs/dashboard/');
+              setOrders(res.data.pipeline);
+            } catch (err) {
+              alert(err.response?.data?.error || 'Auto-allocation failed');
+            }
+          }}
+          style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+        >
           <Zap size={18} /> AUTO-ALLOCATE ALL
         </button>
       </div>
@@ -120,7 +132,7 @@ const OrderAllocation = () => {
             {orders.filter(o => o.status !== 'Pending').map((order, idx) => (
               <div key={idx} style={{ padding: '1.2rem 0', borderBottom: idx !== orders.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                 <div className="flex-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div style={{ fontWeight: 900, color: '#fff' }}>{order.id}</div>
+                   <div style={{ fontWeight: 900, color: '#fff' }}>{order.phlebotomist_name || order.id}</div>
                    <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 900, background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>{order.status}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#94a3b8', marginTop: '10px', fontWeight: 700 }}>

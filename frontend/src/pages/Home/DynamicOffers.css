@@ -6,9 +6,15 @@
    ========================================== */
 
 .dynamic-offers-container {
-  padding: 7.5rem 5% 2rem; /* Increased top padding to clear fixed navbar */
+  padding: 100px 5% 2rem; /* Clear fixed navbar */
   max-width: 1600px;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .dynamic-offers-container {
+    padding: 80px 1.25rem 2rem;
+  }
 }
 
 .dynamic-offers-grid {

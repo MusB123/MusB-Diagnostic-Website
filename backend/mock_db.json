@@ -494,6 +494,17 @@
             "reviews": [],
             "created_at": "2026-04-11T14:15:42.450449",
             "_id": "69da578e6bfcd126e35c59e3"
+        },
+        {
+            "name": "Barenya Prasad Mishra",
+            "email": "test@gmail.com",
+            "phone": "07750067250",
+            "location": "Sector 7",
+            "hub_id": "HUB-DEMO-001",
+            "status": "active",
+            "is_online": false,
+            "created_at": "2026-04-17T18:34:30.712513",
+            "_id": "69e27d36b910b96bc1a8de74"
         }
     ],
     "coverage_zones": [
@@ -724,9 +735,12 @@
             "visit_type": "home",
             "address": "Gopinathpur,Hatabazar,Jatni\nBhubaneswar, India",
             "coordinates": null,
-            "status": "pending_approval",
+            "status": "Assigned",
             "created_at": "2026-04-11T12:06:33.776563",
-            "_id": "69da3949af0706b6fcd85d85"
+            "_id": "69da3949af0706b6fcd85d85",
+            "updated_at": "2026-04-17T19:01:59.717039+00:00",
+            "assigned_phlebotomist_id": "5",
+            "assigned_at": "2026-04-17T19:19:37.622696"
         },
         {
             "full_name": "Barenya",

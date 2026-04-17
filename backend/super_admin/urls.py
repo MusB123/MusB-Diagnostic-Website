@@ -34,6 +34,7 @@ urlpatterns = [
     path('phleb-management/patients/', pm.phleb_patients, name='pm-patients'),
     path('phleb-management/phlebotomists/', pm.phleb_phlebotomists, name='pm-phlebotomists'),
     path('phleb-management/phlebotomists/<str:phleb_id>/status/', pm.update_phleb_status, name='pm-phleb-status'),
+    path('phleb-management/orders/<str:order_id>/status/', pm.update_order_status, name='pm-update-order-status'),
     path('phleb-management/companies/', pm.phleb_companies, name='pm-companies'),
     path('phleb-management/orders/', pm.phleb_orders, name='pm-orders'),
     path('phleb-management/payments/', pm.phleb_payments, name='pm-payments'),

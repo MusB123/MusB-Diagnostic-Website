@@ -13,6 +13,7 @@ from musb_backend.mongodb import (
     get_employers_collection,
     get_lab_tests_collection,
     get_phlebotomists_collection,
+    get_phlebotomy_hubs_collection,
     transform_doc,
 )
 
@@ -78,7 +79,13 @@ def _load_orders():
     phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
 
     test_by_id = {str(t.get("id")): t for t in tests}
-    phleb_by_id = {str(p.get("id")): p for p in phlebs}
+    
+    # Robust Multi-Key Phlebotomist Resolver
+    phleb_by_id = {}
+    for p in phlebs:
+        if p.get("id"): phleb_by_id[str(p["id"])] = p
+        if p.get("_id"): phleb_by_id[str(p["_id"])] = p
+        if p.get("email"): phleb_by_id[p["email"].lower()] = p
 
     orders = []
     for appt in appointments:
@@ -86,7 +93,7 @@ def _load_orders():
         test_doc = test_by_id.get(test_id, {})
         charge_value = float(test_doc.get("price") or 0)
         created_dt = _parse_dt(appt.get("created_at")) or _parse_dt(appt.get("assigned_at")) or _now_utc()
-        phleb_id = str(appt.get("assigned_phlebotomist_id") or "")
+        phleb_id = str(appt.get("assigned_phlebotomist_id") or appt.get("phlebotomist_id") or "")
         phleb_doc = phleb_by_id.get(phleb_id, {})
 
         orders.append(
@@ -127,7 +134,7 @@ def phleb_overview(request):
     now = _now_utc()
     orders = _load_orders()
     phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
-    companies = [transform_doc(d) for d in get_employers_collection().find()]
+    hubs = [transform_doc(d) for d in get_phlebotomy_hubs_collection().find()]
 
     today_orders = [o for o in orders if o["created_dt"].date() == now.date()]
     week_orders = [o for o in orders if o["created_dt"] >= now - timedelta(days=7)]
@@ -179,7 +186,7 @@ def phleb_overview(request):
                 "total_revenue": {"value": _money(revenue_month), "change": revenue_change, "trend": revenue_trend},
                 "platform_fees": {"value": _money(fees_month), "change": fees_change, "trend": fees_trend},
                 "active_phlebotomists": {"value": len(active_phlebs), "change": f"+{max(len(active_phlebs) - len(pending_phlebs), 0)}", "trend": "up"},
-                "registered_companies": {"value": len(companies), "change": "live", "trend": "up"},
+                "registered_companies": {"value": len(hubs), "change": "live", "trend": "up"},
                 "flagged_accounts": {"value": len(pending_phlebs), "change": "live", "trend": "down"},
             },
             "orders_over_time": [{"date": d, "orders": daily_counts.get(d, 0)} for d in day_labels],
@@ -298,35 +305,102 @@ def update_phleb_status(request, phleb_id):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_companies(request):
+    """List Phlebotomy Hubs with aggregated statistics."""
     if not _is_super_admin_request(request):
         return _unauthorized()
-    employers = [transform_doc(d) for d in get_employers_collection().find()]
+    
+    hubs = [transform_doc(d) for d in get_phlebotomy_hubs_collection().find()]
     phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
     orders = _load_orders()
+    
     companies = []
-    for idx, company in enumerate(employers, 1):
-        company_name = company.get("company_name") or company.get("name") or f"Company {idx}"
-        company_phlebs = [p for p in phlebs if (p.get("company") or "").lower() == company_name.lower()]
-        company_orders = [o for o in orders if (o.get("company") or "").lower() == company_name.lower()]
-        company_revenue = sum(o["charge_raw"] for o in company_orders)
+    for idx, hub in enumerate(hubs, 1):
+        # Support both 'hub_id' and the primary record ID
+        hub_id = hub.get("hub_id") or hub.get("id") or str(hub.get("_id"))
+        
+        # Find all specialists belonging to this hub
+        hub_phlebs = [p for p in phlebs if p.get("hub_id") == hub_id or str(p.get("hub_id")) == hub_id]
+        phleb_ids = {str(p.get("id")) for p in hub_phlebs}
+        
+        # Aggregate orders from these specialists
+        hub_orders = [o for o in orders if str(o.get("phleb_id")) in phleb_ids]
+        hub_revenue = sum(o["charge_raw"] for o in hub_orders)
+        
         companies.append(
             {
-                "id": f"CMP-{idx:03d}",
-                "name": company_name,
-                "contact": company.get("name") or "Account Owner",
-                "email": company.get("email") or "N/A",
-                "phlebotomist_count": len(company_phlebs),
-                "orders": len(company_orders),
-                "revenue": _money(company_revenue),
+                "id": hub_id or f"HUB-{idx:03d}",
+                "name": hub.get("name") or f"Hub {idx}",
+                "contact": hub.get("email", "System Hub"),
+                "email": hub.get("email") or "N/A",
+                "phlebotomist_count": len(hub_phlebs),
+                "orders": len(hub_orders),
+                "revenue": _money(hub_revenue),
                 "doc_status": "complete",
-                "status": "active" if str(company.get("plan_status", "Active")).lower() == "active" else "pending",
-                "joined": (_parse_dt(company.get("created_at")) or _now_utc()).strftime("%b %Y"),
+                "status": "active",
+                "joined": (_parse_dt(hub.get("created_at")) or _now_utc()).strftime("%b %Y"),
             }
         )
     return Response({"companies": companies, "total": len(companies), "as_of": _now_utc().isoformat()})
 
 
 # ===================== ORDERS =====================
+@api_view(['POST', 'PATCH'])
+@permission_classes([AllowAny])
+def update_order_status(request, order_id):
+    """Update order status (Approve/Reject) with optional reason for rejection."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    
+    new_status = request.data.get('status')
+    reason = request.data.get('reason', '')
+    
+    if not new_status:
+        return Response({'error': 'Status is required.'}, status=400)
+        
+    coll = get_appointments_collection()
+    
+    # Safe ID Resolver: Handles native ObjectIds and custom string IDs
+    query = {"id": order_id}
+    if len(order_id) == 24:
+        try:
+            query = {"$or": [{"_id": ObjectId(order_id)}, {"id": order_id}]}
+        except:
+            pass
+            
+    # Validation
+    if new_status == 'rejected' and not reason:
+        return Response({'error': 'Rejection reason is required for patient notification.'}, status=400)
+    
+    update_fields = {
+        'status': 'Pending' if new_status == 'approved' else new_status, 
+        'updated_at': _now_utc().isoformat()
+    }
+    
+    if new_status == 'rejected':
+        update_fields['rejection_reason'] = reason
+        # Simulate patient email
+        print(f"\n--- [EMAIL SIMULATION] ---")
+        print(f"TO: (Patient Email from DB)")
+        print(f"SUBJECT: Update regarding your MusB Diagnostic Booking")
+        print(f"MESSAGE: We regret to inform you that your booking could not be approved at this time.")
+        print(f"REASON FROM ADMIN: {reason}")
+        print(f"--------------------------\n")
+
+    try:
+        result = coll.update_one(query, {'$set': update_fields})
+        if result.matched_count == 0:
+            return Response({'error': 'Order not found.'}, status=404)
+    except Exception as e:
+        return Response({
+            'error': 'Database Update Error',
+            'message': f'Failed to update order status: {str(e)}'
+        }, status=500)
+        
+    return Response({
+        'message': f'Order {order_id} marked as {new_status}',
+        'order_id': order_id,
+        'status': update_fields['status']
+    })
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

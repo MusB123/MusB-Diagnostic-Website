@@ -27,6 +27,13 @@ const ResearchDashboard = () => {
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [showNotifs, setShowNotifs] = useState(false);
+    const [sidebarActive, setSidebarActive] = useState(false);
+    
+    // Auto-close sidebar on mobile when navigating
+    useEffect(() => {
+        setSidebarActive(false);
+    }, [location.pathname]);
+
     const [notifications, setNotifications] = useState([
         { id: 1, type: 'study', msg: 'New protocol STUDY-BF5492 initiated for Clinical Phase II.', time: '2m ago' },
         { id: 2, type: 'inventory', msg: 'Freezer FZ-01 capacity reached 88%. Optimization recommended.', time: '1h ago' },
@@ -74,9 +81,12 @@ const ResearchDashboard = () => {
     const allowedNavItems = navItems.filter(item => item.role === 'any' || item.role === user.role);
 
     return (
-        <div className="research-portal">
+        <div className={`research-portal ${sidebarActive ? 'sidebar-active' : ''}`}>
+            {/* Mobile Sidebar Overlay */}
+            {sidebarActive && <div className="res-sidebar-overlay" onClick={() => setSidebarActive(false)}></div>}
+
             {/* Sidebar */}
-            <aside className="res-sidebar">
+            <aside className={`res-sidebar ${sidebarActive ? 'active' : ''}`}>
                 <div className="res-logo">
                     <Microscope size={28} />
                     <h2>{user.role === 'admin' ? 'CENTRAL LAB' : 'RESEARCH HUB'}</h2>
@@ -113,6 +123,12 @@ const ResearchDashboard = () => {
             {/* Main Content */}
             <main className="res-content">
                 <header className="res-header">
+                    <button 
+                        className={`res-sidebar-toggle ${sidebarActive ? 'active' : ''}`}
+                        onClick={() => setSidebarActive(!sidebarActive)}
+                    >
+                        <span></span>
+                    </button>
                     <div className="res-header-title">
                         <h1>{location.pathname.includes('dashboard') ? 'System Overview' : location.pathname.split('/').pop().replace(/-/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</h1>
                         <div className="breadcrumb">Research & Diagnostics » {user.institution}</div>

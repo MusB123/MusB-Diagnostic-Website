@@ -1,4 +1,7 @@
 /* src/styles/Navbar.css */
+.nav-toggle {
+  display: none; /* Hidden on desktop */
+}
 .navbar {
   position: fixed;
   top: 0;
@@ -150,20 +153,124 @@
 
 @media screen and (max-width: 1024px) {
   .navbar {
-    padding: 0.75rem 2rem;
+    padding: 0.75rem 1.5rem;
   }
   .nav-menu {
-    gap: 1rem;
-    margin: 0 auto;
+    gap: 0.8rem;
+  }
+  .nav-link {
+    font-size: 0.85rem;
   }
 }
 
-@media screen and (max-width: 768px) {
-  .nav-menu {
-    display: none;
+/* Mobile Navigation */
+@media screen and (max-width: 992px) {
+  .nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1002;
+    order: 2; /* Move to the right */
   }
+
+  .hamburger {
+    width: 24px;
+    height: 2px;
+    background-color: var(--primary);
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger::before,
+  .hamburger::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background-color: var(--primary);
+    transition: all 0.3s ease;
+  }
+
+  .hamburger::before { transform: translateY(-7px); }
+  .hamburger::after { transform: translateY(7px); }
+
+  .nav-toggle.active .hamburger {
+    background-color: transparent;
+  }
+
+  .nav-toggle.active .hamburger::before {
+    transform: rotate(45deg);
+  }
+
+  .nav-toggle.active .hamburger::after {
+    transform: rotate(-45deg);
+  }
+
+  .nav-menu {
+    position: fixed;
+    top: 76px; /* navbar height */
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - 76px);
+    background: white;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2rem;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    z-index: 1001;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    gap: 0.5rem;
+  }
+
+  .nav-menu.active {
+    left: 0;
+  }
+
+  .nav-item {
+    width: 100%;
+  }
+
+  .nav-link {
+    font-size: 1.1rem;
+    padding: 1rem 0;
+    width: 100%;
+    border-bottom: 1px solid var(--border-color);
+  }
+
   .nav-actions {
-    margin-left: auto;
+    display: none; /* Hide desktop actions or refactor them into the menu */
+  }
+
+  /* Handle Dropdowns in Mobile */
+  .nav-item.dropdown:hover .dropdown-menu {
+    display: none; /* Disable hover dropdowns on mobile */
+  }
+
+  .dropdown-menu {
+    position: static;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    box-shadow: none;
+    border: none;
+    padding-left: 1.5rem;
+    display: none; /* Hide by default on mobile, maybe implement accordion later if needed */
+  }
+
+  .nav-item.dropdown .dropdown-menu {
+     display: block; /* Show them as nested lists for now */
+     background: transparent;
+  }
+
+  .nav-item.dropdown .nav-link {
+    border-bottom: none;
   }
 }
 

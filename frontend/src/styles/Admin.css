@@ -112,6 +112,107 @@
   margin: 0 auto;
 }
 
+/* Sidebar Toggle Button (Hidden on Desktop) */
+.admin-sidebar-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  z-index: 110;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background-color: var(--admin-text-primary);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.admin-sidebar-toggle span::before,
+.admin-sidebar-toggle span::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background-color: var(--admin-text-primary);
+  transition: all 0.3s ease;
+}
+
+.admin-sidebar-toggle span::before { transform: translateY(-7px); }
+.admin-sidebar-toggle span::after { transform: translateY(7px); }
+
+.admin-sidebar-toggle.active span { background-color: transparent; }
+.admin-sidebar-toggle.active span::before { transform: rotate(45deg); }
+.admin-sidebar-toggle.active span::after { transform: rotate(-45deg); }
+
+/* Mobile Overlay */
+.admin-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+}
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    left: -100%;
+    transition: left 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+
+  .admin-sidebar.active {
+    left: 0;
+  }
+
+  .admin-main {
+    margin-left: 0;
+  }
+
+  .admin-sidebar-toggle {
+    display: flex;
+  }
+
+  .admin-header {
+    padding: 0 1.25rem;
+  }
+
+  .admin-search {
+    display: none; /* Hide wide search on mobile for header space */
+  }
+
+  .admin-content {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .admin-page-title {
+    font-size: 1.75rem !important;
+  }
+
+  .dashboard-grid-lower {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Dashboard Grid */
 .admin-stats-grid {
   display: grid;

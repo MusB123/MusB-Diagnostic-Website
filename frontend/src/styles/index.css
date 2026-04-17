@@ -19,6 +19,12 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.4);
+
+  /* Breakpoints */
+  --screen-sm: 640px;
+  --screen-md: 768px;
+  --screen-lg: 1024px;
+  --screen-xl: 1280px;
 }
 
 * {
@@ -353,3 +359,47 @@ textarea:focus {
 .justify-between { justify-content: space-between; }
 .gap-2 { gap: 0.5rem; }
 .gap-4 { gap: 1rem; }
+
+/* Responsive Grid & Flex Utilities */
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* Responsive Display */
+.hidden { display: none; }
+.block { display: block; }
+
+@media (max-width: 768px) {
+  .section {
+    padding: 3rem 1.25rem;
+  }
+  
+  .section-title {
+    font-size: 1.85rem;
+    margin-bottom: 2rem;
+  }
+  
+  .section-title + .section-subtitle {
+    margin-top: -1.5rem;
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+
+  .md-hidden { display: none !important; }
+  .md-block { display: block !important; }
+  .md-flex { display: flex !important; }
+}
+
+@media (max-width: 640px) {
+  .sm-hidden { display: none !important; }
+  .sm-block { display: block !important; }
+  .sm-flex { display: flex !important; }
+  
+  .btn-lg {
+    padding: 0.875rem 2rem;
+    font-size: 1.1rem;
+    width: 100%;
+  }
+}

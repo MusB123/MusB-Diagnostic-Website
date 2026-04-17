@@ -37,6 +37,11 @@ def seed_production_if_empty():
         logger.warning("[SEEDER] Database unreachable. Skipping auto-seed.")
         return
 
+    MOCK_HUBS = [
+        {'id': 'HUB-EAST-001', 'name': 'Atlantic Phlebotomy Fleet', 'email': 'east@musb.fleet', 'address': '450 Park Avenue, NY', 'status': 'active', 'created_at': '2026-01-15T09:00:00'},
+        {'id': 'HUB-WEST-002', 'name': 'Pacific Mobile Diagnostics', 'email': 'west@musb.fleet', 'address': '85 Broad St, NY', 'status': 'active', 'created_at': '2026-02-10T11:00:00'},
+    ]
+
     try:
         # Check if tests are missing
         if db['lab_tests'].count_documents({}) == 0:
@@ -47,6 +52,7 @@ def seed_production_if_empty():
                 'offers': MOCK_OFFERS,
                 'test_categories': MOCK_CATEGORIES,
                 'lab_tests': MOCK_TESTS,
+                'phlebotomy_hubs': MOCK_HUBS,
                 'hero_content': [
                     {'id': 1, 'badge_text': 'Next-Gen Diagnostics', 'title': 'Affordable Lab Testing + Mobile Collections + Research-Grade Quality', 'subtitle': 'Self-pay, employer plans, physicians, facilities, research & biomarker validation.'}
                 ],

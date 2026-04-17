@@ -5,12 +5,18 @@ import { useCart } from '../../context/CartContext';
 import './Navbar.css';
 
 const Navbar = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const location = useLocation();
   useCart();
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
   const isParentActive = (paths) => paths.some(path => location.pathname === path) ? 'active' : '';
   
+  // Close menu when route changes
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
   // Hide global navbar on portal (dashboard) routes
   if (location.pathname.startsWith('/portal')) {
     return null;
@@ -19,10 +25,20 @@ const Navbar = () => {
   return (
     <nav className="navbar glass">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
+        <Link to="/" className="navbar-logo" onClick={() => setIsMobileMenuOpen(false)}>
           <img src="/images/MusB_Diagnostic_Logo.webp" alt="MusB Diagnostics Logo" className="logo-img" />
         </Link>
-        <ul className="nav-menu">
+
+        {/* Hamburger Menu Toggle */}
+        <button 
+          className={`nav-toggle ${isMobileMenuOpen ? 'active' : ''}`} 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle navigation"
+        >
+          <span className="hamburger"></span>
+        </button>
+
+        <ul className={`nav-menu ${isMobileMenuOpen ? 'active' : ''}`}>
           <li className="nav-item">
             <Link to="/" className={`nav-link ${isActive('/')}`}><Stethoscope className="nav-icon"/> Home</Link>
           </li>

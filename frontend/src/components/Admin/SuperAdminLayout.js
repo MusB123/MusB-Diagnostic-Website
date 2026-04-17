@@ -6,6 +6,7 @@ import '../../styles/Admin.css';
 const SuperAdminLayout = () => {
     const { adminUser, logout } = useAdminAuth();
     const navigate = useNavigate();
+    const [sidebarActive, setSidebarActive] = React.useState(false);
 
     const handleLogout = () => {
         logout();
@@ -40,8 +41,11 @@ const SuperAdminLayout = () => {
     ];
 
     return (
-        <div className="admin-layout">
-            <aside className="admin-sidebar">
+        <div className={`admin-layout ${sidebarActive ? 'sidebar-active' : ''}`}>
+             {/* Mobile Sidebar Overlay */}
+            {sidebarActive && <div className="admin-sidebar-overlay" onClick={() => setSidebarActive(false)}></div>}
+            
+            <aside className={`admin-sidebar ${sidebarActive ? 'active' : ''}`}>
                 <div className="admin-logo">
                     MusB ADMIN
                 </div>
@@ -71,6 +75,12 @@ const SuperAdminLayout = () => {
 
             <main className="admin-main">
                 <header className="admin-header">
+                    <button 
+                        className={`admin-sidebar-toggle ${sidebarActive ? 'active' : ''}`}
+                        onClick={() => setSidebarActive(!sidebarActive)}
+                    >
+                        <span></span>
+                    </button>
                     <div className="admin-search">
                         <input 
                             type="text" 
@@ -92,7 +102,7 @@ const SuperAdminLayout = () => {
                                 <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{adminUser?.name || 'Admin'}</div>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>Super Admin</div>
                             </div>
-                            <div style={{ width: '36px', height: '36px', background: 'var(--admin-accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.2rem' }}>
+                            <div style={{ width: '36px', height: '36px', background: 'var(--admin-accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                                 👤
                             </div>
                         </div>

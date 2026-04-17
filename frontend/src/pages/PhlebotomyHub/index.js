@@ -16,6 +16,13 @@ const PhlebotomyHub = () => {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [sidebarActive, setSidebarActive] = useState(false);
+
+  // Auto-close sidebar on mobile when tab changes
+  useEffect(() => {
+    setSidebarActive(false);
+  }, [activeTab]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('hub_user');
@@ -48,20 +55,29 @@ const PhlebotomyHub = () => {
     { id: 'payments', label: 'Payments & Reports', icon: <CreditCard size={20} /> },
   ];
 
+  const notifications = [
+    { id: 1, title: 'New Order Allocated', time: '2 min ago', type: 'order' },
+    { id: 2, title: 'Phleb Online: Sarah J.', time: '10 min ago', type: 'status' },
+    { id: 3, title: 'Route Optimization Complete', time: '15 min ago', type: 'system' },
+  ];
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard />;
+      case 'dashboard': return <Dashboard onNavigate={(tab) => setActiveTab(tab)} />;
       case 'fleet': return <FleetManager />;
       case 'allocation': return <OrderAllocation />;
       case 'payments': return <PaymentsReports />;
-      default: return <Dashboard />;
+      default: return <Dashboard onNavigate={(tab) => setActiveTab(tab)} />;
     }
   };
 
   return (
-    <div className="hub-portal-wrapper" style={{ display: 'flex', minHeight: '100vh', background: '#0f0f1a', color: '#fff' }}>
+    <div className={`hub-portal-wrapper ${sidebarActive ? 'sidebar-active' : ''}`}>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarActive && <div className="hub-sidebar-overlay" onClick={() => setSidebarActive(false)}></div>}
+
       {/* ── Vertical Sidebar (Fixed Skeleton) ── */}
-      <aside className="hub-sidebar-sidebar" style={{ width: '280px', background: '#161625', borderRight: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', padding: '2rem 1rem', height: '100vh', position: 'sticky', top: 0 }}>
+      <aside className={`hub-sidebar-sidebar ${sidebarActive ? 'active' : ''}`}>
         <div className="hub-sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem', paddingLeft: '0.5rem' }}>
           <div style={{ background: '#6366f1', padding: '0.6rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Building2 color="white" size={24} />
@@ -113,22 +129,62 @@ const PhlebotomyHub = () => {
         </div>
       </aside>
 
-      {/* ── Main Content Area (Fixed Skeleton) ── */}
-      <main className="hub-main-body" style={{ flexGrow: 1, padding: '3rem', background: '#0f0f1a' }}>
-        <header className="flex-between" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-              {navItems.find(i => i.id === activeTab).label}
-            </h1>
-            <p style={{ color: '#6366f1', fontWeight: 800, margin: '5px 0 0 0', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>
-              Command Center / {user.name}
-            </p>
+       {/* ── Main Content Area (Fixed Skeleton) ── */}
+      <main className="hub-main-body">
+        <header className="hub-header">
+          <button 
+              className={`hub-sidebar-toggle ${sidebarActive ? 'active' : ''}`}
+              onClick={() => setSidebarActive(!sidebarActive)}
+          >
+              <span></span>
+          </button>
+          <div className="hub-header-left">
+            <div>
+              <h1 style={{ fontSize: '2.2rem', fontWeight: 900, color: '#fff', margin: 0 }}>
+                {navItems.find(i => i.id === activeTab).label}
+              </h1>
+              <p style={{ color: '#6366f1', fontWeight: 800, margin: '5px 0 0 0', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>
+                Command Center / {user.name}
+              </p>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-            <div style={{ position: 'relative', color: '#fff', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', padding: '0.6rem', borderRadius: '12px' }}>
+            <div 
+              style={{ position: 'relative', color: '#fff', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', padding: '0.6rem', borderRadius: '12px' }}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
               <Bell size={20} />
               <div style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#f43f5e', borderRadius: '50%' }}></div>
+              
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    style={{ 
+                      position: 'absolute', top: '120%', right: 0, width: '320px', 
+                      background: '#161625', border: '1px solid rgba(255,255,255,0.1)', 
+                      borderRadius: '16px', padding: '1rem', zIndex: 100,
+                      boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem', marginBottom: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>Recent Notifications</span>
+                      <span style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800 }}>Clear All</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {notifications.map(n => (
+                        <div key={n.id} style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px' }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{n.title}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: '4px' }}>{n.time}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 800, background: 'rgba(16, 185, 129, 0.1)', padding: '0.6rem 1.2rem', borderRadius: '100px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
               <ShieldCheck size={18} /> SECURE
@@ -147,6 +203,7 @@ const PhlebotomyHub = () => {
             {renderContent()}
           </motion.div>
         </AnimatePresence>
+
 
         <footer style={{ marginTop: '5rem', padding: '2rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
           <div>&copy; 2026 MusB Diagnostic Systems • Secure Fleet Infrastructure</div>

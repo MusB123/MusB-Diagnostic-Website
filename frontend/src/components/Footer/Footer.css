@@ -259,19 +259,65 @@
   }
 }
 
+@media (max-width: 768px) {
+  .footer-container {
+    padding: 0 1.5rem;
+  }
+
+  .footer-grid {
+    gap: 2.5rem;
+  }
+
+  .brand-description {
+    max-width: 100%;
+  }
+
+  .compliance-badges {
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 640px) {
+  .main-footer {
+    padding: 3rem 0 1.5rem;
+  }
+
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 2.5rem;
+    text-align: center;
+  }
+
+  .footer-brand, .footer-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-links ul li a:hover {
+    transform: none; /* Disable horizontal slide on mobile center align */
+  }
+
+  .social-links {
+    justify-content: center;
   }
   
   .bottom-content {
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
     text-align: center;
   }
 
   .status-grid {
     grid-template-columns: 1fr;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .admin-link {
+    justify-content: center;
+    width: 100%;
   }
 }

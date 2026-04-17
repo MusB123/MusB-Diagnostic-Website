@@ -268,9 +268,109 @@
 }
 
 /* Responsive Overrides */
+/* Sidebar Toggle Button (Hidden on Desktop) */
+.diag-sidebar-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    z-index: 110;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.diag-sidebar-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: var(--diag-stellar-text-main);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.diag-sidebar-toggle span::before,
+.diag-sidebar-toggle span::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background-color: var(--diag-stellar-text-main);
+    transition: all 0.3s ease;
+}
+
+.diag-sidebar-toggle span::before { transform: translateY(-7px); }
+.diag-sidebar-toggle span::after { transform: translateY(7px); }
+
+.diag-sidebar-toggle.active span { background-color: transparent; }
+.diag-sidebar-toggle.active span::before { transform: rotate(45deg); }
+.diag-sidebar-toggle.active span::after { transform: rotate(-45deg); }
+
+/* Mobile Overlay */
+.diag-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 95;
+}
+
+/* Responsive Overrides */
 @media (max-width: 1024px) {
-    .diag-sidebar { width: 80px; padding: 2rem 0.5rem; }
-    .diag-logo h2, .diag-nav-item span { display: none; }
-    .diag-main-content { margin-left: 80px; padding: 2rem; }
-    .diag-stats-row { grid-template-columns: 1fr; }
+    .diag-sidebar {
+        left: -100%;
+        width: 280px;
+        transition: left 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .diag-sidebar.active {
+        left: 0;
+    }
+
+    .diag-sidebar.active .diag-logo h2, 
+    .diag-sidebar.active .diag-nav-item span { 
+        display: block; 
+    }
+
+    .diag-main-content {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+
+    .diag-sidebar-toggle {
+        display: flex;
+    }
+
+    .diag-header-left h1 {
+        font-size: 1.5rem;
+    }
+
+    .diag-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .diag-header-actions {
+        gap: 0.75rem;
+    }
+
+    .diag-user-profile .info {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .diag-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .diag-header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
