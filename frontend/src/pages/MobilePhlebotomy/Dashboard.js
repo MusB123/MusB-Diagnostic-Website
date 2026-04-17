@@ -702,12 +702,12 @@ function PhlebotomistDashboard() {
 
           <main className="sp-main">
             <div className="sp-main-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className="sp-header-title-group">
                 <button className="sp-menu-toggle" onClick={() => setSidebarOpen(true)}>
                   <Menu size={24} />
                 </button>
-                <div>
-                  <h1>Welcome, {user.name || 'Specialist'}</h1>
+                <div className="sp-header-text">
+                  <h1>{TABS.find(t => t.id === activeTab)?.label || 'Dashboard'}</h1>
                   <p className="sp-main-header-sub">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                 </div>
               </div>

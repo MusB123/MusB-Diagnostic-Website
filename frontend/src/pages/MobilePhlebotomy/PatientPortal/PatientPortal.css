@@ -971,14 +971,27 @@
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .pp-dash-header-subtitle {
   color: #64748b;
   font-size: 0.9rem;
   font-weight: 600;
-  margin-top: 0.25rem;
+  margin-top: 0.1rem;
 }
+
+.pp-dash-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pp-dash-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
 
 /* Dashboard Cards */
 .pp-dash-card {

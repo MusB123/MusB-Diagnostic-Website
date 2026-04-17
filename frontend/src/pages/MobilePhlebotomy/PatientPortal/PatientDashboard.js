@@ -393,11 +393,11 @@ const PatientDashboard = () => {
           {/* Main Content */}
           <main className="pp-dash-main">
             <div className="pp-dash-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className="pp-dash-header-title-group">
                 <button className="pp-dash-menu-toggle" onClick={() => setSidebarOpen(true)}>
                   <Menu size={24} />
                 </button>
-                <div>
+                <div className="pp-dash-header-text">
                   <h1>{TAB_TITLES[activeTab]}</h1>
                   <p className="pp-dash-header-subtitle">Welcome back, {user.name}</p>
                 </div>

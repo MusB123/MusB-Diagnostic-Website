@@ -429,8 +429,20 @@
   margin-bottom: 2.5rem;
 }
 
-.sp-main-header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
-.sp-main-header-sub { color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-top: 0.25rem; opacity: 0.8; }
+.sp-main-header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; margin: 0; }
+.sp-main-header-sub { color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-top: 0.1rem; opacity: 0.8; }
+
+.sp-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sp-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
 
 /* KPI Cards */
 .sp-kpi-grid {
