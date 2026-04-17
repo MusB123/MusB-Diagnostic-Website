@@ -393,7 +393,7 @@ const PatientDashboard = () => {
                 </div>
               </div>
             </div>
-            </div>
+
 
             {getContent()}
           </main>
