@@ -133,29 +133,29 @@ const PhlebotomyHub = () => {
       <main className="hub-main-body">
         <header className="hub-header">
           <button 
-              className={`hub-sidebar-toggle ${sidebarActive ? 'active' : ''}`}
+              className={`hub-toggle-v2 ${sidebarActive ? 'active' : ''}`}
               onClick={() => setSidebarActive(!sidebarActive)}
           >
-              <span></span>
+              <div className="toggle-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
           </button>
+          
           <div className="hub-header-left">
-            <div>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-                {navItems.find(i => i.id === activeTab).label}
-              </h1>
-              <p style={{ color: '#6366f1', fontWeight: 800, margin: '5px 0 0 0', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>
-                Command Center / {user.name}
-              </p>
-            </div>
+            <h1 className="hub-header-title">
+              {navItems.find(i => i.id === activeTab).label}
+            </h1>
+            <p className="hub-header-breadcrumb">
+              Mission Control / {user.name}
+            </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-            <div 
-              style={{ position: 'relative', color: '#fff', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', padding: '0.6rem', borderRadius: '12px' }}
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
-              <Bell size={20} />
-              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#f43f5e', borderRadius: '50%' }}></div>
+          <div className="hub-header-actions">
+            <div className="hub-notification-wrapper" onClick={() => setShowNotifications(!showNotifications)}>
+              <Bell size={20} className="hub-bell-icon" />
+              <div className="hub-notification-dot"></div>
               
               <AnimatePresence>
                 {showNotifications && (
