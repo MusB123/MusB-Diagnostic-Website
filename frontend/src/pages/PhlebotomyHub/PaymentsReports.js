@@ -54,7 +54,7 @@ const PaymentsReports = () => {
         </div>
       </div>
 
-      <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div className="grid-4">
         <div className="stat-card-custom" style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '24px', padding: '1.5rem' }}>
           <div style={{ color: '#10b981', fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Available Commission</div>
           <div className="stat-value-large" style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', margin: '15px 0' }}>
@@ -76,7 +76,7 @@ const PaymentsReports = () => {
         </div>
       </div>
 
-      <div className="hub-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+      <div className="hub-main-grid">
         <div className="hub-glass-panel">
           <h3 className="hub-heading" style={{ fontSize: '1.2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <BarChart3 size={20} color="#6366f1" /> REVENUE FLOW (7 DAYS)

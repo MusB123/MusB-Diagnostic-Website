@@ -108,11 +108,38 @@
   border-right: 1px solid var(--hub-border);
   display: flex !important;
   flex-direction: column !important;
-  padding: 2.5rem 1.2rem;
+  padding: 1.5rem 1.2rem;
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: left 0.3s var(--hub-ease);
+  transition: all 0.4s var(--hub-ease);
+}
+
+.hub-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  padding: 0.5rem;
+}
+
+.hub-logo-box {
+  background: #6366f1;
+  padding: 0.75rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+}
+
+.hub-brand-name {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .hub-main-body {
@@ -288,16 +315,23 @@
 }
 
 /* ── Navigation List ── */
+.hub-nav-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px;
+  flex-grow: 1;
+}
+
 .hub-nav-item {
   display: flex !important;
   align-items: center !important;
-  gap: 14px;
-  padding: 0.9rem 1.2rem;
-  border-radius: var(--hub-radius-sm);
-  color: var(--hub-text-muted);
+  gap: 12px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  color: #94a3b8;
   text-decoration: none;
   font-weight: 700;
-  transition: all 0.2s var(--hub-ease);
+  transition: all 0.3s var(--hub-ease);
   cursor: pointer;
   border: 1px solid transparent;
 }
@@ -308,9 +342,26 @@
 }
 
 .hub-nav-item.active {
-  background: var(--hub-primary) !important;
+  background: #6366f1 !important;
   color: #fff !important;
-  box-shadow: 0 4px 15px var(--hub-primary-glow);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+  transform: translateX(4px);
+}
+
+.hub-sidebar-footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hub-border);
+}
+
+.hub-logout-btn {
+  color: #f43f5e !important;
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.hub-logout-btn:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fff !important;
 }
 
 /* ── Data Grid & Tables ── */
@@ -359,19 +410,36 @@
   gap: 2rem;
 }
 
-@media (max-width: 1400px) { .grid-symmetric { grid-template-columns: repeat(2, 1fr); } }
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.hub-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1400px) { 
+  .grid-symmetric { grid-template-columns: repeat(2, 1fr); } 
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
 
 @media (max-width: 1024px) { 
   .hub-sidebar-sidebar {
-    position: fixed;
-    left: -100%;
-    z-index: 1200;
+    position: fixed !important;
+    left: -100% !important;
+    z-index: 1200 !important;
     height: 100vh;
-    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+    box-shadow: 20px 0 60px rgba(0,0,0,0.6) !important;
+    width: 300px !important;
+    background: #0f0f1a !important; /* Darker on mobile for depth */
   }
 
   .hub-sidebar-sidebar.active {
-    left: 0;
+    left: 0 !important;
   }
 
   .hub-main-body {
@@ -386,7 +454,22 @@
   .hub-header {
     margin-bottom: 2.5rem;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
+  }
+
+  .hub-header-responsive {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1.5rem !important;
+  }
+
+  .hub-header-responsive > div {
+    width: 100%;
+  }
+
+  .hub-header-responsive .hub-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .hub-header-title {
@@ -408,23 +491,23 @@
 
 @media (max-width: 768px) { 
   .grid-symmetric { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr !important; }
+  .hub-main-grid { grid-template-columns: 1fr !important; }
   
   .hub-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 1.5rem;
+    padding-top: 1rem;
   }
 
   .hub-header-left {
     width: 100%;
   }
 
-  .grid-4 {
-    grid-template-columns: 1fr !important;
-  }
-
-  .hub-main-grid {
-    grid-template-columns: 1fr !important;
+  .hub-header-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .order-item {
@@ -440,5 +523,14 @@
 
   .hub-heading {
     font-size: 1.25rem !important;
+  }
+
+  .stat-value-large {
+    font-size: 2.2rem !important;
+  }
+
+  .hub-main-body {
+    padding: 1.25rem;
+    padding-top: 5rem;
   }
 }

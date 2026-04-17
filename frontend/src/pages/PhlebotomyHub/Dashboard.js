@@ -57,7 +57,7 @@ const Dashboard = ({ onNavigate }) => {
 
   return (
     <div className="hub-dashboard">
-      <div className="grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div className="grid-4">
         <motion.div className="stat-card-custom" whileHover={{ y: -5 }} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '1.5rem' }}>
           <div className="flex-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <ClipboardList color="#6366f1" size={24} />
@@ -95,7 +95,7 @@ const Dashboard = ({ onNavigate }) => {
         </motion.div>
       </div>
 
-      <div className="hub-main-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div className="hub-main-grid">
         <div className="hub-glass-panel" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '2rem' }}>
           <div className="flex-between" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 className="hub-heading" style={{ color: '#fff', fontSize: '1.3rem', fontWeight: 900, margin: 0 }}>Active Pipeline</h3>

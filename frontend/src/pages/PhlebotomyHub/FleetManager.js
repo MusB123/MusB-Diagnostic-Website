@@ -94,7 +94,7 @@ const FleetManager = () => {
         )}
       </AnimatePresence>
 
-      <div className="flex-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+      <div className="flex-between hub-header-responsive">
         <div>
           <h2 className="hub-heading" style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: 0 }}>Active Specialists</h2>
           <p className="hub-subheading" style={{ color: '#94a3b8', fontWeight: 700, marginTop: '8px' }}>Overseeing {fleet.length} Field Operatives</p>
@@ -119,7 +119,8 @@ const FleetManager = () => {
       </div>
 
       <div className="hub-glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               <th style={{ padding: '1.5rem', fontSize: '0.8rem', color: '#475569', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Specialist</th>
@@ -171,7 +172,8 @@ const FleetManager = () => {
         </table>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default FleetManager;

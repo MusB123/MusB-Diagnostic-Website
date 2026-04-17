@@ -66,7 +66,7 @@ const OrderAllocation = () => {
         </button>
       </div>
 
-      <div className="hub-main-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div className="hub-main-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px' }}>Incoming Queue</h3>
           {orders.filter(o => o.status === 'Pending').map((order, idx) => (

@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, AlertTriangle, Wallet,
   Navigation, BarChart as BarChart3, Shield, ChevronRight, Upload,
   ArrowLeft, ArrowRight, Phone, Package, ClipboardList,
-  Camera, Globe, X, ShieldCheck, UserPlus
+  Camera, Globe, X, ShieldCheck, UserPlus, Menu
 } from 'lucide-react';
 import './SpecialistPortal/SpecialistPortal.css';
 
@@ -605,6 +605,7 @@ function PhlebotomistDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showJobRequest, setShowJobRequest] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(120);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [jobAccepted, setJobAccepted] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('phleb_user') || '{}');
@@ -669,8 +670,11 @@ function PhlebotomistDashboard() {
         <div className="sp-mesh-blob b2" />
       </div>
       <div className="sp-content">
-        <div className="sp-dashboard">
-          <aside className="sp-sidebar">
+        <div className={`sp-dashboard ${sidebarOpen ? 'sidebar-active' : ''}`}>
+          {/* Mobile Overlay */}
+          {sidebarOpen && <div className="sp-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+          <aside className={`sp-sidebar ${sidebarOpen ? 'active' : ''}`}>
             <div className="sp-sidebar-logo">
               <div className="sp-sidebar-logo-icon"><Droplets size={20} /></div>
               <h3>SPECIALIST HQ</h3>
@@ -680,7 +684,10 @@ function PhlebotomistDashboard() {
                 <button
                   key={t.id}
                   className={`sp-nav-item ${activeTab === t.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(t.id)}
+                  onClick={() => {
+                    setActiveTab(t.id);
+                    setSidebarOpen(false);
+                  }}
                 >
                   {t.icon} {t.label}
                 </button>
@@ -695,9 +702,14 @@ function PhlebotomistDashboard() {
 
           <main className="sp-main">
             <div className="sp-main-header">
-              <div>
-                <h1>Welcome, {user.name || 'Specialist'}</h1>
-                <p className="sp-main-header-sub">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button className="sp-menu-toggle" onClick={() => setSidebarOpen(true)}>
+                  <Menu size={24} />
+                </button>
+                <div>
+                  <h1>Welcome, {user.name || 'Specialist'}</h1>
+                  <p className="sp-main-header-sub">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                </div>
               </div>
               <button className="sp-btn-secondary" onClick={() => setShowJobRequest(true)}>
                 <Bell size={16} /> Simulate Job
