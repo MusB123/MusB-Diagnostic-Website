@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -41,12 +41,22 @@ const PatientDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const user = JSON.parse(localStorage.getItem('patient_user') || '{"name":"John Doe","email":"john@example.com"}');
+
+  useEffect(() => {
+    const token = localStorage.getItem('patient_token');
+    if (!token) {
+      navigate('/portal/patient/login', { replace: true });
+    }
+  }, [navigate]);
+
+  const user = JSON.parse(localStorage.getItem('patient_user') || 'null');
+
+  if (!user) return null; // Prevent flicker before redirect
 
   const handleLogout = () => {
     localStorage.removeItem('patient_token');
     localStorage.removeItem('patient_user');
-    navigate('/portal/patient/login');
+    navigate('/portal/patient/login', { replace: true });
   };
 
   const NAV_ITEMS = [
