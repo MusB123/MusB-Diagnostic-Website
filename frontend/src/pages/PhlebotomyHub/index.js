@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Building2, LayoutDashboard, Users, 
-  ClipboardCheck, CreditCard, LogOut, Bell,
-  ShieldCheck, HelpCircle, Settings,
+  LayoutDashboard, 
+  ClipboardCheck, LogOut, Bell,
+  ShieldCheck,
   Send, Wallet, Star, User, UserPlus
 } from 'lucide-react';
 import Login from './Login.js';

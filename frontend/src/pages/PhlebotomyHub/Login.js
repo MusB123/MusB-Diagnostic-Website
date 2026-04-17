@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Mail, Lock, ShieldCheck, ArrowRight, Loader2, X } from 'lucide-react';
 import api from '../../api/api';

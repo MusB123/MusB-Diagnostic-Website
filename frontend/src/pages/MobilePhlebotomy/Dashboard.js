@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Droplets, Star, DollarSign, Calendar, Bell,
-  MapPin, Clock, FileText, User, Settings, LogOut,
+  MapPin, Clock, FileText, User, LogOut,
   CheckCircle, XCircle, AlertTriangle, Wallet,
   Navigation, BarChart as BarChart3, Shield, ChevronRight, Upload,
   ArrowLeft, ArrowRight, Phone, Package, ClipboardList,
@@ -608,7 +608,7 @@ function PhlebotomistDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [jobAccepted, setJobAccepted] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('phleb_user') || '{}');
+
 
   useEffect(() => {
     const token = localStorage.getItem('phleb_token');

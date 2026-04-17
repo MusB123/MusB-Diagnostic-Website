@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Droplets, CalendarDays, Clock, FileText, CreditCard,
-  Settings, LogOut, Star, ChevronRight, Plus, MapPin, User, Menu, X
+  Settings, LogOut, Star, ChevronRight, Plus, MapPin, User, Menu
 } from 'lucide-react';
 import './PatientPortal.css';
 
