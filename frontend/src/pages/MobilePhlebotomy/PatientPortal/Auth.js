@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Droplets, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Droplets, ArrowRight, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import './PatientPortal.css';
 
 const PatientAuth = () => {
@@ -448,8 +448,17 @@ const PatientAuth = () => {
         <div className="pp-mesh-blob blob-2" />
       </div>
       <div className="pp-content">
-        <div className="pp-auth-page">
+        <div className="pp-auth-page" onClick={(e) => {
+          if (e.target.className === 'pp-auth-page') navigate(-1);
+        }}>
           <div className="pp-auth-card">
+            <button
+              className="pp-auth-close"
+              onClick={() => navigate(-1)}
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
             <AnimatePresence mode="wait">
               {renderContent()}
             </AnimatePresence>
