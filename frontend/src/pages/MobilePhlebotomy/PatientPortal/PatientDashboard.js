@@ -392,13 +392,7 @@ const PatientDashboard = () => {
                   <p className="pp-dash-header-subtitle">Welcome back, {user.name}</p>
                 </div>
               </div>
-              <button
-                className="pp-btn-primary"
-                onClick={() => navigate('/portal/patient/book')}
-                style={{ padding: '0.75rem 1.5rem' }}
-              >
-                <Plus size={18} /> Book Appointment
-              </button>
+            </div>
             </div>
 
             {getContent()}
