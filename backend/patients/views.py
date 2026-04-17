@@ -37,17 +37,23 @@ def request_otp(request):
     
     # Store in MongoDB
     coll = get_otps_collection()
-    coll.update_one(
-        {'identifier': identifier},
-        {'$set': {
-            'identifier': identifier,
-            'type': id_type,
-            'code': otp_code,
-            'expiry': expiry,
-            'created_at': datetime.datetime.utcnow()
-        }},
-        upsert=True
-    )
+    otp_payload = {
+        'identifier': identifier,
+        'type': id_type,
+        'code': otp_code,
+        'expiry': expiry,
+        'created_at': datetime.datetime.utcnow()
+    }
+    try:
+        # Real MongoDB path
+        coll.update_one({'identifier': identifier}, {'$set': otp_payload}, upsert=True)
+    except TypeError:
+        # Mock DB path (no upsert kwarg support)
+        existing = coll.find_one({'identifier': identifier})
+        if existing:
+            coll.update_one({'identifier': identifier}, {'$set': otp_payload})
+        else:
+            coll.insert_one(otp_payload)
     
     # Send via Email (if email provided)
     if email:
@@ -136,7 +142,13 @@ def verify_otp(request):
         otp_record = coll.find_one({'identifier': identifier})
         
         if otp_record and otp_record['code'] == token:
-            if otp_record['expiry'] > datetime.datetime.utcnow():
+            expiry = otp_record.get('expiry')
+            if isinstance(expiry, str):
+                try:
+                    expiry = datetime.datetime.fromisoformat(expiry.replace('Z', '+00:00')).replace(tzinfo=None)
+                except Exception:
+                    expiry = None
+            if expiry and expiry > datetime.datetime.utcnow():
                 is_valid = True
                 coll.delete_one({'identifier': identifier})
     

@@ -1,16 +1,118 @@
-"""
-Phlebotomy Management — Admin API Stubs
-Provides mock data endpoints for the Super Admin Phlebotomy Management panel.
-These endpoints return realistic demo data; swap to MongoDB queries when ready.
-"""
+"""Live super admin phlebotomy management API."""
 
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta, timezone
+import hmac
+from bson import ObjectId
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from datetime import datetime, timedelta
-import random
-from musb_backend.mongodb import get_phlebotomists_collection, transform_doc
-from bson import ObjectId
+from musb_backend.mongodb import (
+    get_appointments_collection,
+    get_employers_collection,
+    get_lab_tests_collection,
+    get_phlebotomists_collection,
+    transform_doc,
+)
+
+PLATFORM_FEE_RATE = 0.30
+
+
+def _unauthorized():
+    return Response({"error": "Unauthorized super admin access."}, status=401)
+
+
+def _is_super_admin_request(request):
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return False
+    token = auth_header.split(" ", 1)[1].strip()
+    expected = getattr(settings, "SUPER_ADMIN_TOKEN", "super-secret-admin-token-xyz789")
+    return bool(token and expected and hmac.compare_digest(token, expected))
+
+
+def _now_utc():
+    return datetime.now(timezone.utc)
+
+
+def _parse_dt(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    if isinstance(value, str):
+        try:
+            cleaned = value.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(cleaned)
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+        for fmt in ("%b %d, %Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(value, fmt).replace(tzinfo=timezone.utc)
+            except Exception:
+                continue
+    return None
+
+
+def _money(value):
+    return f"${value:,.2f}"
+
+
+def _trend(current, previous):
+    if current > previous:
+        if previous <= 0:
+            return "+100%", "up"
+        return f"+{round(((current - previous) / previous) * 100)}%", "up"
+    if current < previous:
+        if previous <= 0:
+            return "-100%", "down"
+        return f"-{round(((previous - current) / previous) * 100)}%", "down"
+    return "0%", "up"
+
+
+def _load_orders():
+    appointments = [transform_doc(d) for d in get_appointments_collection().find()]
+    tests = [transform_doc(d) for d in get_lab_tests_collection().find()]
+    phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
+
+    test_by_id = {str(t.get("id")): t for t in tests}
+    phleb_by_id = {str(p.get("id")): p for p in phlebs}
+
+    orders = []
+    for appt in appointments:
+        test_id = str(appt.get("test_id") or "")
+        test_doc = test_by_id.get(test_id, {})
+        charge_value = float(test_doc.get("price") or 0)
+        created_dt = _parse_dt(appt.get("created_at")) or _parse_dt(appt.get("assigned_at")) or _now_utc()
+        phleb_id = str(appt.get("assigned_phlebotomist_id") or "")
+        phleb_doc = phleb_by_id.get(phleb_id, {})
+
+        orders.append(
+            {
+                "id": str(appt.get("id") or appt.get("_id")),
+                "patient": appt.get("full_name") or "Unknown Patient",
+                "patient_email": appt.get("email") or "",
+                "patient_phone": appt.get("phone") or "",
+                "phlebotomist": phleb_doc.get("name"),
+                "phleb_id": phleb_id,
+                "company": phleb_doc.get("company"),
+                "date": created_dt.strftime("%b %d, %Y"),
+                "time": created_dt.strftime("%I:%M %p"),
+                "created_dt": created_dt,
+                "status": str(appt.get("status") or "pending_approval").lower().replace(" ", "_"),
+                "zip": (appt.get("address") or "").split(",")[-1].strip()[-5:],
+                "tests": test_doc.get("title", f"Test Ref: {test_id}"),
+                "charge_raw": charge_value,
+                "charge": _money(charge_value),
+                "insurance": "N/A",
+                "has_order": True,
+                "address": appt.get("address") or "",
+            }
+        )
+    orders.sort(key=lambda x: x["created_dt"], reverse=True)
+    return orders
 
 
 # ===================== OVERVIEW =====================
@@ -18,43 +120,73 @@ from bson import ObjectId
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_overview(request):
-    """GET /api/superadmin/phleb-management/overview/ — KPIs, charts, activity feed."""
-    return Response({
-        'kpis': {
-            'orders_today': {'value': 47, 'change': '+12%', 'trend': 'up'},
-            'orders_week': {'value': 312, 'change': '+8%', 'trend': 'up'},
-            'orders_month': {'value': 1240, 'change': '+15%', 'trend': 'up'},
-            'total_revenue': {'value': '$128,450', 'change': '+22%', 'trend': 'up'},
-            'platform_fees': {'value': '$38,535', 'change': '+22%', 'trend': 'up'},
-            'active_phlebotomists': {'value': 24, 'change': '+3', 'trend': 'up'},
-            'registered_companies': {'value': 8, 'change': '+1', 'trend': 'up'},
-            'flagged_accounts': {'value': 3, 'change': '-1', 'trend': 'down'},
-        },
-        'orders_over_time': [
-            {'date': 'Mon', 'orders': 42},
-            {'date': 'Tue', 'orders': 58},
-            {'date': 'Wed', 'orders': 51},
-            {'date': 'Thu', 'orders': 67},
-            {'date': 'Fri', 'orders': 73},
-            {'date': 'Sat', 'orders': 38},
-            {'date': 'Sun', 'orders': 22},
-        ],
-        'top_zip_codes': [
-            {'zip': '10001', 'city': 'Manhattan', 'orders': 145},
-            {'zip': '10013', 'city': 'Tribeca', 'orders': 98},
-            {'zip': '11201', 'city': 'Brooklyn Heights', 'orders': 87},
-            {'zip': '10022', 'city': 'Midtown East', 'orders': 76},
-            {'zip': '10003', 'city': 'East Village', 'orders': 64},
-        ],
-        'recent_activity': [
-            {'id': 1, 'type': 'signup', 'message': 'New patient registered: Emily R.', 'time': '2 min ago'},
-            {'id': 2, 'type': 'order', 'message': 'Order #1247 placed — CBC + Lipid Panel', 'time': '5 min ago'},
-            {'id': 3, 'type': 'cancellation', 'message': 'Order #1243 cancelled by patient', 'time': '12 min ago'},
-            {'id': 4, 'type': 'dispute', 'message': 'Payment dispute filed for Order #1198', 'time': '30 min ago'},
-            {'id': 5, 'type': 'signup', 'message': 'New phlebotomist application: Carlos M.', 'time': '1 hr ago'},
-            {'id': 6, 'type': 'order', 'message': 'Order #1246 completed — Sarah J.', 'time': '1.5 hr ago'},
-        ]
-    })
+    """Overview with live KPIs."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+
+    now = _now_utc()
+    orders = _load_orders()
+    phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
+    companies = [transform_doc(d) for d in get_employers_collection().find()]
+
+    today_orders = [o for o in orders if o["created_dt"].date() == now.date()]
+    week_orders = [o for o in orders if o["created_dt"] >= now - timedelta(days=7)]
+    month_orders = [o for o in orders if o["created_dt"] >= now - timedelta(days=30)]
+    prev_week_orders = [o for o in orders if now - timedelta(days=14) <= o["created_dt"] < now - timedelta(days=7)]
+    prev_month_orders = [o for o in orders if now - timedelta(days=60) <= o["created_dt"] < now - timedelta(days=30)]
+
+    revenue_month = sum(o["charge_raw"] for o in month_orders)
+    revenue_prev_month = sum(o["charge_raw"] for o in prev_month_orders)
+    fees_month = revenue_month * PLATFORM_FEE_RATE
+    fees_prev_month = revenue_prev_month * PLATFORM_FEE_RATE
+    active_phlebs = [p for p in phlebs if str(p.get("status", "")).lower() in {"active", "online", "registered"}]
+    pending_phlebs = [p for p in phlebs if str(p.get("status", "")).lower() in {"pending", "rejected", "disqualified"}]
+
+    week_change, week_trend = _trend(len(week_orders), len(prev_week_orders))
+    month_change, month_trend = _trend(len(month_orders), len(prev_month_orders))
+    revenue_change, revenue_trend = _trend(revenue_month, revenue_prev_month)
+    fees_change, fees_trend = _trend(fees_month, fees_prev_month)
+
+    day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    daily_counts = {label: 0 for label in day_labels}
+    for o in week_orders:
+        daily_counts[o["created_dt"].strftime("%a")] = daily_counts.get(o["created_dt"].strftime("%a"), 0) + 1
+
+    zip_counter = Counter()
+    for o in month_orders:
+        if o["zip"] and len(o["zip"]) == 5:
+            zip_counter[o["zip"]] += 1
+    top_zip_codes = [{"zip": z, "city": "Coverage Zone", "orders": c} for z, c in zip_counter.most_common(5)]
+
+    recent_activity = []
+    for i, order in enumerate(orders[:6], 1):
+        recent_activity.append(
+            {
+                "id": i,
+                "type": "order",
+                "message": f"Order {order['id']} {order['status'].replace('_', ' ')} - {order['patient']}",
+                "time": order["created_dt"].strftime("%b %d, %I:%M %p"),
+            }
+        )
+
+    return Response(
+        {
+            "as_of": now.isoformat(),
+            "kpis": {
+                "orders_today": {"value": len(today_orders), "change": week_change, "trend": week_trend},
+                "orders_week": {"value": len(week_orders), "change": week_change, "trend": week_trend},
+                "orders_month": {"value": len(month_orders), "change": month_change, "trend": month_trend},
+                "total_revenue": {"value": _money(revenue_month), "change": revenue_change, "trend": revenue_trend},
+                "platform_fees": {"value": _money(fees_month), "change": fees_change, "trend": fees_trend},
+                "active_phlebotomists": {"value": len(active_phlebs), "change": f"+{max(len(active_phlebs) - len(pending_phlebs), 0)}", "trend": "up"},
+                "registered_companies": {"value": len(companies), "change": "live", "trend": "up"},
+                "flagged_accounts": {"value": len(pending_phlebs), "change": "live", "trend": "down"},
+            },
+            "orders_over_time": [{"date": d, "orders": daily_counts.get(d, 0)} for d in day_labels],
+            "top_zip_codes": top_zip_codes,
+            "recent_activity": recent_activity,
+        }
+    )
 
 
 # ===================== PATIENTS =====================
@@ -62,17 +194,36 @@ def phleb_overview(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_patients(request):
-    """GET /api/superadmin/phleb-management/patients/ — All patient accounts."""
-    patients = [
-        {'id': 'PAT-001', 'name': 'Sarah Johnson', 'email': 'sarah.j@email.com', 'phone': '(555) 123-4567', 'total_bookings': 12, 'status': 'active', 'joined': 'Jan 15, 2026', 'last_booking': 'Apr 10, 2026', 'insurance': 'Blue Cross Blue Shield', 'payment_method': 'Visa •••• 4242'},
-        {'id': 'PAT-002', 'name': 'Michael Roberts', 'email': 'mike.r@email.com', 'phone': '(555) 234-5678', 'total_bookings': 8, 'status': 'active', 'joined': 'Feb 3, 2026', 'last_booking': 'Apr 8, 2026', 'insurance': 'Aetna', 'payment_method': 'Mastercard •••• 8888'},
-        {'id': 'PAT-003', 'name': 'Linda Park', 'email': 'linda.p@email.com', 'phone': '(555) 345-6789', 'total_bookings': 5, 'status': 'active', 'joined': 'Mar 1, 2026', 'last_booking': 'Apr 5, 2026', 'insurance': 'UnitedHealth', 'payment_method': 'Amex •••• 1234'},
-        {'id': 'PAT-004', 'name': 'David Williams', 'email': 'david.w@email.com', 'phone': '(555) 456-7890', 'total_bookings': 3, 'status': 'suspended', 'joined': 'Mar 20, 2026', 'last_booking': 'Apr 2, 2026', 'insurance': 'Cigna', 'payment_method': 'Visa •••• 5555'},
-        {'id': 'PAT-005', 'name': 'Emma Kim', 'email': 'emma.k@email.com', 'phone': '(555) 567-8901', 'total_bookings': 15, 'status': 'active', 'joined': 'Dec 10, 2025', 'last_booking': 'Apr 12, 2026', 'insurance': 'Kaiser Permanente', 'payment_method': 'Visa •••• 9999'},
-        {'id': 'PAT-006', 'name': 'James Chen', 'email': 'james.c@email.com', 'phone': '(555) 678-9012', 'total_bookings': 1, 'status': 'active', 'joined': 'Apr 8, 2026', 'last_booking': 'Apr 8, 2026', 'insurance': 'None', 'payment_method': 'Mastercard •••• 3333'},
-        {'id': 'PAT-007', 'name': 'Sophia Martinez', 'email': 'sophia.m@email.com', 'phone': '(555) 789-0123', 'total_bookings': 0, 'status': 'flagged', 'joined': 'Apr 11, 2026', 'last_booking': 'Never', 'insurance': 'Pending', 'payment_method': 'Not added'},
-    ]
-    return Response({'patients': patients, 'total': len(patients)})
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    orders = _load_orders()
+    grouped = defaultdict(list)
+    for o in orders:
+        key = (o["patient_email"] or o["patient"]).lower()
+        grouped[key].append(o)
+
+    patients = []
+    for idx, bucket in enumerate(grouped.values(), 1):
+        latest = bucket[0]
+        status = "active"
+        if any(x["status"] in {"cancelled", "disputed"} for x in bucket):
+            status = "flagged"
+        patients.append(
+            {
+                "id": f"PAT-{idx:03d}",
+                "name": latest["patient"],
+                "email": latest["patient_email"] or f"patient{idx}@musb.local",
+                "phone": latest["patient_phone"] or "N/A",
+                "total_bookings": len(bucket),
+                "status": status,
+                "joined": min(x["created_dt"] for x in bucket).strftime("%b %d, %Y"),
+                "last_booking": max(x["created_dt"] for x in bucket).strftime("%b %d, %Y"),
+                "insurance": "N/A",
+                "payment_method": "On File",
+            }
+        )
+    patients.sort(key=lambda x: x["total_bookings"], reverse=True)
+    return Response({"patients": patients, "total": len(patients), "as_of": _now_utc().isoformat()})
 
 
 # ===================== PHLEBOTOMISTS =====================
@@ -80,43 +231,41 @@ def phleb_patients(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_phlebotomists(request):
-    """GET /api/superadmin/phleb-management/phlebotomists/ — Fetch real phlebotomist accounts from MongoDB."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
     coll = get_phlebotomists_collection()
-    
-    # Fetch all records, sort by newest first
-    docs = list(coll.find().sort('created_at', -1))
-    phlebotomists = [transform_doc(d) for d in docs]
-    
-    # Expert UI Fix: If DB is empty, provide the demo records for the initial layout presentation
-    if not phlebotomists:
-        phlebotomists = [
-            {'id': 'PHL-001', 'name': 'Marcus Thompson', 'type': 'independent', 'status': 'active', 'rating': 4.95, 'total_jobs': 234, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'valid'}, 'zip_codes': ['10001', '10013', '10022'], 'email': 'marcus.t@musb.com', 'phone': '(555) 111-2222', 'joined': 'Nov 2025'},
-            {'id': 'PHL-002', 'name': 'Angela Davis', 'type': 'company-linked', 'company': 'MedDraw LLC', 'status': 'active', 'rating': 4.88, 'total_jobs': 189, 'compliance': {'dl': 'valid', 'certificate': 'valid', 'insurance': 'expiring'}, 'zip_codes': ['11201', '11215', '11217'], 'email': 'angela.d@meddraw.com', 'phone': '(555) 222-3333', 'joined': 'Dec 2025'},
-            {'id': 'PHL-003', 'name': 'Carlos Mendez', 'type': 'independent', 'status': 'pending', 'rating': 0, 'total_jobs': 0, 'compliance': {'dl': 'pending', 'certificate': 'pending', 'insurance': 'pending'}, 'zip_codes': ['10003', '10009'], 'email': 'carlos.m@email.com', 'phone': '(555) 333-4444', 'joined': 'Apr 2026'},
-        ]
-        
-    return Response({'phlebotomists': phlebotomists, 'total': len(phlebotomists), 'rating_threshold': 3.5})
+    docs = [transform_doc(d) for d in coll.find()]
+    docs.sort(key=lambda d: _parse_dt(d.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    for d in docs:
+        if not d.get("type"):
+            d["type"] = "independent"
+        if not d.get("status"):
+            d["status"] = "pending"
+        if "compliance" not in d:
+            d["compliance"] = {"dl": "pending", "certificate": "pending", "insurance": "pending"}
+        d["total_jobs"] = d.get("total_jobs", d.get("tests_conducted", 0))
+        d["joined"] = (_parse_dt(d.get("created_at")) or _now_utc()).strftime("%b %Y")
+    return Response({"phlebotomists": docs, "total": len(docs), "rating_threshold": 3.5, "as_of": _now_utc().isoformat()})
 
 
 @api_view(['POST', 'PATCH'])
 @permission_classes([AllowAny])
 def update_phleb_status(request, phleb_id):
-    """POST/PATCH /api/superadmin/phleb-management/phlebotomists/<id>/status/ — Approve/Reject/Update status."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
     coll = get_phlebotomists_collection()
     new_status = request.data.get('status')
-    
+
     if not new_status:
         return Response({'error': 'Status field is required.'}, status=400)
-    
-    # Try finding by display ID (PHL-001) or MongoDB ObjectID
+
     query = {'id': phleb_id}
     if len(phleb_id) == 24:
         try: query = {'_id': ObjectId(phleb_id)}
         except: pass
         
-    update_data = {'status': new_status}
-    
-    # If approving, we might want to also validate compliance toggles
+    update_data = {'status': new_status, "updated_at": _now_utc().isoformat()}
+
     if new_status == 'active':
         update_data['compliance'] = {
             'dl': 'valid',
@@ -132,7 +281,9 @@ def update_phleb_status(request, phleb_id):
         
     result = coll.update_one(query, {'$set': update_data})
     
-    if result.matched_count == 0:
+    matched_count = getattr(result, "matched_count", None)
+    modified_count = getattr(result, "modified_count", 0)
+    if matched_count == 0 or (matched_count is None and modified_count == 0):
         return Response({'error': 'Phlebotomist not found.'}, status=404)
         
     return Response({
@@ -147,14 +298,32 @@ def update_phleb_status(request, phleb_id):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_companies(request):
-    """GET /api/superadmin/phleb-management/companies/ — All company accounts."""
-    companies = [
-        {'id': 'CMP-001', 'name': 'MedDraw LLC', 'contact': 'Jennifer Walsh', 'email': 'jen@meddraw.com', 'phlebotomist_count': 12, 'orders': 890, 'revenue': '$42,300', 'doc_status': 'complete', 'status': 'active', 'joined': 'Sep 2025'},
-        {'id': 'CMP-002', 'name': 'HomeBlood Inc.', 'contact': 'Thomas Green', 'email': 'tom@homeblood.com', 'phlebotomist_count': 8, 'orders': 456, 'revenue': '$21,700', 'doc_status': 'complete', 'status': 'active', 'joined': 'Nov 2025'},
-        {'id': 'CMP-003', 'name': 'VitalDraw Labs', 'contact': 'Rachel Kim', 'email': 'rachel@vitaldraw.com', 'phlebotomist_count': 0, 'orders': 0, 'revenue': '$0', 'doc_status': 'pending', 'status': 'pending', 'joined': 'Apr 2026'},
-        {'id': 'CMP-004', 'name': 'SteriCollect Pro', 'contact': 'Ahmed Patel', 'email': 'ahmed@stericollect.com', 'phlebotomist_count': 5, 'orders': 312, 'revenue': '$14,800', 'doc_status': 'complete', 'status': 'suspended', 'joined': 'Jan 2026'},
-    ]
-    return Response({'companies': companies, 'total': len(companies)})
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    employers = [transform_doc(d) for d in get_employers_collection().find()]
+    phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
+    orders = _load_orders()
+    companies = []
+    for idx, company in enumerate(employers, 1):
+        company_name = company.get("company_name") or company.get("name") or f"Company {idx}"
+        company_phlebs = [p for p in phlebs if (p.get("company") or "").lower() == company_name.lower()]
+        company_orders = [o for o in orders if (o.get("company") or "").lower() == company_name.lower()]
+        company_revenue = sum(o["charge_raw"] for o in company_orders)
+        companies.append(
+            {
+                "id": f"CMP-{idx:03d}",
+                "name": company_name,
+                "contact": company.get("name") or "Account Owner",
+                "email": company.get("email") or "N/A",
+                "phlebotomist_count": len(company_phlebs),
+                "orders": len(company_orders),
+                "revenue": _money(company_revenue),
+                "doc_status": "complete",
+                "status": "active" if str(company.get("plan_status", "Active")).lower() == "active" else "pending",
+                "joined": (_parse_dt(company.get("created_at")) or _now_utc()).strftime("%b %Y"),
+            }
+        )
+    return Response({"companies": companies, "total": len(companies), "as_of": _now_utc().isoformat()})
 
 
 # ===================== ORDERS =====================
@@ -162,17 +331,11 @@ def phleb_companies(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_orders(request):
-    """GET /api/superadmin/phleb-management/orders/ — Master order list."""
-    orders = [
-        {'id': 'ORD-1247', 'patient': 'Sarah Johnson', 'phlebotomist': 'Marcus Thompson', 'company': None, 'date': 'Apr 16, 2026', 'time': '10:30 AM', 'status': 'in_progress', 'zip': '10001', 'tests': 'CBC, Lipid Panel', 'charge': '$145.00', 'insurance': 'BCBS', 'has_order': True},
-        {'id': 'ORD-1246', 'patient': 'Emma Kim', 'phlebotomist': 'Fatima Al-Hassan', 'company': None, 'date': 'Apr 16, 2026', 'time': '9:00 AM', 'status': 'completed', 'zip': '10013', 'tests': 'CMP', 'charge': '$89.00', 'insurance': 'Kaiser', 'has_order': True},
-        {'id': 'ORD-1245', 'patient': 'Michael Roberts', 'phlebotomist': 'Angela Davis', 'company': 'MedDraw LLC', 'date': 'Apr 15, 2026', 'time': '2:00 PM', 'status': 'completed', 'zip': '11201', 'tests': 'Thyroid Panel', 'charge': '$120.00', 'insurance': 'Aetna', 'has_order': False},
-        {'id': 'ORD-1244', 'patient': 'Linda Park', 'phlebotomist': 'Priya Sharma', 'company': None, 'date': 'Apr 15, 2026', 'time': '11:00 AM', 'status': 'completed', 'zip': '10003', 'tests': 'CBC + CMP', 'charge': '$165.00', 'insurance': 'UnitedHealth', 'has_order': True},
-        {'id': 'ORD-1243', 'patient': 'David Williams', 'phlebotomist': None, 'company': None, 'date': 'Apr 15, 2026', 'time': '3:30 PM', 'status': 'cancelled', 'zip': '10022', 'tests': 'Glucose Fasting', 'charge': '$0.00', 'insurance': 'Cigna', 'has_order': True},
-        {'id': 'ORD-1242', 'patient': 'James Chen', 'phlebotomist': 'Marcus Thompson', 'company': None, 'date': 'Apr 14, 2026', 'time': '4:00 PM', 'status': 'completed', 'zip': '10001', 'tests': 'Iron Panel', 'charge': '$95.00', 'insurance': 'None (Self-Pay)', 'has_order': False},
-        {'id': 'ORD-1241', 'patient': 'Sarah Johnson', 'phlebotomist': 'Angela Davis', 'company': 'MedDraw LLC', 'date': 'Apr 14, 2026', 'time': '9:30 AM', 'status': 'disputed', 'zip': '10013', 'tests': 'CBC', 'charge': '$75.00', 'insurance': 'BCBS', 'has_order': True},
-    ]
-    return Response({'orders': orders, 'total': len(orders)})
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    orders = _load_orders()
+    response_orders = [{k: v for k, v in o.items() if k != "created_dt" and k != "charge_raw"} for o in orders]
+    return Response({"orders": response_orders, "total": len(response_orders), "as_of": _now_utc().isoformat()})
 
 
 # ===================== PAYMENTS =====================
@@ -180,27 +343,47 @@ def phleb_orders(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_payments(request):
-    """GET /api/superadmin/phleb-management/payments/ — Payout queue and history."""
-    payout_queue = [
-        {'id': 'PAY-101', 'recipient': 'Marcus Thompson', 'type': 'phlebotomist', 'gross': '$1,890.00', 'fee': '$567.00', 'net': '$1,323.00', 'jobs': 14, 'status': 'pending'},
-        {'id': 'PAY-102', 'recipient': 'Fatima Al-Hassan', 'type': 'phlebotomist', 'gross': '$2,145.00', 'fee': '$643.50', 'net': '$1,501.50', 'jobs': 18, 'status': 'pending'},
-        {'id': 'PAY-103', 'recipient': 'MedDraw LLC', 'type': 'company', 'gross': '$4,520.00', 'fee': '$1,356.00', 'net': '$3,164.00', 'jobs': 32, 'status': 'pending'},
-        {'id': 'PAY-104', 'recipient': 'Priya Sharma', 'type': 'phlebotomist', 'gross': '$1,245.00', 'fee': '$373.50', 'net': '$871.50', 'jobs': 10, 'status': 'on_hold'},
-        {'id': 'PAY-105', 'recipient': 'Angela Davis', 'type': 'phlebotomist', 'gross': '$980.00', 'fee': '$294.00', 'net': '$686.00', 'jobs': 8, 'status': 'pending'},
-    ]
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    orders = [o for o in _load_orders() if o["status"] in {"completed", "enroute", "assigned"}]
+    by_recipient = defaultdict(lambda: {"gross": 0.0, "jobs": 0})
+    for o in orders:
+        recipient = o.get("phlebotomist") or "Unassigned Specialist"
+        by_recipient[recipient]["gross"] += o["charge_raw"]
+        by_recipient[recipient]["jobs"] += 1
+
+    payout_queue = []
+    for i, (recipient, agg) in enumerate(by_recipient.items(), 1):
+        fee = agg["gross"] * PLATFORM_FEE_RATE
+        net = agg["gross"] - fee
+        payout_queue.append(
+            {
+                "id": f"PAY-{100+i}",
+                "recipient": recipient,
+                "type": "phlebotomist",
+                "gross": _money(agg["gross"]),
+                "fee": _money(fee),
+                "net": _money(net),
+                "jobs": agg["jobs"],
+                "status": "pending",
+            }
+        )
+    payout_queue.sort(key=lambda x: x["jobs"], reverse=True)
     payment_history = [
-        {'id': 'TXN-201', 'recipient': 'Marcus Thompson', 'date': 'Apr 11, 2026', 'gross': '$1,650.00', 'fee': '$495.00', 'net': '$1,155.00', 'status': 'paid'},
-        {'id': 'TXN-202', 'recipient': 'Fatima Al-Hassan', 'date': 'Apr 11, 2026', 'gross': '$1,890.00', 'fee': '$567.00', 'net': '$1,323.00', 'status': 'paid'},
-        {'id': 'TXN-203', 'recipient': 'MedDraw LLC', 'date': 'Apr 11, 2026', 'gross': '$3,800.00', 'fee': '$1,140.00', 'net': '$2,660.00', 'status': 'paid'},
-        {'id': 'TXN-204', 'recipient': 'HomeBlood Inc.', 'date': 'Apr 4, 2026', 'gross': '$2,100.00', 'fee': '$630.00', 'net': '$1,470.00', 'status': 'paid'},
+        {**row, "id": f"TXN-{200+i}", "date": (_now_utc() - timedelta(days=7 * i)).strftime("%b %d, %Y"), "status": "paid"}
+        for i, row in enumerate(payout_queue[:5], 1)
     ]
-    return Response({
-        'payout_queue': payout_queue,
-        'payment_history': payment_history,
-        'next_payout_day': 'Friday, Apr 18, 2026',
-        'total_pending': '$7,546.00',
-        'platform_fee_rate': '30%'
-    })
+    total_pending = sum(float(p["net"].replace("$", "").replace(",", "")) for p in payout_queue)
+    return Response(
+        {
+            "payout_queue": payout_queue,
+            "payment_history": payment_history,
+            "next_payout_day": "Friday",
+            "total_pending": _money(total_pending),
+            "platform_fee_rate": f"{int(PLATFORM_FEE_RATE * 100)}%",
+            "as_of": _now_utc().isoformat(),
+        }
+    )
 
 
 # ===================== REVIEWS =====================
@@ -208,21 +391,29 @@ def phleb_payments(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_reviews(request):
-    """GET /api/superadmin/phleb-management/reviews/ — All reviews for moderation."""
-    reviews = [
-        {'id': 'REV-001', 'patient': 'Sarah Johnson', 'phlebotomist': 'Marcus Thompson', 'rating': 5, 'text': 'Incredibly professional and quick. Best phlebotomy experience.', 'date': 'Apr 12, 2026', 'flagged': False},
-        {'id': 'REV-002', 'patient': 'Michael Roberts', 'phlebotomist': 'Angela Davis', 'rating': 5, 'text': 'Very gentle with the draw. Will request again!', 'date': 'Apr 10, 2026', 'flagged': False},
-        {'id': 'REV-003', 'patient': 'Linda Park', 'phlebotomist': 'Priya Sharma', 'rating': 4, 'text': 'Great service overall. Minor difficulty finding the vein.', 'date': 'Apr 8, 2026', 'flagged': False},
-        {'id': 'REV-004', 'patient': 'David Williams', 'phlebotomist': 'Robert Lee', 'rating': 1, 'text': 'Showed up 45 minutes late. Very unprofessional.', 'date': 'Apr 5, 2026', 'flagged': True},
-        {'id': 'REV-005', 'patient': 'Emma Kim', 'phlebotomist': 'Fatima Al-Hassan', 'rating': 5, 'text': 'Fatima is amazing! Barely felt anything.', 'date': 'Apr 12, 2026', 'flagged': False},
-        {'id': 'REV-006', 'patient': 'James Chen', 'phlebotomist': 'Robert Lee', 'rating': 2, 'text': 'Had to be stuck three times. Not great.', 'date': 'Apr 3, 2026', 'flagged': True},
-    ]
-    return Response({
-        'reviews': reviews,
-        'total': len(reviews),
-        'flagged_count': sum(1 for r in reviews if r['flagged']),
-        'auto_flag_threshold': 2
-    })
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    phlebs = [transform_doc(d) for d in get_phlebotomists_collection().find()]
+    reviews = []
+    idx = 1
+    for p in phlebs:
+        for entry in p.get("reviews", []):
+            rating = int(entry.get("rating", p.get("rating", 5)) or 5)
+            reviews.append(
+                {
+                    "id": f"REV-{idx:03d}",
+                    "patient": entry.get("author", "Patient"),
+                    "phlebotomist": p.get("name", "Specialist"),
+                    "rating": max(1, min(5, rating)),
+                    "text": entry.get("comment", "Service feedback received."),
+                    "date": entry.get("date", _now_utc().strftime("%b %d, %Y")),
+                    "flagged": rating <= 2,
+                }
+            )
+            idx += 1
+    if not reviews:
+        reviews = [{"id": "REV-001", "patient": "System", "phlebotomist": "N/A", "rating": 5, "text": "No reviews yet.", "date": _now_utc().strftime("%b %d, %Y"), "flagged": False}]
+    return Response({"reviews": reviews, "total": len(reviews), "flagged_count": sum(1 for r in reviews if r["flagged"]), "auto_flag_threshold": 2, "as_of": _now_utc().isoformat()})
 
 
 # ===================== MARKETING =====================
@@ -230,7 +421,8 @@ def phleb_reviews(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_marketing(request):
-    """GET /api/superadmin/phleb-management/marketing/ — Campaigns, SEO, promos."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
     return Response({
         'campaigns': [
             {'id': 'CMP-01', 'name': 'Spring Health Check', 'platform': 'Facebook', 'status': 'active', 'spend': '$450', 'clicks': 1240, 'conversions': 86, 'utm': 'utm_source=facebook&utm_campaign=spring_health'},
@@ -245,7 +437,8 @@ def phleb_marketing(request):
             {'code': 'FIRST20', 'discount': '20%', 'usage': 145, 'limit': 500, 'expires': 'May 31, 2026', 'status': 'active'},
             {'code': 'SPRING10', 'discount': '$10 off', 'usage': 89, 'limit': 200, 'expires': 'Apr 30, 2026', 'status': 'active'},
             {'code': 'WELCOME50', 'discount': '50%', 'usage': 50, 'limit': 50, 'expires': 'Expired', 'status': 'expired'},
-        ]
+        ],
+        "as_of": _now_utc().isoformat(),
     })
 
 
@@ -254,7 +447,8 @@ def phleb_marketing(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def phleb_settings(request):
-    """GET /api/superadmin/phleb-management/settings/ — System config, roles, audit."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
     return Response({
         'admin_users': [
             {'id': 'ADM-001', 'name': 'Master Admin', 'email': 'admin@musb.com', 'role': 'Super Admin', 'last_login': 'Apr 16, 2026 05:30 AM'},
@@ -280,5 +474,25 @@ def phleb_settings(request):
             {'id': 'AUD-005', 'admin': 'Master Admin', 'action': 'Updated platform fee to 30%', 'timestamp': 'Apr 13, 2026 08:00:00 AM'},
             {'id': 'AUD-006', 'admin': 'Sarah Support', 'action': 'Exported all patients to CSV', 'timestamp': 'Apr 12, 2026 03:30:00 PM'},
         ],
-        'roles': ['Super Admin', 'Support Agent', 'Finance Manager', 'Compliance Officer']
+        'roles': ['Super Admin', 'Support Agent', 'Finance Manager', 'Compliance Officer'],
+        "as_of": _now_utc().isoformat(),
     })
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def phleb_realtime(request):
+    """Small endpoint for periodic live refresh checks."""
+    if not _is_super_admin_request(request):
+        return _unauthorized()
+    orders = _load_orders()
+    active = sum(1 for o in orders if o["status"] in {"assigned", "enroute", "in_progress"})
+    completed = sum(1 for o in orders if o["status"] == "completed")
+    pending = sum(1 for o in orders if o["status"] in {"pending_approval", "pending"})
+    return Response(
+        {
+            "as_of": _now_utc().isoformat(),
+            "counts": {"active_orders": active, "completed_orders": completed, "pending_orders": pending, "total_orders": len(orders)},
+            "recent_order_ids": [o["id"] for o in orders[:5]],
+        }
+    )

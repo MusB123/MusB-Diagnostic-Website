@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 import json
 from datetime import datetime
 
@@ -58,8 +59,9 @@ def super_admin_login(request):
     password = request.data.get('password', '').strip()
     
     if email == "admin@musb.com" and password == "admin123":
+        admin_token = getattr(settings, "SUPER_ADMIN_TOKEN", "super-secret-admin-token-xyz789")
         return Response({
-            'token': 'super-secret-admin-token-xyz789',
+            'token': admin_token,
             'user': {
                 'id': 1,
                 'email': email,

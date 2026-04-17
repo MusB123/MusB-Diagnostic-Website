@@ -75,20 +75,37 @@ function PhlebotomyManagement() {
   const [activeTab, setActiveTab] = useState('overview');
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchData = async (silent = false) => {
+      if (!silent) setLoading(true);
+      setError('');
+      const endpoint = activeTab === 'overview' ? 'overview' : activeTab;
       try {
-        const res = await api.get(`${API_BASE}/${activeTab === 'overview' ? 'overview' : activeTab}/`);
+        const res = await api.get(`${API_BASE}/${endpoint}/`);
         setData(prev => ({ ...prev, [activeTab]: res.data }));
+        setLastUpdated(new Date());
       } catch (err) {
         console.error(`Failed to fetch ${activeTab}:`, err);
+        setError(err?.response?.data?.error || `Failed to fetch ${activeTab} data`);
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     };
-    fetchData();
+
+    fetchData(false);
+    const poll = setInterval(() => {
+      fetchData(true);
+      if (activeTab !== 'overview') {
+        api.get(`${API_BASE}/realtime/`)
+          .then((res) => setData(prev => ({ ...prev, realtime: res.data })))
+          .catch(() => {});
+      }
+    }, 15000);
+
+    return () => clearInterval(poll);
   }, [activeTab]);
 
   return (
@@ -97,6 +114,9 @@ function PhlebotomyManagement() {
         <div>
           <h1 className="admin-page-title">Phlebotomy Management</h1>
           <p className="admin-page-subtitle">Mobile Dispatch &amp; Operations Control Center</p>
+          <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.35rem' }}>
+            Live Sync: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Connecting...'}
+          </p>
         </div>
       </div>
 
@@ -117,6 +137,12 @@ function PhlebotomyManagement() {
           </button>
         ))}
       </div>
+
+      {error && (
+        <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171', fontWeight: 700, fontSize: '0.8rem' }}>
+          {error}
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (

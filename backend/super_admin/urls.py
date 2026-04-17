@@ -40,4 +40,5 @@ urlpatterns = [
     path('phleb-management/reviews/', pm.phleb_reviews, name='pm-reviews'),
     path('phleb-management/marketing/', pm.phleb_marketing, name='pm-marketing'),
     path('phleb-management/settings/', pm.phleb_settings, name='pm-settings'),
+    path('phleb-management/realtime/', pm.phleb_realtime, name='pm-realtime'),
 ]

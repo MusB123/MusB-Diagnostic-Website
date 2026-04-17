@@ -30,10 +30,25 @@ api.interceptors.request.use((config) => {
     const phlebToken = localStorage.getItem('phleb_token');
     const employerToken = localStorage.getItem('token');
     const researchToken = localStorage.getItem('research_token');
-    const superAdminToken = localStorage.getItem('super_admin_token');
+    const superAdminToken = localStorage.getItem('super_admin_token') || localStorage.getItem('admin_token');
     const hubToken = localStorage.getItem('hub_token');
+    const reqUrl = config.url || '';
+    let token = null;
 
-    const token = phlebToken || employerToken || researchToken || superAdminToken || hubToken;
+    // Endpoint-aware token routing prevents wrong-role tokens from being sent.
+    if (reqUrl.includes('/api/superadmin/')) {
+      token = superAdminToken;
+    } else if (reqUrl.includes('/api/phleb/hubs/')) {
+      token = hubToken;
+    } else if (reqUrl.includes('/api/phleb/')) {
+      token = phlebToken;
+    } else if (reqUrl.includes('/api/employers/')) {
+      token = employerToken;
+    } else if (reqUrl.includes('/api/research/')) {
+      token = researchToken;
+    } else {
+      token = superAdminToken || phlebToken || employerToken || researchToken || hubToken;
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

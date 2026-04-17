@@ -5,7 +5,9 @@ const AdminAuthContext = createContext(null);
 
 export const AdminAuthProvider = ({ children }) => {
   const [adminUser, setAdminUser] = useState(null);
-  const [adminToken, setAdminToken] = useState(localStorage.getItem('admin_token'));
+  const [adminToken, setAdminToken] = useState(
+    localStorage.getItem('super_admin_token') || localStorage.getItem('admin_token')
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export const AdminAuthProvider = ({ children }) => {
       
       setAdminToken(token);
       setAdminUser(user);
+      localStorage.setItem('super_admin_token', token);
       localStorage.setItem('admin_token', token);
       localStorage.setItem('admin_user', JSON.stringify(user));
       
@@ -40,6 +43,7 @@ export const AdminAuthProvider = ({ children }) => {
   const logout = () => {
     setAdminToken(null);
     setAdminUser(null);
+    localStorage.removeItem('super_admin_token');
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
   };
