@@ -191,14 +191,15 @@
   .hamburger::after {
     content: '';
     position: absolute;
+    left: 0;
     width: 24px;
     height: 2px;
     background-color: var(--primary);
     transition: all 0.3s ease;
   }
 
-  .hamburger::before { transform: translateY(-7px); }
-  .hamburger::after { transform: translateY(7px); }
+  .hamburger::before { transform: translateY(-8px); }
+  .hamburger::after { transform: translateY(8px); }
 
   .nav-toggle.active .hamburger {
     background-color: transparent;
