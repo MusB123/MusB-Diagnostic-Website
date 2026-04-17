@@ -253,6 +253,10 @@
     display: none; /* Disable hover dropdowns on mobile */
   }
 
+  .nav-item.dropdown .dropdown-arrow.active {
+    transform: rotate(180deg);
+  }
+
   .dropdown-menu {
     position: static;
     transform: none;
@@ -261,12 +265,19 @@
     box-shadow: none;
     border: none;
     padding-left: 1.5rem;
-    display: none; /* Hide by default on mobile, maybe implement accordion later if needed */
+    display: none; /* Hide by default on mobile */
+    background: transparent;
+    transition: none; /* Instant show for mobile accordion */
   }
 
-  .nav-item.dropdown .dropdown-menu {
-     display: block; /* Show them as nested lists for now */
-     background: transparent;
+  .dropdown-menu.show {
+    display: block; /* Show when toggled active */
+    animation: slideDownMobile 0.3s ease-out;
+  }
+
+  @keyframes slideDownMobile {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .nav-item.dropdown .nav-link {

@@ -6,15 +6,23 @@ import './Navbar.css';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [activeDropdown, setActiveDropdown] = React.useState(null); // 'facilities' or 'research' or null
   const location = useLocation();
   useCart();
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
   const isParentActive = (paths) => paths.some(path => location.pathname === path) ? 'active' : '';
   
-  // Close menu when route changes
+  const toggleDropdown = (name) => {
+    if (window.innerWidth <= 992) {
+      setActiveDropdown(activeDropdown === name ? null : name);
+    }
+  };
+
+  // Close menu and reset dropdowns when route changes
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
+    setActiveDropdown(null);
   }, [location]);
 
   // Hide global navbar on portal (dashboard) routes
@@ -51,11 +59,14 @@ const Navbar = () => {
           <li className="nav-item">
             <Link to="/employer-health-program" className={`nav-link ${isActive('/employer-health-program')}`}><Briefcase className="nav-icon"/> Employers & HR</Link>
           </li>
-          <li className="nav-item dropdown">
-            <div className={`nav-link dropdown-toggle ${isParentActive(['/assisted-living-testing', '/mobile-phlebotomy', '/community-programs', '/physicians'])}`}>
-              <Building2 className="nav-icon"/> Facilities <ChevronDown className="dropdown-arrow" size={14}/>
+          <li className={`nav-item dropdown ${activeDropdown === 'facilities' ? 'mobile-open' : ''}`}>
+            <div 
+              className={`nav-link dropdown-toggle ${isParentActive(['/assisted-living-testing', '/mobile-phlebotomy', '/community-programs', '/physicians'])}`}
+              onClick={() => toggleDropdown('facilities')}
+            >
+              <Building2 className="nav-icon"/> Facilities <ChevronDown className={`dropdown-arrow ${activeDropdown === 'facilities' ? 'active' : ''}`} size={14}/>
             </div>
-            <ul className="dropdown-menu">
+            <ul className={`dropdown-menu ${activeDropdown === 'facilities' ? 'show' : ''}`}>
               <li>
                 <Link to="/assisted-living-testing" className={`dropdown-item ${isActive('/assisted-living-testing')}`}>Assisted Living</Link>
               </li>
@@ -70,11 +81,14 @@ const Navbar = () => {
               </li>
             </ul>
           </li>
-          <li className="nav-item dropdown">
-            <div className={`nav-link dropdown-toggle ${isParentActive(['/research-central-lab', '/early-diagnostics'])}`}>
-              <FlaskConical className="nav-icon"/> Research <ChevronDown className="dropdown-arrow" size={14}/>
+          <li className={`nav-item dropdown ${activeDropdown === 'research' ? 'mobile-open' : ''}`}>
+            <div 
+              className={`nav-link dropdown-toggle ${isParentActive(['/research-central-lab', '/early-diagnostics'])}`}
+              onClick={() => toggleDropdown('research')}
+            >
+              <FlaskConical className="nav-icon"/> Research <ChevronDown className={`dropdown-arrow ${activeDropdown === 'research' ? 'active' : ''}`} size={14}/>
             </div>
-            <ul className="dropdown-menu">
+            <ul className={`dropdown-menu ${activeDropdown === 'research' ? 'show' : ''}`}>
               <li>
                 <Link to="/research-central-lab" className={`dropdown-item ${isActive('/research-central-lab')}`}>Research Central Lab</Link>
               </li>
