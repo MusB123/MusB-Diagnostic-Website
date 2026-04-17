@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Building2, Mail, Lock, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Mail, Lock, ShieldCheck, ArrowRight, Loader2, X } from 'lucide-react';
 import api from '../../api/api';
 import './HubPortal.css';
 
@@ -9,6 +8,7 @@ const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: '', password: '', name: '', registration_number: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +28,26 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', fontFamily: 'Inter, sans-serif' }}>
+    <div 
+      className="hub-login-wrapper"
+      onClick={(e) => {
+        if (e.target.className === 'hub-login-wrapper') navigate(-1);
+      }}
+      style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', fontFamily: 'Inter, sans-serif' }}
+    >
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="hub-glass-panel" 
-        style={{ width: '100%', maxWidth: '450px', padding: '3rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px' }}
+        style={{ width: '100%', maxWidth: '450px', padding: '3rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px', position: 'relative' }}
       >
+        <button
+          className="hub-login-close"
+          onClick={() => navigate(-1)}
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ background: '#6366f1', padding: '1rem', borderRadius: '16px', display: 'inline-flex', marginBottom: '1.5rem', boxShadow: '0 0 30px rgba(99, 102, 241, 0.4)' }}>
             <Building2 color="white" size={32} />

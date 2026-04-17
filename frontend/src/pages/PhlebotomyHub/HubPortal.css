@@ -242,6 +242,39 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.hub-login-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s var(--hub-ease);
+  z-index: 10;
+}
+
+.hub-login-close:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+  transform: rotate(90deg) scale(1.1);
+}
+
+.hub-login-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+
 /* ── Standardized KPI Cards ── */
 .stat-card-custom {
   background: var(--hub-glass);
