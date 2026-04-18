@@ -159,8 +159,8 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
 
 # High-Stakes Presentation & SMTP Hardening
 EMAIL_TIMEOUT = 10 
-# FORCED TRUE FOR ZERO-FAILURE PRESENTATION STABILITY
-PRESENTATION_SAFE_MODE = os.getenv('PRESENTATION_SAFE_MODE', 'true').lower() != 'false'
+# Set to 'true' in Render/Vercel ONLY if you want to simulate success during a demo
+PRESENTATION_SAFE_MODE = os.getenv('PRESENTATION_SAFE_MODE', 'false').lower() == 'true'
 
 # Fallback to Console Backend in Debug if no password is set
 if not EMAIL_HOST_PASSWORD and DEBUG:
