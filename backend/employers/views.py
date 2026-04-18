@@ -489,8 +489,17 @@ def send_invite_email(request, employee_id):
                 'detail': 'Queued for delivery (Simulation Mode)',
                 'success': True
             })
+        
+        # Enhanced SMTP Error Mapping
+        err_str = str(e)
+        if "530" in err_str and "Authentication Required" in err_str:
+            return Response({
+                'error': 'GMAIL_AUTH_FAILED',
+                'message': 'Gmail rejected your credentials.',
+                'hint': 'You MUST use a 16-character "App Password" (not your regular password). Ensure EMAIL_HOST_USER matches your Gmail address.'
+            }, status=500)
 
-        return Response({'error': f'Failed to send email: {str(e)}'}, status=500)
+        return Response({'error': f'Failed to send email: {err_str}'}, status=500)
 
 
 @api_view(['GET'])
