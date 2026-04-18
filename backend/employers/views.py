@@ -461,48 +461,57 @@ def send_invite_email(request, employee_id):
         coll.update_one({'_id': obj_id}, {'$set': {'invite_sent_at': datetime.datetime.utcnow()}})
         
         return Response({'message': f'Invitation email sent to {recipient}'})
+        return Response({'message': f'Invitation email sent to {recipient}'})
     except Exception as e:
-        print(f"🔥 EMAIL SEND ERROR: {e}")
-        
-        # MISSION-CRITICAL: Zero-Failure Presentation Fail-Safe
-        if getattr(settings, 'PRESENTATION_SAFE_MODE', True):
-            # 1. Log the failure secretly for post-presentation debugging
-            try:
-                activity_coll = get_activity_log_collection()
-                activity_coll.insert_one({
-                    'type': 'INVITE_STABILIZED',
-                    'recipient': recipient,
-                    'original_error': str(e),
-                    'timestamp': datetime.datetime.utcnow(),
-                    'note': 'Error caught by Zero-Failure Presentation Mode'
-                })
-            except: pass
-            
-            # 2. Force update employee record so the dashboard UI stays consistent
-            try:
-                coll.update_one({'_id': obj_id}, {'$set': {
-                    'invite_sent_at': datetime.datetime.utcnow(),
-                    'status': 'Invited'
-                }})
-            except: pass
-            
-            # 3. Return SUCCESS to the UI to keep the demo moving flawlessly
-            return Response({
-                'message': f'Invitation for {recipient} has been processed.',
-                'detail': 'Successfully queued (Secure Delivery Active)',
-                'success': True
-            })
-        
-        # Enhanced SMTP Error Mapping (Only shows if Safe Mode is OFF)
-        err_str = str(e)
-        if "530" in err_str and "Authentication Required" in err_str:
-            return Response({
-                'error': 'GMAIL_AUTH_FAILED',
-                'message': 'Gmail rejected your credentials.',
-                'hint': 'You MUST use a 16-character "App Password".'
-            }, status=500)
+        # LOG RAW ERROR FOR PRODUCTION DEBUGGING
+        err_msg = str(e)
+        print(f"🔥 PRODUCTION SMTP ERROR: {err_msg}")
+        return Response({
+            'error': 'SMTP_DELIVERY_FAILURE',
+            'message': 'Real email delivery failed.',
+            'raw_technical_error': err_msg,
+            'hint': 'Visit /api/employers/debug-email/ to see the exact reason Google rejected this send.'
+        }, status=500)
 
-        return Response({'error': f'Failed to send email: {err_str}'}, status=500)
+
+@api_view(['GET'])
+def debug_email(request):
+    """
+    Expert-level diagnostic endpoint to verify SMTP credentials in production.
+    Visit this URL to see the RAW error message from Google.
+    """
+    try:
+        from django.core.mail import send_mail
+        subject = "SMTP Diagnostic Test - MusB Diagnostics"
+        message = (
+            "This is a technical diagnostic email.\n\n"
+            "If you received this, your production SMTP settings (SSL Port 465) are WORKING CORRECTLY.\n"
+            "Invitations will now be delivered successfully."
+        )
+        recipient = settings.EMAIL_HOST_USER
+        
+        # Force a real send test
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient], fail_silently=False)
+        
+        return Response({
+            'status': 'SMTP_CONNECTION_VERIFIED',
+            'message': f'Diagnostic email sent to {recipient}. Your settings are perfect.',
+            'details': {
+                'host': settings.EMAIL_HOST,
+                'port': settings.EMAIL_PORT,
+                'user': settings.EMAIL_HOST_USER,
+                'ssl': settings.EMAIL_USE_SSL
+            }
+        })
+    except Exception as e:
+        import traceback
+        return Response({
+            'status': 'SMTP_CONNECTION_FAILED',
+            'error_type': type(e).__name__,
+            'raw_google_error': str(e),
+            'traceback': traceback.format_exc() if settings.DEBUG else 'Hidden in production',
+            'urgent_action': 'Check your Gmail App Password (16 chars) and verify EMAIL_HOST_USER.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

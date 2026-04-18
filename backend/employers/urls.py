@@ -17,4 +17,5 @@ urlpatterns = [
     path('select-plan/', views.select_plan, name='select-plan'),
     path('enroll/verify/<str:token>/', views.verify_enrollment, name='enroll-verify'),
     path('enroll/complete/<str:token>/', views.complete_enrollment, name='enroll-complete'),
+    path('debug-email/', views.debug_email, name='debug-email'),
 ]
