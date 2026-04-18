@@ -5,7 +5,7 @@ import {
   MapPin, LogOut, Menu, X, Bell, Search, Plus, 
   Download, Filter, ChevronRight, AlertCircle, ArrowRight,
   FileText, CheckCircle2, Clock, Sun, Moon, Share2, Copy, Trash2, ShieldCheck,
-  Smartphone, QrCode
+  Smartphone, QrCode, Mail
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { employersAPI } from '../../services/api';
@@ -124,6 +124,9 @@ const EmployerDashboard = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [activeInvite, setActiveInvite] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
   const [newEmployee, setNewEmployee] = useState({ full_name: '', email: '', due_date: '' });
 
   const fetchDashboardData = useCallback(async () => {
@@ -177,6 +180,27 @@ const EmployerDashboard = () => {
       alert('Failed to add employee');
     }
   };
+
+  const handleSendInviteEmail = async () => {
+    if (!activeInvite || emailSending) return;
+    
+    setEmailSending(true);
+    setEmailSuccess(false);
+    
+    try {
+      const res = await employersAPI.sendInviteEmail(activeInvite.id, token);
+      if (res.ok) {
+        setEmailSuccess(true);
+        setTimeout(() => setEmailSuccess(false), 3000);
+      } else {
+        alert('Failed to send email: ' + (res.data?.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Communication error while sending email.');
+    }
+    setEmailSending(false);
+  };
+
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -418,24 +442,38 @@ const EmployerDashboard = () => {
                     value={`${window.location.origin}/enroll/${activeInvite.invite_token}`} 
                   />
                   <button 
-                    className="copy-btn"
+                    className={`copy-btn ${copied ? 'copied' : ''}`}
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/enroll/${activeInvite.invite_token}`);
-                      // Simple feedback
-                      const btn = document.activeElement;
-                      const original = btn.innerHTML;
-                      btn.innerHTML = 'Copied!';
-                      setTimeout(() => btn.innerHTML = original, 2000);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
                     }}
                   >
-                    <Copy size={16} />
+                    {copied ? <CheckCircle2 size={18} /> : <Copy size={16} />}
                   </button>
                 </div>
               </div>
               
               <div className="invite-meta">
-                <p>Inviting: <strong>{activeInvite.full_name}</strong></p>
-                <p>Status: <span className="status-badge invited">Ready to Join</span></p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                  <p>Inviting: <strong>{activeInvite.full_name}</strong></p>
+                  <p>Status: <span className="status-badge invited">Invited</span></p>
+                </div>
+                
+                <button 
+                  className={`btn ${emailSuccess ? 'btn-success' : 'btn-primary'} btn-block`} 
+                  style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+                  onClick={handleSendInviteEmail}
+                  disabled={emailSending}
+                >
+                  {emailSending ? (
+                    'Sending...'
+                  ) : emailSuccess ? (
+                    <><CheckCircle2 size={18} /> Invite Sent!</>
+                  ) : (
+                    <><Mail size={18} /> Send via Email</>
+                  )}
+                </button>
               </div>
             </div>
           </div>

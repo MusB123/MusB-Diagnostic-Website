@@ -17,6 +17,11 @@ async function request(endpoint, options = {}) {
     return apiCache.get(cacheKey);
   }
 
+  // Invalidate cache on mutations (POST, PUT, DELETE, PATCH)
+  if (!isCacheable) {
+    apiCache.clear();
+  }
+
   const url = `${API_BASE}${endpoint}`;
   const { headers, ...restOptions } = options;
   const config = {
@@ -138,6 +143,15 @@ export const employersAPI = {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ plan_id: planId })
+  }),
+  sendInviteEmail: (employeeId, token) => request(`/employers/employees/${employeeId}/send-email/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }
+  }),
+  verifyEnrollment: (token) => request(`/employers/enroll/verify/${token}/`),
+  completeEnrollment: (token, data) => request(`/employers/enroll/complete/${token}/`, {
+    method: 'POST',
+    body: JSON.stringify(data)
   }),
 };
 

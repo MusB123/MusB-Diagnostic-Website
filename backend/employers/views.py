@@ -3,6 +3,13 @@ from bson import ObjectId
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.conf import settings
+from django.utils.html import strip_tags
+import qrcode
+import io
+import base64
+import datetime
 
 
 @api_view(['GET'])
@@ -347,7 +354,7 @@ def select_plan(request):
             {'_id': ObjectId(employer_id)},
             {'$set': {
                 'plan_name': plan_name,
-                'plan_status': plan_name,
+                'plan_status': 'Active',
                 'renewal_date': renewal,
                 'plan_activated_at': datetime.datetime.utcnow(),
             }}
@@ -361,3 +368,166 @@ def select_plan(request):
         'plan_name': plan_name,
         'renewal_date': renewal,
     })
+
+
+@api_view(['POST'])
+def send_invite_email(request, employee_id):
+    """POST /api/employers/employees/<id>/send-email/ — Send enrollment link via email."""
+    employer_payload = get_current_employer(request)
+    if not employer_payload:
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    employer_id = employer_payload['employer_id']
+    coll = get_employees_collection()
+
+    try:
+        obj_id = ObjectId(employee_id)
+    except:
+        return Response({'error': 'Invalid ID format'}, status=status.HTTP_400_BAD_REQUEST)
+
+    emp = coll.find_one({'_id': obj_id, 'employer_id': employer_id})
+    if not emp:
+        return Response({'error': 'Employee not found or unauthorized'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Link Construction - Correcting port for local development
+    recipient = emp['email']
+    base_url = request.build_absolute_uri('/')[:-1]
+    if ':8000' in base_url:
+        base_url = base_url.replace(':8000', ':3000')
+    
+    enroll_link = f"{base_url}/enroll/{emp.get('invite_token')}"
+
+    # Generate QR Code
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(enroll_link)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    qr_buffer = io.BytesIO()
+    img.save(qr_buffer, format="PNG")
+    qr_data = qr_buffer.getvalue()
+
+    # Compose Professional HTML Email
+    company_name = employer_payload.get('company_name', 'MusB Health')
+    subject = f"Invitation to Join {company_name}"
+    
+    html_content = f"""
+    <html>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #10b981; margin-bottom: 5px;">MusB Diagnostics</h1>
+          <p style="color: #64748b; margin: 0;">Corporate Wellness Program</p>
+        </div>
+        
+        <h2 style="font-size: 1.25rem; font-weight: 700;">Hello {emp['full_name']},</h2>
+        
+        <p>You have been invited by <strong>{company_name}</strong> to join the MusB Diagnostic health platform. This program provides you with seamless access to diagnostic services and health tracking.</p>
+        
+        <div style="text-align: center; margin: 35px 0;">
+          <a href="{enroll_link}" style="background-color: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">Accept Invitation & Enroll</a>
+        </div>
+        
+        <div style="background-color: #f8fafc; padding: 25px; border-radius: 16px; text-align: center; border: 1px solid #e2e8f0;">
+          <p style="margin-top: 0; font-weight: 600;">Scan to Enroll Instantly</p>
+          <img src="cid:qrcode_img" alt="QR Code" width="180" height="180" style="margin: 0 auto;" />
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0;">Scan this code with your phone camera</p>
+        </div>
+        
+        <div style="margin-top: 35px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; color: #94a3b8;">
+          <p>If the button above doesn't work, copy and paste this link: <br/> 
+          <a href="{enroll_link}" style="color: #10b981;">{enroll_link}</a></p>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center; font-size: 0.8rem; color: #94a3b8;">
+          <p>&copy; {datetime.datetime.now().year} MusB Diagnostics. All rights reserved.</p>
+        </div>
+      </body>
+    </html>
+    """
+    text_content = strip_tags(html_content)
+
+    try:
+        email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [recipient])
+        email.attach_alternative(html_content, "text/html")
+        
+        # Attach QR code inline
+        from email.mime.image import MIMEImage
+        mime_img = MIMEImage(qr_data)
+        mime_img.add_header('Content-ID', '<qrcode_img>')
+        email.attach(mime_img)
+        
+        email.send()
+
+        # Update metadata
+        coll.update_one({'_id': obj_id}, {'$set': {'invite_sent_at': datetime.datetime.utcnow()}})
+        
+        return Response({'message': f'Invitation email sent to {recipient}'})
+    except Exception as e:
+        print(f"🔥 EMAIL SEND ERROR: {e}")
+        return Response({'error': f'Failed to send email: {str(e)}'}, status=500)
+
+
+@api_view(['GET'])
+def verify_enrollment(request, token):
+    """
+    GET /api/employers/enroll/verify/<token>/ — Publicly verify invitation token.
+    No Auth needed as this is a public verification for the signup flow.
+    """
+    emp_coll = get_employees_collection()
+    employee = emp_coll.find_one({'invite_token': token})
+    
+    if not employee:
+        return Response({'error': 'Invitation invalid or expired'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if employee.get('status') == 'Enrolled':
+        return Response({'error': 'ALREADY_ENROLLED'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    # Fetch employer info for branding
+    employer_coll = get_employers_collection()
+    employer_id = employee.get('employer_id')
+    
+    company_name = "MusB Corporate Partner"
+    plan_name = employee.get('plan_name', 'Annual Health Coverage')
+    
+    # Handle demo edge case or real ObjectId
+    if employer_id == 'demo_id_123':
+        company_name = "MusB Health Corp (Demo)"
+    else:
+        try:
+            employer = employer_coll.find_one({'_id': ObjectId(employer_id)})
+            if employer:
+                company_name = employer.get('company_name', company_name)
+        except Exception:
+            pass
+            
+    return Response({
+        'full_name': employee.get('full_name'),
+        'email': employee.get('email'),
+        'company_name': company_name,
+        'program_type': plan_name,
+        'status': employee.get('status')
+    })
+
+
+@api_view(['POST', 'GET']) # GET for easy debug
+def complete_enrollment(request, token):
+    """POST /api/employers/enroll/complete/<token>/ — Finalize employee enrollment."""
+    emp_coll = get_employees_collection()
+    employee = emp_coll.find_one({'invite_token': token})
+    
+    if not employee:
+        return Response({'error': 'Invitation invalid or expired'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if employee.get('status') == 'Enrolled':
+        return Response({'error': 'This enrollment has already been completed.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    emp_coll.update_one({'invite_token': token}, {
+        '$set': {
+            'status': 'Enrolled', 
+            'enrolled_at': datetime.datetime.utcnow()
+        }
+    })
+    
+    return Response({'message': 'Enrollment complete', 'status': 'Enrolled'})
+
+

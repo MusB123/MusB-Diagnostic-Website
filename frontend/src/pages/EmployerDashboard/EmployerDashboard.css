@@ -50,6 +50,27 @@
   --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
 }
 
+/* Fix visibility for headings and labels in dark mode */
+.dark-theme h1, 
+.dark-theme h2, 
+.dark-theme h3, 
+.dark-theme h4, 
+.dark-theme .modal-title {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme label {
+  color: var(--text-secondary) !important;
+}
+
+/* Glass Theme Override */
+.dark-theme .glass {
+  background: rgba(22, 27, 42, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
 /* Specific enhancement for darker elements in Dark Mode */
 .dark-theme .section-title {
   color: #ffffff !important;
@@ -442,6 +463,19 @@
   gap: 0.6rem;
   border-radius: 10px;
 }
+
+.btn-success {
+  background: var(--emerald-500) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-success:hover {
+  background: var(--emerald-600) !important;
+  transform: scale(1.02);
+}
+
 
 /* Buttons & Chips */
 .status-pill {
@@ -1093,4 +1127,220 @@
 .onsite-success-view p {
   max-width: 400px;
   margin: 0 auto 2rem;
+}
+/* ====== Share Invitation Modal ====== */
+.invite-share-modal {
+  max-width: 480px;
+  width: 100%;
+  padding: 2.5rem;
+  border-radius: 28px;
+  animation: modalEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--bg-card); /* Fallback */
+  border: 1px solid var(--border-card);
+}
+
+@keyframes modalEntrance {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.invite-share-modal .modal-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-main);
+  justify-content: center;
+  position: relative;
+}
+
+.invite-share-modal .modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem !important;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.invite-share-modal .close-btn {
+  position: absolute;
+  right: -0.5rem;
+  top: -0.25rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-main);
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.invite-share-modal .close-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fecaca;
+  transform: rotate(90deg);
+}
+
+.invite-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+
+.qr-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.qr-wrapper {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 
+    0 0 0 1px rgba(0,0,0,0.05),
+    0 15px 35px -5px rgba(0,0,0,0.1);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.qr-wrapper:hover {
+  transform: scale(1.02);
+}
+
+.qr-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, var(--emerald-500), transparent);
+  z-index: -1;
+  opacity: 0.3;
+}
+
+.qr-hint {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.dark-theme .qr-hint {
+  color: var(--text-secondary);
+}
+
+.link-section {
+  width: 100%;
+}
+
+.link-section label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.copy-link-group {
+  display: flex;
+  background: var(--bg-input);
+  border: 2px solid var(--border-main);
+  border-radius: 16px;
+  padding: 0.5rem;
+  transition: all 0.2s;
+  align-items: center;
+}
+
+.copy-link-group:focus-within {
+  border-color: var(--emerald-500);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.copy-link-group input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.copy-btn {
+  background: var(--emerald-500);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.copy-btn:hover {
+  background: var(--emerald-600);
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+}
+
+.copy-btn.copied {
+  background: #10b981;
+}
+
+.invite-meta {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: rgba(16, 185, 129, 0.04);
+  border-radius: 16px;
+  border: 1px dashed rgba(16, 185, 129, 0.2);
+}
+
+.dark-theme .invite-meta {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.invite-meta p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dark-theme .invite-meta p {
+  color: var(--text-secondary);
+}
+
+.invite-meta strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.invite-meta .status-badge {
+  background: var(--emerald-100);
+  color: var(--emerald-600);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }

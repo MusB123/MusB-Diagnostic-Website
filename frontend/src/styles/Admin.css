@@ -89,6 +89,7 @@
   margin-left: var(--admin-sidebar-width);
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Let flex child shrink so inner horizontal scroll works */
 }
 
 .admin-header {
@@ -110,6 +111,8 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  min-width: 0; /* Prevent wide dashboard tracks from stretching the layout */
+  box-sizing: border-box;
 }
 
 /* Sidebar Toggle Button (Hidden on Desktop) */
@@ -134,16 +137,19 @@
   background-color: var(--admin-text-primary);
   position: relative;
   transition: all 0.3s ease;
+  border-radius: 2px;
 }
 
 .admin-sidebar-toggle span::before,
 .admin-sidebar-toggle span::after {
   content: '';
   position: absolute;
+  left: 0;
   width: 24px;
   height: 2px;
   background-color: var(--admin-text-primary);
   transition: all 0.3s ease;
+  border-radius: 2px;
 }
 
 .admin-sidebar-toggle span::before { transform: translateY(-7px); }
@@ -189,14 +195,12 @@
   }
 
   .admin-content {
-    padding: 1.25rem;
+    padding: 1rem;
   }
 }
 
 @media (max-width: 640px) {
-  .admin-stats-grid {
-    grid-template-columns: 1fr;
-  }
+  /* Removed grid-template-columns: 1fr to maintain slider behavior */
 
   .admin-header-main {
     flex-direction: column;
@@ -208,8 +212,38 @@
     font-size: 1.75rem !important;
   }
 
+  .admin-slider-track {
+    gap: 0.5rem !important;
+    padding: 0 0.75rem 0 0.25rem !important;
+  }
+
   .dashboard-grid-lower {
-    grid-template-columns: 1fr;
+    display: inline-flex !important; /* Force inline extension */
+    flex-wrap: nowrap !important;
+    gap: 0.75rem;
+    width: fit-content !important;
+    min-width: 100%;
+  }
+
+  .dashboard-grid-lower > div {
+    min-width: 88vw;
+    width: 88vw;
+    flex: 0 0 88vw !important;
+    scroll-snap-align: center;
+  }
+
+  .admin-dashboard .kpi-card {
+    min-width: 96px !important;
+    max-width: 118px !important;
+    padding: 0.45rem 0.5rem !important;
+  }
+
+  .admin-dashboard .kpi-value {
+    font-size: 0.95rem !important;
+  }
+
+  .admin-dashboard .kpi-trend {
+    font-size: 0.62rem !important;
   }
 }
 
@@ -219,6 +253,174 @@
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+
+/* Native Snap Slider Framework (Fail-Proof) */
+.admin-slider-viewport {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  display: block;
+  position: relative;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem 0 1.25rem;
+  margin: 0 -0.5rem;
+  overscroll-behavior-x: contain;
+  box-sizing: border-box;
+  touch-action: pan-x pan-y;
+}
+
+/* Thin scrollbar on slider strips (global * rule hides scrollbars elsewhere) */
+.admin-slider-viewport::-webkit-scrollbar {
+  display: block !important;
+  height: 6px;
+}
+.admin-slider-viewport::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+}
+.admin-slider-viewport::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+.admin-slider-viewport {
+  scrollbar-width: thin !important; /* Override global * { scrollbar-width: none } */
+  scrollbar-color: rgba(148, 163, 184, 0.5) rgba(15, 23, 42, 0.4) !important;
+}
+
+.admin-slider-track {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  gap: 1rem;
+  width: fit-content !important;
+  padding: 0 5rem 0 0.5rem; /* Desktop: room to scroll last card into view */
+}
+
+/* Tablet & phone only — desktop ( > 1024px ) keeps full-size cards and original spacing */
+@media (max-width: 1024px) {
+  .admin-slider-track {
+    padding: 0 1.5rem 0 0.5rem !important;
+  }
+
+  /* Only the dashboard KPI strip (.admin-slider-track); plain .admin-stats-grid grids stay intact */
+  .admin-stats-grid.admin-slider-track,
+  .admin-scroll-row,
+  .dashboard-grid-lower {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.75rem;
+    width: max-content;
+  }
+
+  .admin-stats-grid.admin-slider-track .kpi-card {
+    min-width: 125px;
+    max-width: 155px;
+    flex: 0 0 auto !important;
+    scroll-snap-align: center;
+    padding: 0.75rem !important;
+  }
+
+  .admin-module {
+    min-width: 86vw;
+    flex: 0 0 auto !important;
+    scroll-snap-align: center;
+    margin-right: 0.25rem;
+  }
+
+  .admin-scroll-item {
+    min-width: 95px;
+    flex: 0 0 auto !important;
+    scroll-snap-align: center;
+  }
+}
+
+/* Navigation Arrow Logic */
+.slider-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--admin-accent);
+  color: var(--admin-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+/* Slider Navigation Arrows */
+.slider-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid var(--admin-accent);
+  color: var(--admin-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.slider-nav-btn:hover {
+  background: var(--admin-accent);
+  color: white;
+}
+
+.slider-controls {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .slider-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+.kpi-label {
+  font-size: 0.65rem; /* Shrink label */
+  font-weight: 700;
+  color: var(--admin-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 1.25rem; /* Shrink value */
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.slider-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+.slider-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--admin-text-secondary);
+  transition: all 0.3s ease;
+}
+
+.slider-dot.active {
+  background: var(--admin-accent);
+  transform: scale(1.4);
 }
 
 .kpi-card {
@@ -357,6 +559,18 @@
     margin-top: 0.5rem !important;
 }
 
+/* Dashboard page: stay within main column so horizontal scroll regions work */
+.admin-dashboard {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.admin-dashboard .admin-page-title {
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
 /* Dashboard Specific Visibility Overrides */
 .admin-dashboard h1 {
   color: #ffffff !important;
@@ -463,25 +677,27 @@
 .admin-module {
   background: var(--admin-card-bg);
   border: 1px solid var(--admin-border);
-  border-radius: 1rem;
+  border-radius: 0.85rem; /* Slightly tighter radius */
   overflow: hidden;
+  margin-bottom: 1.25rem; /* Reduced gap */
 }
 
 .module-header {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem; /* Reduced padding */
   border-bottom: 1px solid var(--admin-border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .module-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 0.95rem; /* Shrink title */
+  font-weight: 700;
+  margin: 0;
 }
 
 .module-body {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem; /* Reduced padding */
 }
 
 /* Activity List */
@@ -510,6 +726,7 @@
 
 .activity-details {
   flex: 1;
+  min-width: 0; /* Long titles wrap inside fixed-width module cards */
 }
 
 .activity-title {

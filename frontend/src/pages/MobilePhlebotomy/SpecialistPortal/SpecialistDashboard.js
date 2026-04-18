@@ -39,7 +39,11 @@ const SpecialistDashboard = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('phleb_token');
-    if (!token) navigate('/mobile-phlebotomy');
+    const patientToken = localStorage.getItem('patient_token');
+    if (!token) {
+      if (patientToken) navigate('/portal/patient/dashboard', { replace: true });
+      else navigate('/mobile-phlebotomy');
+    }
   }, [navigate]);
 
   /* Auto-show job request after 5s for demo */

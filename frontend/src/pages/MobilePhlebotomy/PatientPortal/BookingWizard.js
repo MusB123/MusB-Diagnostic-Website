@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -41,6 +41,13 @@ const TIME_SLOTS = [
 
 const BookingWizard = () => {
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const token = localStorage.getItem('patient_token');
+    if (!token) {
+      navigate('/portal/patient/login', { replace: true });
+    }
+  }, [navigate]);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -136,7 +143,7 @@ const BookingWizard = () => {
               </p>
               <button
                 className="pp-btn-primary"
-                onClick={() => navigate('/portal/patient/dashboard')}
+                onClick={() => navigate('/portal/patient/dashboard', { replace: true })}
                 style={{ maxWidth: 300, margin: '0 auto' }}
               >
                 Go to Dashboard <ArrowRight size={18} />
@@ -497,7 +504,7 @@ const BookingWizard = () => {
         <div className="pp-wizard-page">
           {/* Header */}
           <div className="pp-wizard-header">
-            <button className="pp-wizard-back" onClick={step > 1 ? handleBack : () => navigate('/mobile-phlebotomy')}>
+            <button className="pp-wizard-back" onClick={step > 1 ? handleBack : () => navigate('/portal/patient/dashboard', { replace: true })}>
               <ArrowLeft size={18} />
               {step > 1 ? 'Back' : 'Exit'}
             </button>

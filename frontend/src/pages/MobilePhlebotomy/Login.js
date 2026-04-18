@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +35,14 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
     zipCodes: []
   });
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const token = localStorage.getItem('phleb_token');
+    if (token) {
+      // If we're already logged in, skip the login screen
+      navigate('/portal/phlebotomist/dashboard', { replace: true });
+    }
+  }, [navigate]);
   
   const update = (f, v) => setFormData(prev => ({ ...prev, [f]: v }));
 
@@ -119,7 +127,7 @@ const PhlebotomistLogin = ({ isOpen, onClose }) => {
         localStorage.setItem('phleb_token', data.token);
         localStorage.setItem('phleb_user', JSON.stringify(data.user));
         onClose();
-        navigate('/portal/phlebotomist/dashboard');
+        navigate('/portal/phlebotomist/dashboard', { replace: true });
       } else {
         setError(data.error || 'Invalid phlebotomist credentials');
       }

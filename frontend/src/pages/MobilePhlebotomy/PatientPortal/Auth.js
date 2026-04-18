@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Droplets, ArrowRight, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
@@ -14,6 +14,13 @@ const PatientAuth = () => {
   const [otpTimer, setOtpTimer] = useState(59);
   const otpRefs = useRef([]);
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const token = localStorage.getItem('patient_token');
+    if (token) {
+      navigate('/portal/patient/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '', password: ''
@@ -52,7 +59,7 @@ const PatientAuth = () => {
       setLoading(false);
       localStorage.setItem('patient_token', 'demo_token');
       localStorage.setItem('patient_user', JSON.stringify({ name: 'John Doe', email: form.email }));
-      navigate('/portal/patient/dashboard');
+      navigate('/portal/patient/dashboard', { replace: true });
     }, 1500);
   };
 
@@ -135,7 +142,7 @@ const PatientAuth = () => {
       setLoading(false);
       localStorage.setItem('patient_token', data.token);
       localStorage.setItem('patient_user', JSON.stringify(data.user));
-      navigate('/portal/patient/dashboard');
+      navigate('/portal/patient/dashboard', { replace: true });
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -454,7 +461,11 @@ const PatientAuth = () => {
           <div className="pp-auth-card">
             <button
               className="pp-auth-close"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                const token = localStorage.getItem('patient_token');
+                if (token) navigate('/portal/patient/dashboard', { replace: true });
+                else navigate(-1);
+              }}
               aria-label="Close"
             >
               <X size={20} />

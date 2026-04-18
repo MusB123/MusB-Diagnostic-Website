@@ -262,6 +262,7 @@
     background-color: var(--primary);
     position: relative;
     transition: all 0.3s ease;
+    border-radius: 2px;
   }
 
   .hamburger::before,
@@ -273,6 +274,7 @@
     height: 2px;
     background-color: var(--primary);
     transition: all 0.3s ease;
+    border-radius: 2px;
   }
 
   .hamburger::before { transform: translateY(-8px); }

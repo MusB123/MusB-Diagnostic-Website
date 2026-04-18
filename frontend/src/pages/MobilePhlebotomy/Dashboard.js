@@ -612,7 +612,11 @@ function PhlebotomistDashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('phleb_token');
-    if (!token) navigate('/mobile-phlebotomy');
+    const patientToken = localStorage.getItem('patient_token');
+    if (!token) {
+      if (patientToken) navigate('/portal/patient/dashboard', { replace: true });
+      else navigate('/mobile-phlebotomy');
+    }
   }, [navigate]);
 
   useEffect(() => {
@@ -644,7 +648,7 @@ function PhlebotomistDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('phleb_token');
     localStorage.removeItem('phleb_user');
-    navigate('/mobile-phlebotomy');
+    navigate('/mobile-phlebotomy', { replace: true });
   };
 
   const formatTimer = useCallback((s) => {
