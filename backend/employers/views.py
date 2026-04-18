@@ -158,7 +158,8 @@ def login_view(request):
         # Check manual login (Developer account)
         login_data = login_manual(email, password)
         if login_data:
-            return Response(login_data)
+            # Enforce transformation for production serialization stability
+            return Response(transform_doc(login_data))
             
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:

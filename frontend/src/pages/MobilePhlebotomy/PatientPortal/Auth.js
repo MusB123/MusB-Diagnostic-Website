@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Droplets, ArrowRight, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import './PatientPortal.css';
+import api from '../../../api/api';
 
 const PatientAuth = () => {
   const [mode, setMode] = useState('login'); // login | signup | otp | forgot
@@ -83,13 +84,11 @@ const PatientAuth = () => {
 
     try {
       if (method === 'email') {
-        const response = await fetch('http://localhost:8000/api/patients/request-otp/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.email })
+        const response = await api.post('/api/patients/request-otp/', {
+          email: form.email
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to send email code.');
+        const data = response.data;
+        // api-axios automatically throws on non-2xx
         
         setMode('otp');
         startOtpTimer();
@@ -124,20 +123,15 @@ const PatientAuth = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/patients/verify-otp/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: form.phone,
-          email: form.email,
-          token: code,
-          method: verifyMethod,
-          name: form.name
-        })
+      const response = await api.post('/api/patients/verify-otp/', {
+        phone: form.phone,
+        email: form.email,
+        token: code,
+        method: verifyMethod,
+        name: form.name
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Invalid verification code.');
+      const data = response.data;
 
       setLoading(false);
       localStorage.setItem('patient_token', data.token);
@@ -154,16 +148,7 @@ const PatientAuth = () => {
     setError('');
     try {
       const payload = verifyMethod === 'email' ? { email: form.email } : { phone: form.phone };
-      const response = await fetch('http://localhost:8000/api/patients/request-otp/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to resend code.');
-      }
+      await api.post('/api/patients/request-otp/', payload);
 
       setLoading(false);
       startOtpTimer();

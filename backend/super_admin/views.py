@@ -258,9 +258,19 @@ def _build_test_query(test_id):
 @permission_classes([AllowAny])
 def admin_tests_list(request):
     """GET /api/superadmin/catalog/tests/ — List ALL tests for admin management."""
-    coll = get_lab_tests_collection()
-    docs = list(coll.find())
-    return Response([transform_doc(d) for d in docs])
+    try:
+        coll = get_lab_tests_collection()
+        docs = list(coll.find())
+        data = [transform_doc(d) for d in docs]
+        return Response(data)
+    except Exception as e:
+        print(f"🔥 ADMIN TESTS LIST ERROR: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return Response({
+            'error': 'Failed to fetch catalog tests',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

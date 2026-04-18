@@ -391,15 +391,15 @@ def transform_doc(doc):
 
     from bson import ObjectId
     import datetime
+    from decimal import Decimal
 
     new_doc = doc.copy()
     
     # Standardize ID field
     if '_id' in new_doc:
+        oid = new_doc.pop('_id')
         if 'id' not in new_doc:
-            new_doc['id'] = str(new_doc.pop('_id'))
-        else:
-            new_doc.pop('_id')
+            new_doc['id'] = str(oid)
     
     # Deep serialization check
     for key, value in new_doc.items():
@@ -407,10 +407,12 @@ def transform_doc(doc):
             new_doc[key] = str(value)
         elif isinstance(value, (datetime.datetime, datetime.date)):
             new_doc[key] = value.isoformat()
+        elif isinstance(value, Decimal):
+            new_doc[key] = float(value)
         elif isinstance(value, dict):
             new_doc[key] = transform_doc(value)
-        elif isinstance(value, list) and len(value) > 0 and isinstance(value[0], dict):
-            new_doc[key] = [transform_doc(item) for item in value]
+        elif isinstance(value, list):
+            new_doc[key] = [transform_doc(item) if isinstance(item, dict) else item for item in value]
 
     return new_doc
 
