@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, Users, Calendar, Wallet, CreditCard, 
+  LayoutDashboard, Users, User, Calendar, Wallet, CreditCard, 
   MapPin, LogOut, Menu, X, Bell, Search, Plus, 
   Download, Filter, ChevronRight, AlertCircle, ArrowRight,
   FileText, CheckCircle2, Clock, Sun, Moon, Share2, Copy, Trash2, ShieldCheck,
@@ -665,29 +665,84 @@ const EmployerDashboard = () => {
         </div>
       )}
 
-      {/* Lifted Modal - Rendered at root to avoid stacking context issues */}
-      {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal-content glass" onClick={e => e.stopPropagation()}>
-            <h2 className="modal-title">Invite Employee</h2>
-            <form onSubmit={handleAddEmployee} className="login-form">
-              <div className="form-group">
-                <label>Full Name</label>
-                <input type="text" value={newEmployee.full_name} onChange={e => setNewEmployee({...newEmployee, full_name: e.target.value})} placeholder="John Doe" required />
+      {/* Lifted Modal - Redesigned for Symmetry and Polish */}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="modal-content glass invite-employee-modal" 
+              onClick={e => e.stopPropagation()}
+            >
+              <button className="modal-close-btn" onClick={() => setShowAddModal(false)}>
+                <X size={20} />
+              </button>
+              
+              <div className="modal-header-section">
+                <div className="modal-icon-badge">
+                  <User size={24} />
+                </div>
+                <h2 className="modal-title">Invite Employee</h2>
+                <p className="modal-subtitle">Add a new member to your corporate health program</p>
               </div>
-              <div className="form-group">
-                <label>Email Address</label>
-                <input type="email" value={newEmployee.email} onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} placeholder="john@company.com" required />
-              </div>
-              <div className="form-group">
-                <label>Annual Due Date (Est)</label>
-                <input type="date" value={newEmployee.due_date} onChange={e => setNewEmployee({...newEmployee, due_date: e.target.value})} required />
-              </div>
-              <button type="submit" className="btn btn-primary btn-block">Send Invite</button>
-            </form>
+
+              <form onSubmit={handleAddEmployee} className="modern-modal-form">
+                <div className="form-group-dynamic">
+                  <label>Full Name</label>
+                  <div className="input-with-icon">
+                    <User size={18} className="field-icon" />
+                    <input 
+                      type="text" 
+                      value={newEmployee.full_name} 
+                      onChange={e => setNewEmployee({...newEmployee, full_name: e.target.value})} 
+                      placeholder="e.g. John Doe" 
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group-dynamic">
+                  <label>Email Address</label>
+                  <div className="input-with-icon">
+                    <Mail size={18} className="field-icon" />
+                    <input 
+                      type="email" 
+                      value={newEmployee.email} 
+                      onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} 
+                      placeholder="e.g. john@company.com" 
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group-dynamic">
+                  <label>Annual Due Date (Estimated)</label>
+                  <div className="input-with-icon">
+                    <Calendar size={18} className="field-icon" />
+                    <input 
+                      type="date" 
+                      value={newEmployee.due_date} 
+                      onChange={e => setNewEmployee({...newEmployee, due_date: e.target.value})} 
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <motion.button 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit" 
+                  className="btn btn-primary btn-full-width mt-4"
+                >
+                  Send Invitation <ArrowRight size={18} />
+                </motion.button>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

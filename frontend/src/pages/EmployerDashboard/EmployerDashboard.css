@@ -1128,6 +1128,159 @@
   max-width: 400px;
   margin: 0 auto 2rem;
 }
+/* ====== Invite Employee Modal Redesign ====== */
+.invite-employee-modal {
+  max-width: 480px;
+  width: 100%;
+  padding: 2.5rem;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-main);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.modal-close-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fecaca;
+  transform: rotate(90deg);
+}
+
+.modal-header-section {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-icon-badge {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--emerald-500);
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem !important;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.modal-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 80%;
+}
+
+.modern-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group-dynamic {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.form-group-dynamic label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-left: 0.25rem;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-icon {
+  position: absolute;
+  left: 1.25rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 0.85rem 1.25rem 0.85rem 3.25rem !important;
+  background: var(--bg-input);
+  border: 2px solid var(--border-main);
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.input-with-icon input:focus {
+  border-color: var(--emerald-500);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.input-with-icon input:focus + .field-icon {
+  color: var(--emerald-500);
+}
+
+.btn-full-width {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 14px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* Dark theme specific fixes for invitation modal */
+.dark-theme .invite-employee-modal {
+  background: rgba(22, 27, 42, 0.95) !important;
+}
+
+.dark-theme .modal-header-section .modal-title {
+  color: #ffffff;
+}
+
+.dark-theme .form-group-dynamic label {
+  color: var(--text-secondary);
+}
+
 /* ====== Share Invitation Modal ====== */
 .invite-share-modal {
   max-width: 480px;
@@ -1344,3 +1497,4 @@
   font-weight: 800;
   text-transform: uppercase;
 }
+

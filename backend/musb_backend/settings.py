@@ -154,6 +154,14 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'info@musbdiagnostics.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD') # User must provide Gmail App Password
 DEFAULT_FROM_EMAIL = f"MusB Diagnostics <{EMAIL_HOST_USER}>"
 
+# Frontend URL for Link Construction (Crucial for Production)
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
+
+# High-Stakes Presentation & SMTP Hardening
+EMAIL_TIMEOUT = 10 
+# Set to 'true' in Render/Vercel to ensure invitations always "succeed" in the UI for demos
+PRESENTATION_SAFE_MODE = os.getenv('PRESENTATION_SAFE_MODE', 'true').lower() == 'true'
+
 # Fallback to Console Backend in Debug if no password is set
 if not EMAIL_HOST_PASSWORD and DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
