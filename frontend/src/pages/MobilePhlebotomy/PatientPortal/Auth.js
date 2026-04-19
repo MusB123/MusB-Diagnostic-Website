@@ -96,8 +96,10 @@ const PatientAuth = () => {
       }
     } catch (err) {
       setLoading(false);
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
-      setError(msg);
+      const data = err.response?.data;
+      const msg = data?.error || data?.message || err.message;
+      const details = data?.details ? ` (${data.details})` : '';
+      setError(`${msg}${details}`);
     }
   };
 
@@ -129,7 +131,8 @@ const PatientAuth = () => {
         email: form.email,
         token: code,
         method: verifyMethod,
-        name: form.name
+        name: form.name,
+        password: form.password
       });
 
       const data = response.data;
@@ -140,8 +143,10 @@ const PatientAuth = () => {
       navigate('/portal/patient/dashboard', { replace: true });
     } catch (err) {
       setLoading(false);
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
-      setError(msg);
+      const data = err.response?.data;
+      const msg = data?.error || data?.message || err.message;
+      const details = data?.details ? ` (${data.details})` : '';
+      setError(`${msg}${details}`);
     }
   };
 
@@ -156,8 +161,10 @@ const PatientAuth = () => {
       startOtpTimer();
     } catch (err) {
       setLoading(false);
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
-      setError(msg);
+      const data = err.response?.data;
+      const msg = data?.error || data?.message || err.message;
+      const details = data?.details ? ` (${data.details})` : '';
+      setError(`${msg}${details}`);
     }
   };
 

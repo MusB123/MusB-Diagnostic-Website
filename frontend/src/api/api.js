@@ -68,7 +68,8 @@ api.interceptors.response.use(
     console.error('❌ [API Error]', {
       url: error.config?.url,
       status: error.response?.status,
-      message: errorMsg
+      message: errorMsg,
+      data: error.response?.data // Professional detail exposure
     });
     return Promise.reject(error);
   }

@@ -148,9 +148,9 @@ REST_FRAMEWORK = {
 # Email Configuration (Gmail SMTP - Hardened for Production)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'info@musbdiagnostics.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD') # User must provide Gmail App Password
 DEFAULT_FROM_EMAIL = f"MusB Diagnostics <{EMAIL_HOST_USER}>"
@@ -159,7 +159,7 @@ DEFAULT_FROM_EMAIL = f"MusB Diagnostics <{EMAIL_HOST_USER}>"
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
 
 # High-Stakes SMTP Hardening
-EMAIL_TIMEOUT = 10 
+EMAIL_TIMEOUT = 25 
 
 # Fallback to Console Backend in Debug if no password is set
 if not EMAIL_HOST_PASSWORD and DEBUG:
