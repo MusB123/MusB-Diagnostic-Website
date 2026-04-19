@@ -33,7 +33,9 @@ class OTPService:
             logger.info(f"OTP Email sent to {recipient_email}")
             return True
         except Exception as e:
-            logger.error(f"EMAIL ERROR: {str(e)}")
+            logger.error(f"EMAIL ERROR during OTP send to {recipient_email}: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             return False
 
     @staticmethod

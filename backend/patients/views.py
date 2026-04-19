@@ -56,17 +56,35 @@ def request_otp(request):
             coll.insert_one(otp_payload)
     
     # Send via Email (if email provided)
+    sent = True
+    email_error = None
     if email:
-        sent = OTPService.send_email_otp(email, otp_code)
+        try:
+            sent = OTPService.send_email_otp(email, otp_code)
+        except Exception as e:
+            sent = False
+            email_error = str(e)
     else:
         # Fallback to console for phone for now (since user wanted to move away from Twilio)
         print(f"\n[INTERNAL] SMS OTP for {phone}: {otp_code}\n")
-        sent = True
     
     if sent:
         return Response({'message': f'OTP sent successfully to {id_type}.'})
-    else:
-        return Response({'error': f'Failed to send code to {id_type}.'}, status= status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    # If we are in DEBUG mode, we allow the request to succeed even if email delivery fails.
+    # This ensures developers/demo systems aren't blocked by SMTP issues.
+    if settings.DEBUG:
+        print(f"\n[DEVELOPMENT ALERT] Email delivery failed: {email_error}")
+        print(f"[DEVELOPMENT ALERT] OTP for {identifier}: {otp_code}\n")
+        return Response({
+            'message': f'OTP generated successfully (Debug Mode). Check server logs for code.',
+            'debug_info': 'Email delivery failed, but signup is allowed in DEBUG mode.'
+        })
+
+    return Response({
+        'error': f'Failed to send code to {id_type}.',
+        'details': email_error or 'Unknown SMTP error. Check backend configuration.'
+    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -128,7 +146,7 @@ def verify_otp(request):
             current_secret = patient['totp_secret']
             
         if not current_secret:
-            return Response({'error': 'TOTP secret not found. Please restart setup.'}, status=400)
+            return Response({'error': 'Authenticator secret not found. Please restart setup.'}, status=400)
             
         is_valid = OTPService.verify_totp(current_secret, token)
         if is_valid and patient:
@@ -165,6 +183,7 @@ def verify_otp(request):
             'email': email,
             'phone': phone,
             'name': data.get('name', 'New Patient'),
+            'password': data.get('password'), # Saving the password for real auth later
             'status': 'verified',
             'created_at': datetime.datetime.utcnow()
         }
@@ -177,6 +196,7 @@ def verify_otp(request):
     else:
         update_fields = {'status': 'verified'}
         if data.get('name'): update_fields['name'] = data['name']
+        if data.get('password'): update_fields['password'] = data['password']
         if method == 'totp' and secret: update_fields['totp_secret'] = secret
         
         patients_coll.update_one(identifier_query, {'$set': update_fields})

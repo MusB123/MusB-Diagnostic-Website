@@ -96,7 +96,8 @@ const PatientAuth = () => {
       }
     } catch (err) {
       setLoading(false);
-      setError(err.message);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(msg);
     }
   };
 
@@ -139,7 +140,8 @@ const PatientAuth = () => {
       navigate('/portal/patient/dashboard', { replace: true });
     } catch (err) {
       setLoading(false);
-      setError(err.message);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(msg);
     }
   };
 
@@ -154,7 +156,8 @@ const PatientAuth = () => {
       startOtpTimer();
     } catch (err) {
       setLoading(false);
-      setError(err.message);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(msg);
     }
   };
 
