@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .otp_service import OTPService
 from .auth import generate_token
+from django.conf import settings
 from musb_backend.mongodb import get_db, transform_doc
 
 def get_otps_collection():
