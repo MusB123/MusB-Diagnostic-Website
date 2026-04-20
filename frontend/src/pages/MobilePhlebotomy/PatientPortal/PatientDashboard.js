@@ -105,6 +105,11 @@ const PatientDashboard = () => {
             <div className="pp-appt-info">
               <h4>{appt.test}</h4>
               <p>{appt.time} • {appt.phlebotomist}</p>
+              {appt.status === 'rejected' && appt.rejection_reason && (
+                <div className="pp-appt-rejection-note">
+                  <strong>Rejection Reason:</strong> {appt.rejection_reason}
+                </div>
+              )}
             </div>
             <div className="pp-appt-actions">
               <button
@@ -204,6 +209,11 @@ const PatientDashboard = () => {
             <div className="pp-appt-info">
               <h4>{appt.test}</h4>
               <p>{appt.time} • {appt.phlebotomist}</p>
+              {appt.status === 'rejected' && appt.rejection_reason && (
+                <div className="pp-appt-rejection-note">
+                  <strong>Rejection Reason:</strong> {appt.rejection_reason}
+                </div>
+              )}
             </div>
             <span className={`pp-appt-badge ${appt.status}`}>{appt.status}</span>
           </div>

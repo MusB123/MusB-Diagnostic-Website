@@ -119,6 +119,8 @@ def dashboard_view(request):
         doc['time'] = doc.get('preferred_time', 'TBD')
         # Phlebotomist assignment placeholder or real name
         doc['phlebotomist'] = doc.get('assigned_phlebotomist_name', 'Awaiting Assignment')
+        # Include rejection reason for feedback
+        doc['rejection_reason'] = doc.get('rejection_reason', '')
         return doc
 
     return Response({
