@@ -100,12 +100,6 @@ const BookingWizard = () => {
   const [dialHour, setDialHour] = useState('09');
   const [dialMinute, setDialMinute] = useState('00');
 
-  // Auto-sync dial to data.selectedTime on step 5 entry
-  useEffect(() => {
-    if (step === 5 && !data.selectedTime) {
-      updateField('selectedTime', `${dialHour}:${dialMinute}`);
-    }
-  }, [step, data.selectedTime, dialHour, dialMinute]);
 
   const [data, setData] = useState({
     address: '',        // Street Address
@@ -174,6 +168,13 @@ const BookingWizard = () => {
   const updateField = (field, value) => {
     setData((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Auto-sync dial to data.selectedTime on step 5 entry
+  useEffect(() => {
+    if (step === 5 && !data.selectedTime) {
+      updateField('selectedTime', `${dialHour}:${dialMinute}`);
+    }
+  }, [step, data.selectedTime, dialHour, dialMinute]);
 
   const canNext = () => {
     switch (step) {
