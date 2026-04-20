@@ -28,6 +28,7 @@ def login_manual(email, password):
     Expert implementation of employer login: 
     Checks the 'employers' collection for an email match, then verifies the password.
     Includes a demo fallback for presentation reliability.
+    """
     coll = get_employers_collection()
     employer = coll.find_one({'email': email})
     
