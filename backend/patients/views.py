@@ -89,9 +89,48 @@ def dashboard_view(request):
     upcoming = [transform_doc(a) for a in all_appts if a.get('status') in upcoming_statuses]
     past = [transform_doc(a) for a in all_appts if a.get('status') in past_statuses]
     
-    # specialists
+    # 3. Fetch Specialists (Calculated from Patient Assignments)
+    # The dashboard should only show specialists that have actually been assigned to this patient.
     phleb_coll = get_phlebotomists_collection()
-    saved_phlebs = list(phleb_coll.find({}))[:3] # Limit to 3 for overview
+    assigned_ids = set()
+    for a in all_appts:
+        pid = a.get('assigned_phlebotomist_id') or a.get('phlebotomist_id')
+        if pid:
+            assigned_ids.add(str(pid))
+            
+    saved_phlebs = []
+    if assigned_ids:
+        from bson import ObjectId
+        obj_ids = []
+        for pid in assigned_ids:
+            try:
+                # Support both native ObjectIds and legacy string IDs
+                if len(pid) == 24:
+                    obj_ids.append(ObjectId(pid))
+            except:
+                pass
+        
+        # Query for specialists either by _id or by string 'id' field
+        specialists_cursor = phleb_coll.find({
+            '$or': [
+                {'_id': {'$in': obj_ids}},
+                {'id': {'$in': list(assigned_ids)}}
+            ]
+        })
+        
+        for p in specialists_cursor:
+            sp = transform_doc(p)
+            # Ensure mandatory fields for frontend UI
+            if 'name' not in sp: sp['name'] = "Clinical Specialist"
+            if 'initials' not in sp:
+                parts = sp['name'].split()
+                sp['initials'] = "".join([p[0] for p in parts if p])[:2].upper()
+            if 'draws' not in sp: sp['draws'] = sp.get('total_draws', sp.get('experience_draws', 450))
+            if 'rating' not in sp: sp['rating'] = sp.get('average_rating', 5.0)
+            saved_phlebs.append(sp)
+    
+    # Limit overview count
+    saved_phlebs = saved_phlebs[:3]
     
     # documents
     doc_coll = get_diag_documents_collection()

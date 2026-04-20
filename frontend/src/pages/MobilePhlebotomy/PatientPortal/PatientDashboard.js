@@ -144,7 +144,7 @@ const PatientDashboard = () => {
           </div>
           Saved Phlebotomists
         </div>
-        {SAVED_PHLEBS.map((p) => (
+        {SAVED_PHLEBS.length > 0 ? SAVED_PHLEBS.map((p) => (
           <div
             key={p.id}
             className="pp-saved-phleb"
@@ -160,7 +160,11 @@ const PatientDashboard = () => {
               <Star size={14} /> {p.rating}
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="pp-empty-state" style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+            <p>No specialists assigned yet.</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -252,8 +256,8 @@ const PatientDashboard = () => {
             </div>
           </div>
         )) : (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-            <p>You haven't saved any specialists yet.</p>
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+            <p>No specialists assigned to your appointments yet.</p>
           </div>
         )}
       </div>
