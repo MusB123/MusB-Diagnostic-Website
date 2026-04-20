@@ -6,6 +6,7 @@ urlpatterns = [
     path('signup/', views.request_otp, name='signup'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('book-appointment/', views.book_appointment, name='book-appointment'),
+    path('add-payment-method/', views.add_payment_method, name='add-payment-method'),
     path('request-otp/', views.request_otp, name='request-otp'),
     path('verify-otp/', views.verify_otp, name='verify-otp'),
 ]

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Droplets, CalendarDays, Clock, FileText, CreditCard,
-  Settings, LogOut, Star, ChevronRight, Plus, MapPin, User, Menu
+  Settings, LogOut, Star, ChevronRight, Plus, MapPin, User, Menu, X, AlertTriangle
 } from 'lucide-react';
 import './PatientPortal.css';
 import api from '../../../api/api';
@@ -19,6 +19,15 @@ const PatientDashboard = () => {
     saved_phlebotomists: [],
     documents: [],
     stats: { total: 0, completed: 0, upcoming: 0 }
+  });
+
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [submittingCard, setSubmittingCard] = useState(false);
+  const [cardForm, setCardForm] = useState({
+    number: '',
+    exp: '',
+    cvc: '',
+    name: ''
   });
 
   useEffect(() => {
@@ -60,6 +69,38 @@ const PatientDashboard = () => {
   const DOCUMENTS = dashData.documents || [];
   const PAYMENT_METHODS = dashData.payment_methods || [];
   const STATS = dashData.stats;
+
+  const handleAddPayment = async (e) => {
+    e.preventDefault();
+    setSubmittingCard(true);
+    try {
+      const last4 = cardForm.number.replace(/\s/g, '').slice(-4);
+      let brand = 'Visa';
+      if (cardForm.number.startsWith('5')) brand = 'MasterCard';
+      if (cardForm.number.startsWith('3')) brand = 'Amex';
+
+      await api.post('/api/patients/add-payment-method/', {
+        brand,
+        last4,
+        exp: cardForm.exp,
+        card_holder: cardForm.name
+      });
+
+      setShowAddPayment(false);
+      setCardForm({ number: '', exp: '', cvc: '', name: '' });
+      fetchDashboardData();
+    } catch (err) {
+      console.error("Failed to add card", err);
+      alert("Failed to save payment method. Please check your details.");
+    } finally {
+      setSubmittingCard(false);
+    }
+  };
+
+  const formatCardNumber = (val) => {
+    const digits = val.replace(/\D/g, '').slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
 
   const NAV_ITEMS = [
     { id: 'overview', label: 'Overview', icon: CalendarDays },
@@ -299,8 +340,9 @@ const PatientDashboard = () => {
           </div>
           Saved Payment Methods
         </div>
-        {PAYMENT_METHODS.map((card) => (
-          <div key={card.id} className="pp-doc-item">
+        
+        {PAYMENT_METHODS.length > 0 ? PAYMENT_METHODS.map((card) => (
+          <div key={card.id || card._id} className="pp-doc-item">
             <div className="pp-doc-icon" style={{ background: 'rgba(99, 102, 241, 0.1)' }}>
               <CreditCard size={18} />
             </div>
@@ -309,10 +351,93 @@ const PatientDashboard = () => {
               <p>Expires {card.exp}</p>
             </div>
           </div>
-        ))}
-        <button className="pp-btn-secondary" style={{ marginTop: '1rem' }}>
+        )) : (
+          <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+            No payment methods saved yet.
+          </div>
+        )}
+
+        <button 
+          className="pp-btn-secondary" 
+          style={{ marginTop: '1rem' }}
+          onClick={() => setShowAddPayment(true)}
+        >
           <Plus size={18} /> Add Payment Method
         </button>
+
+        {/* Add Payment Modal */}
+        {showAddPayment && (
+          <div className="pp-modal-overlay">
+            <motion.div 
+              className="pp-modal-content"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+            >
+              <div className="pp-modal-header">
+                <h3>Add Card</h3>
+                <button className="pp-modal-close" onClick={() => setShowAddPayment(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleAddPayment} className="pp-auth-form">
+                <div className="pp-form-group">
+                  <label>Cardholder Name</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="John Doe"
+                    value={cardForm.name}
+                    onChange={e => setCardForm({...cardForm, name: e.target.value})}
+                  />
+                </div>
+                <div className="pp-form-group">
+                  <label>Card Number</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="4242 4242 4242 4242"
+                    value={formatCardNumber(cardForm.number)}
+                    onChange={e => setCardForm({...cardForm, number: e.target.value})}
+                  />
+                </div>
+                <div className="pp-form-row">
+                  <div className="pp-form-group">
+                    <label>Expiry Date</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="MM/YY"
+                      value={cardForm.exp}
+                      onChange={e => setCardForm({...cardForm, exp: e.target.value})}
+                      maxLength={5}
+                    />
+                  </div>
+                  <div className="pp-form-group">
+                    <label>CVC</label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="•••"
+                      value={cardForm.cvc}
+                      onChange={e => setCardForm({...cardForm, cvc: e.target.value})}
+                      maxLength={3}
+                    />
+                  </div>
+                </div>
+
+                <div className="pp-payment-notice" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
+                  <AlertTriangle size={16} />
+                  <p style={{ fontSize: '0.75rem' }}>Your data is encrypted. We store only card metadata for identification.</p>
+                </div>
+
+                <button className="pp-btn-primary" type="submit" disabled={submittingCard}>
+                  {submittingCard ? 'Saving...' : 'Add Payment Method'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

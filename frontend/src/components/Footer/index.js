@@ -69,7 +69,7 @@ const Footer = () => {
               <li><Link to="/test-catalog">Test Catalog</Link></li>
               <li><Link to="/book">Book Appointment</Link></li>
               <li><Link to="/offers">Health Offers</Link></li>
-              <li><Link to="/home-collection">Home Collection</Link></li>
+              <li><Link to="/mobile-phlebotomy">Mobile Phlebotomy</Link></li>
               <li><Link to="/faq">FAQs</Link></li>
             </ul>
           </motion.div>

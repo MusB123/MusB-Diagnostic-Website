@@ -32,7 +32,7 @@ def create_booking(request):
 
     # Validate address for home visits
     if visit_type == 'home' and not address:
-        return Response({'error': 'Address is required for home collection.'}, status=400)
+        return Response({'error': 'Address is required for mobile phlebotomy.'}, status=400)
 
     # Perform geocoding for home visits
     coordinates = None

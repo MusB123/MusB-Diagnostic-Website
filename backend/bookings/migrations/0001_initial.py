@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('test_name', models.CharField(help_text='Selected test or package', max_length=200)),
                 ('preferred_date', models.DateField()),
                 ('preferred_time', models.CharField(choices=[('morning', 'Morning (8 AM - 12 PM)'), ('afternoon', 'Afternoon (12 PM - 4 PM)'), ('evening', 'Evening (4 PM - 8 PM)')], max_length=20)),
-                ('visit_type', models.CharField(choices=[('home', 'Home Collection'), ('lab', 'Lab Visit')], default='home', max_length=10)),
+                ('visit_type', models.CharField(choices=[('home', 'Mobile Phlebotomy'), ('lab', 'Lab Visit')], default='home', max_length=10)),
                 ('status', models.CharField(choices=[('pending', 'Pending'), ('confirmed', 'Confirmed'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='pending', max_length=20)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),

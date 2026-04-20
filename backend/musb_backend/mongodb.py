@@ -239,6 +239,9 @@ def get_otps_collection():
     return get_db()['otps']
 
 
+def get_patient_payments_collection():
+    return get_db()['patient_payments']
+
 # --- Phlebotomist Portal Specific Helpers ---
 
 def get_phlebotomists_collection():

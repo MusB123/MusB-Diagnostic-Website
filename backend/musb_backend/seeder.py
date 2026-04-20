@@ -25,6 +25,7 @@ MOCK_TESTS = [
     {'id': 4, 'title': 'Vitamin D Profile', 'category': 3, 'category_name': 'Vitamins & Minerals', 'description': 'Important for bone health, immune function, and overall wellness.', 'price': '39.00', 'preparation': 'No fasting required', 'sample_type': 'Blood', 'turnaround': '48h', 'icon_name': 'Bone'},
     {'id': 5, 'title': 'Urinalysis Complete', 'category': 4, 'category_name': 'Kidney Health', 'description': 'Evaluates physical, chemical, and microscopic properties of urine.', 'price': '35.00', 'preparation': 'Morning sample preferred', 'sample_type': 'Urine', 'turnaround': '24h', 'icon_name': 'Activity'},
     {'id': 6, 'title': 'Throat Culture Swab', 'category': 5, 'category_name': 'Infectious Disease', 'description': 'Detects the presence of bacterial or fungal infections in the throat.', 'price': '45.00', 'preparation': 'No food 1 hr prior', 'sample_type': 'Swab', 'turnaround': '48h', 'icon_name': 'FileWarning'},
+    {'id': 7, 'title': 'Mobile Phlebotomy (Home/Office)', 'category': 1, 'category_name': 'General Wellness', 'description': 'On-site blood collection service at your preferred location.', 'price': '100.00', 'preparation': 'As per specific tests', 'sample_type': 'Service', 'turnaround': 'Varies', 'icon_name': 'Truck'},
 ]
 
 def seed_production_if_empty():

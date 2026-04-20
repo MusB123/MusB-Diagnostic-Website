@@ -8,9 +8,10 @@ from .otp_service import OTPService
 from .auth import generate_token, verify_token
 from django.conf import settings
 from musb_backend.mongodb import (
-    get_patients_collection, get_otps_collection, 
+    get_patients_collection, get_otps_collection,
     get_appointments_collection, get_phlebotomists_collection,
-    get_diag_documents_collection, transform_doc
+    get_diag_documents_collection, get_patient_payments_collection,
+    transform_doc
 )
 
 @api_view(['POST'])
@@ -132,9 +133,45 @@ def dashboard_view(request):
     # Limit overview count
     saved_phlebs = saved_phlebs[:3]
     
-    # documents
+    # documents (Dynamic generation from appointments + standalone)
     doc_coll = get_diag_documents_collection()
-    docs = list(doc_coll.find({}))
+    docs = list(doc_coll.find({})) # Standalone system docs
+    
+    # Extract documents from actual patient appointments
+    appointment_docs = []
+    for a in all_appts:
+        # Format the date for the document list
+        raw_date = a.get('preferred_date', a.get('created_at', ''))
+        doc_date = raw_date.split('T')[0] if raw_date else "Recent"
+        test_title = a.get('test_name', 'Clinical Test')
+        
+        # Track Doctor's Order
+        if a.get('doctor_order_base64'):
+            appointment_docs.append({
+                'id': f"order_{a['_id']}",
+                'name': f"Doctor's Order - {test_title}",
+                'type': 'Prescription',
+                'date': doc_date
+            })
+        
+        # Track Insurance Cards
+        if a.get('insurance_front_base64'):
+            appointment_docs.append({
+                'id': f"ins_f_{a['_id']}",
+                'name': f"Insurance (Front) - {test_title}",
+                'type': 'Insurance Card',
+                'date': doc_date
+            })
+        if a.get('insurance_back_base64'):
+            appointment_docs.append({
+                'id': f"ins_b_{a['_id']}",
+                'name': f"Insurance (Back) - {test_title}",
+                'type': 'Insurance Card',
+                'date': doc_date
+            })
+
+    # Combine all documents
+    all_visible_docs = docs + appointment_docs
     
     def _format_appt(a):
         doc = transform_doc(a)
@@ -162,11 +199,16 @@ def dashboard_view(request):
         doc['rejection_reason'] = doc.get('rejection_reason', '')
         return doc
 
+    # 4. Fetch Real Payment Methods
+    pay_coll = get_patient_payments_collection()
+    cards = list(pay_coll.find({'patient_email': email}))
+    
     return Response({
         'upcoming': [_format_appt(a) for a in all_appts if a.get('status') in upcoming_statuses],
         'past': [_format_appt(a) for a in all_appts if a.get('status') in past_statuses],
         'saved_phlebotomists': [transform_doc(p) for p in saved_phlebs],
-        'documents': [transform_doc(d) for d in docs],
+        'documents': [transform_doc(d) for d in all_visible_docs],
+        'payment_methods': [transform_doc(c) for c in cards],
         'stats': {
             'total': len(all_appts),
             'completed': len([a for a in all_appts if a.get('status') == 'completed']),
@@ -224,7 +266,14 @@ def book_appointment(request):
         'preferred_time': data.get('preferred_time'),
         'payment_method': data.get('payment_method', 'Credit Card'),
         'status': 'pending_approval',
-        'created_at': datetime.datetime.utcnow().isoformat()
+        'created_at': datetime.datetime.utcnow().isoformat(),
+        # Clinical Documents (Base64)
+        'doctor_order_base64': data.get('doctor_order_base64'),
+        'doctor_order_name': data.get('doctor_order_name'),
+        'insurance_front_base64': data.get('insurance_front_base64'),
+        'insurance_front_name': data.get('insurance_front_name'),
+        'insurance_back_base64': data.get('insurance_back_base64'),
+        'insurance_back_name': data.get('insurance_back_name'),
     }
     
     # Optional non-sensitive payment bits
@@ -432,3 +481,35 @@ def verify_otp(request):
             'mfa_enabled': bool(patient.get('totp_secret'))
         }
     })
+
+@api_view(['POST'])
+def add_payment_method(request):
+    """
+    POST /api/patients/add-payment-method/
+    Body: { "brand": "Visa", "last4": "4242", "exp": "12/25" }
+    """
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return Response({'error': 'Unauthorized'}, status=401)
+    
+    token = auth_header.split(' ')[1]
+    payload = verify_token(token)
+    if not payload:
+        return Response({'error': 'Invalid session.'}, status=401)
+    
+    email = payload.get('email')
+    data = request.data
+    
+    card_data = {
+        'patient_email': email,
+        'brand': data.get('brand', 'Visa'),
+        'last4': data.get('last4', '0000'),
+        'exp': data.get('exp', '01/01'),
+        'card_holder': data.get('card_holder', 'Patient'),
+        'created_at': datetime.datetime.utcnow().isoformat()
+    }
+    
+    pay_coll = get_patient_payments_collection()
+    pay_coll.insert_one(card_data)
+    
+    return Response({'message': 'Payment method added successfully.'}, status=status.HTTP_201_CREATED)

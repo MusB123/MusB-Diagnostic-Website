@@ -36,7 +36,6 @@ const generateDates = () => {
   return dates;
 };
 
-const TIME_SLOTS = []; // Deprecated - Using Dial Picker now
 
 const WheelColumn = ({ values, selectedValue, onChange, label }) => {
   const containerRef = React.useRef(null);
@@ -59,7 +58,7 @@ const WheelColumn = ({ values, selectedValue, onChange, label }) => {
         containerRef.current.scrollTop = index * itemHeight;
       }
     }
-  }, []);
+  }, [selectedValue, values]);
 
   return (
     <div className="pp-dial-column-wrapper">
@@ -152,6 +151,17 @@ const BookingWizard = () => {
     lookupZip(data.zipCode);
   }, [data.zipCode]);
 
+  const toBase64 = file => new Promise((resolve, reject) => {
+    if (!file || !(file instanceof File)) {
+      resolve(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+
   const fetchCatalog = async () => {
     try {
       const res = await api.get('/api/superadmin/catalog/tests/');
@@ -232,6 +242,24 @@ const BookingWizard = () => {
             card_holder: data.cardName,
             last4: data.cardNumber.slice(-4)
           };
+        }
+
+        // 4. Handle File Conversion to Base64 (Clinical Documents)
+        // This ensures the files are stored in the appointment doc for the dashboard
+        if (data.hasOrder && data.orderFile) {
+          payload.doctor_order_base64 = await toBase64(data.orderFile);
+          payload.doctor_order_name = data.orderFile.name;
+        }
+
+        if (data.hasInsurance) {
+          if (data.insuranceFront) {
+            payload.insurance_front_base64 = await toBase64(data.insuranceFront);
+            payload.insurance_front_name = data.insuranceFront.name;
+          }
+          if (data.insuranceBack) {
+            payload.insurance_back_base64 = await toBase64(data.insuranceBack);
+            payload.insurance_back_name = data.insuranceBack.name;
+          }
         }
 
         await api.post('/api/patients/book-appointment/', payload);
@@ -631,10 +659,10 @@ const BookingWizard = () => {
                             id="insFront"
                             accept="image/*" 
                             hidden 
-                            onChange={(e) => updateField('insuranceFront', e.target.files[0]?.name || null)} 
+                            onChange={(e) => updateField('insuranceFront', e.target.files[0] || null)} 
                           />
                           <div className="pp-upload-icon" style={{ width: 40, height: 40, borderRadius: 10 }}><Camera size={18} /></div>
-                          <p style={{ fontSize: '0.8rem' }}>{data.insuranceFront || 'Front of Card'}</p>
+                          <p style={{ fontSize: '0.8rem' }}>{data.insuranceFront?.name || 'Front of Card'}</p>
                         </div>
                       </div>
                       <div className="pp-form-group">
@@ -649,10 +677,10 @@ const BookingWizard = () => {
                             id="insBack"
                             accept="image/*" 
                             hidden 
-                            onChange={(e) => updateField('insuranceBack', e.target.files[0]?.name || null)} 
+                            onChange={(e) => updateField('insuranceBack', e.target.files[0] || null)} 
                           />
                           <div className="pp-upload-icon" style={{ width: 40, height: 40, borderRadius: 10 }}><Camera size={18} /></div>
-                          <p style={{ fontSize: '0.8rem' }}>{data.insuranceBack || 'Back of Card'}</p>
+                          <p style={{ fontSize: '0.8rem' }}>{data.insuranceBack?.name || 'Back of Card'}</p>
                         </div>
                       </div>
                     </div>
@@ -920,7 +948,7 @@ const BookingWizard = () => {
               </div>
               <div className="pp-review-row">
                 <span className="pp-review-label">Doctor&apos;s Order</span>
-                <span className="pp-review-label">{data.orderFile || 'Not provided'}</span>
+                <span className="pp-review-label">{data.orderFile?.name || 'Not provided'}</span>
               </div>
               <div className="pp-review-row">
                 <span className="pp-review-label">Insurance</span>

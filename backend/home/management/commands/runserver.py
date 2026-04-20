@@ -15,13 +15,10 @@ class Command(RunserverCommand):
         # 2. Check MongoDB status
         try:
             from musb_backend import mongodb
-            from musb_backend.mongodb import MockDatabase
 
             db = mongodb.get_db()
             if getattr(settings, 'MONGO_USE_MOCK', False):
                 db_status = "Mock DB (MONGO_USE_MOCK=true)"
-            elif isinstance(db, MockDatabase):
-                db_status = "Mock DB (Mongo unreachable — MONGO_FALLBACK_MOCK)"
             else:
                 db_status = f"MongoDB ({settings.MONGO_DB_NAME})"
         except Exception as exc:

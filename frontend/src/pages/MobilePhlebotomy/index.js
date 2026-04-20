@@ -146,7 +146,7 @@ const MobilePhlebotomy = () => {
           </div>
           <div className="stat-item">
             <h3>2k+</h3>
-            <p>Monthly Home Collections</p>
+            <p>Monthly Mobile Phlebotomy</p>
           </div>
           <div className="stat-item">
             <h3>99.8%</h3>
