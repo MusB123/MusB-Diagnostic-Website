@@ -13,5 +13,7 @@ class HomeConfig(AppConfig):
             try:
                 from musb_backend.seeder import seed_production_if_empty
                 seed_production_if_empty()
-            except ImportError:
-                pass
+            except Exception as e:
+                # Expert Resilience: Don't let a seeding error crash the entire web server boot process.
+                import logging
+                logging.getLogger(__name__).error(f"CRITICAL: Auto-seed failed during boot: {str(e)}")

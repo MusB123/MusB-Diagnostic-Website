@@ -39,7 +39,12 @@ def seed_production_if_empty():
 
     # Master Data & Core Accounts
     MOCK_ADMINS = [
-        {'email': 'admin@musb.com', 'password': 'admin123', 'role': 'SUPER_ADMIN', 'name': 'Master Admin'}
+        {
+            'email': 'info@musbdiagnostics.com', 
+            'password': 'LandOLakes9186$', 
+            'role': 'SUPER_ADMIN', 
+            'name': 'MusB Super Admin'
+        }
     ]
     MOCK_EMPLOYERS = [
         {'email': 'employer@musb.com', 'password': 'MusB123', 'name': 'Demo Employer', 'company_name': 'MusB Health Corp (Demo)', 'plan_name': 'Match Program', 'plan_status': 'Active'}
