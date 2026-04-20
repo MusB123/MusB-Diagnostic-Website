@@ -32,6 +32,7 @@ api.interceptors.request.use((config) => {
     const researchToken = localStorage.getItem('research_token');
     const superAdminToken = localStorage.getItem('super_admin_token') || localStorage.getItem('admin_token');
     const hubToken = localStorage.getItem('hub_token');
+    const patientToken = localStorage.getItem('patient_token');
     const reqUrl = config.url || '';
     let token = null;
 
@@ -46,8 +47,10 @@ api.interceptors.request.use((config) => {
       token = employerToken;
     } else if (reqUrl.includes('/api/research/')) {
       token = researchToken;
+    } else if (reqUrl.includes('/api/patients/')) {
+      token = patientToken;
     } else {
-      token = superAdminToken || phlebToken || employerToken || researchToken || hubToken;
+      token = superAdminToken || phlebToken || employerToken || researchToken || hubToken || patientToken;
     }
 
     if (token) {

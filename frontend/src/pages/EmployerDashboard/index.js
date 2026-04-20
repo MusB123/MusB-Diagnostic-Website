@@ -284,7 +284,7 @@ const EmployerDashboard = () => {
               />
             </motion.div>
             <div className="user-details" style={{ display: 'block', padding: 0 }}>
-              <div className="user-name" style={{ color: 'white', fontWeight: 800, lineHeight: 1 }}>MusB Diagnostics</div>
+              <div className="user-name" style={{ color: 'white', fontWeight: 800, lineHeight: 1 }}>{user?.name || 'MusB Diagnostics'}</div>
               <div className="user-role" style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.4rem' }}>Official Partner</div>
             </div>
           </div>

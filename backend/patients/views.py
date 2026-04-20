@@ -75,14 +75,19 @@ def dashboard_view(request):
     email = payload.get('email')
     
     # 2. Fetch Data from MongoDB
-    # appointments
     appt_coll = get_appointments_collection()
-    # In a real app, we'd filter by patient_email or patient_id
-    # For demo, we'll fetch all and categorize
-    all_appts = list(appt_coll.find({}))
     
-    upcoming = [transform_doc(a) for a in all_appts if a.get('status') == 'upcoming']
-    past = [transform_doc(a) for a in all_appts if a.get('status') in ['completed', 'cancelled']]
+    # Filter by logged-in patient's email
+    # Try multiple keys to support legacy and new data
+    user_query = {'$or': [{'patient_email': email}, {'email': email}]}
+    all_appts = list(appt_coll.find(user_query))
+    
+    # Categorize based on status
+    upcoming_statuses = ['upcoming', 'pending_approval', 'Pending', 'approved', 'assigned', 'in_progress']
+    past_statuses = ['completed', 'cancelled', 'rejected']
+    
+    upcoming = [transform_doc(a) for a in all_appts if a.get('status') in upcoming_statuses]
+    past = [transform_doc(a) for a in all_appts if a.get('status') in past_statuses]
     
     # specialists
     phleb_coll = get_phlebotomists_collection()
@@ -92,9 +97,33 @@ def dashboard_view(request):
     doc_coll = get_diag_documents_collection()
     docs = list(doc_coll.find({}))
     
+    def _format_appt(a):
+        doc = transform_doc(a)
+        # Add formatted date parts for the frontend UI
+        pref_date = doc.get('preferred_date')
+        if pref_date:
+            try:
+                dt = datetime.datetime.fromisoformat(pref_date)
+                doc['month'] = dt.strftime('%b')
+                doc['day'] = dt.strftime('%d')
+            except:
+                doc['month'] = '???'
+                doc['day'] = '??'
+        else:
+            doc['month'] = 'TBD'
+            doc['day'] = '--'
+        
+        # Use test_name if available
+        doc['test'] = doc.get('test_name', 'Clinical Test')
+        # Map time fields
+        doc['time'] = doc.get('preferred_time', 'TBD')
+        # Phlebotomist assignment placeholder or real name
+        doc['phlebotomist'] = doc.get('assigned_phlebotomist_name', 'Awaiting Assignment')
+        return doc
+
     return Response({
-        'upcoming': upcoming,
-        'past': past,
+        'upcoming': [_format_appt(a) for a in all_appts if a.get('status') in upcoming_statuses],
+        'past': [_format_appt(a) for a in all_appts if a.get('status') in past_statuses],
         'saved_phlebotomists': [transform_doc(p) for p in saved_phlebs],
         'documents': [transform_doc(d) for d in docs],
         'stats': {
@@ -103,6 +132,74 @@ def dashboard_view(request):
             'upcoming': len(upcoming)
         }
     })
+
+@api_view(['POST'])
+def book_appointment(request):
+    """
+    POST /api/patients/book-appointment/
+    Body: { 
+        "test_id": "...", 
+        "full_name": "...", 
+        "email": "...", 
+        "phone": "...", 
+        "address": "...", 
+        "visit_type": "...", 
+        "preferred_date": "...", 
+        "preferred_time": "...",
+        "payment_method": "...",
+        "payment_info": { ... }
+    }
+    """
+    # 1. Verify Token
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return Response({'error': 'Unauthorized'}, status=401)
+    
+    token = auth_header.split(' ')[1]
+    payload = verify_token(token)
+    if not payload:
+        return Response({'error': 'Invalid or expired session.'}, status=401)
+    
+    # 2. Extract and Sanitize Data
+    data = request.data
+    email_from_token = payload.get('email')
+    
+    # Robust Name Resolution: Fetch from DB using token email
+    patients_coll = get_patients_collection()
+    patient_record = patients_coll.find_one({'email': email_from_token})
+    db_name = patient_record.get('name') if patient_record else None
+    
+    booking_data = {
+        'test_id': data.get('test_id'),
+        'test_name': data.get('test_name'),
+        'test_price': data.get('test_price'),
+        'patient_email': email_from_token,
+        'full_name': db_name or data.get('full_name') or 'Patient',
+        'email': data.get('email'), # Contact email
+        'phone': data.get('phone'),
+        'address': data.get('address'),
+        'visit_type': data.get('visit_type'),
+        'preferred_date': data.get('preferred_date'),
+        'preferred_time': data.get('preferred_time'),
+        'payment_method': data.get('payment_method', 'Credit Card'),
+        'status': 'pending_approval',
+        'created_at': datetime.datetime.utcnow().isoformat()
+    }
+    
+    # Optional non-sensitive payment bits
+    if 'payment_info' in data:
+        p_info = data['payment_info']
+        sensitive = ['card_number', 'cvv', 'cvc', 'expiry', 'password']
+        booking_data['payment_info'] = {k: v for k, v in p_info.items() if k.lower() not in sensitive}
+
+    # 3. Save to MongoDB
+    coll = get_appointments_collection()
+    res = coll.insert_one(booking_data)
+    
+    return Response({
+        'message': 'Appointment request submitted successfully. Waiting for Admin Approval.',
+        'appointment_id': str(res.inserted_id)
+    }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

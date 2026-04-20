@@ -53,23 +53,12 @@ const PatientDashboard = () => {
     navigate('/portal/patient/login', { replace: true });
   };
 
-  // Re-map our dynamic data to the existing render variables
-  const UPCOMING = dashData.upcoming.length > 0 ? dashData.upcoming : [
-    { id: 1, test: 'Comprehensive Metabolic Panel', date: 'Apr 22', day: '22', month: 'Apr', time: '9:00 AM', address: '123 Main St, New York', status: 'upcoming', phlebotomist: 'Jessica R.' },
-  ];
-  const PAST = dashData.past.length > 0 ? dashData.past : [
-    { id: 3, test: 'Lipid Panel', date: 'Apr 5', day: '05', month: 'Apr', time: '10:00 AM', status: 'completed', phlebotomist: 'Sarah K.' },
-  ];
-  const SAVED_PHLEBS = dashData.saved_phlebotomists.length > 0 ? dashData.saved_phlebotomists : [
-    { id: 1, name: 'Jessica Rivera', initials: 'JR', rating: 4.9, draws: 1200 },
-  ];
-  const DOCUMENTS = dashData.documents.length > 0 ? dashData.documents : [
-    { id: 1, name: "Dr. Wilson's Lab Order", type: 'Lab Order', date: 'Apr 10, 2026' },
-  ];
-  const PAYMENT_METHODS = dashData.payment_methods?.length > 0 ? dashData.payment_methods : [
-    { id: 1, brand: 'Visa', last4: '4242', exp: '08/27' },
-    { id: 2, brand: 'Mastercard', last4: '8888', exp: '12/26' }
-  ];
+  // Use real data from backend, default to empty arrays if none
+  const UPCOMING = dashData.upcoming || [];
+  const PAST = dashData.past || [];
+  const SAVED_PHLEBS = dashData.saved_phlebotomists || [];
+  const DOCUMENTS = dashData.documents || [];
+  const PAYMENT_METHODS = dashData.payment_methods || [];
   const STATS = dashData.stats;
 
   const NAV_ITEMS = [
@@ -107,7 +96,7 @@ const PatientDashboard = () => {
           </div>
           Upcoming Appointments
         </div>
-        {UPCOMING.map((appt) => (
+        {UPCOMING.length > 0 ? UPCOMING.map((appt) => (
           <div key={appt.id} className="pp-appt-item">
             <div className="pp-appt-date-block">
               <span className="pp-appt-month">{appt.month}</span>
@@ -127,7 +116,12 @@ const PatientDashboard = () => {
               </button>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="pp-empty-state" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+            <CalendarDays size={40} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+            <p>No upcoming appointments scheduled.</p>
+          </div>
+        )}
         <button
           className="pp-btn-primary"
           onClick={() => navigate('/portal/patient/book')}
@@ -201,7 +195,7 @@ const PatientDashboard = () => {
           </div>
           Past Appointments
         </div>
-        {PAST.map((appt) => (
+        {PAST.length > 0 ? PAST.map((appt) => (
           <div key={appt.id} className="pp-appt-item">
             <div className="pp-appt-date-block">
               <span className="pp-appt-month">{appt.month}</span>
@@ -213,7 +207,11 @@ const PatientDashboard = () => {
             </div>
             <span className={`pp-appt-badge ${appt.status}`}>{appt.status}</span>
           </div>
-        ))}
+        )) : (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+            <p>No past appointment history.</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -227,7 +225,7 @@ const PatientDashboard = () => {
           </div>
           Your Saved Specialists
         </div>
-        {SAVED_PHLEBS.map((p) => (
+        {SAVED_PHLEBS.length > 0 ? SAVED_PHLEBS.map((p) => (
           <div
             key={p.id}
             className="pp-saved-phleb"
@@ -243,7 +241,11 @@ const PatientDashboard = () => {
               <Star size={14} /> {p.rating}
             </div>
           </div>
-        ))}
+        )) : (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+            <p>You haven't saved any specialists yet.</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -257,7 +259,7 @@ const PatientDashboard = () => {
           </div>
           Uploaded Documents
         </div>
-        {DOCUMENTS.map((doc) => (
+        {DOCUMENTS.length > 0 ? DOCUMENTS.map((doc) => (
           <div key={doc.id} className="pp-doc-item">
             <div className="pp-doc-icon"><FileText size={18} /></div>
             <div className="pp-doc-info">
@@ -265,7 +267,11 @@ const PatientDashboard = () => {
               <p>{doc.type} • {doc.date}</p>
             </div>
           </div>
-        ))}
+        )) : (
+          <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b' }}>
+            <p>No documents found.</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -376,7 +382,7 @@ const PatientDashboard = () => {
               <div className="pp-dash-sidebar-logo-icon">
                 <Droplets size={20} />
               </div>
-              <h3>MusB Patient</h3>
+              <h3>{user.name}</h3>
             </div>
 
             <nav className="pp-dash-nav">

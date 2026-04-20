@@ -89,9 +89,14 @@ def _load_orders():
 
     orders = []
     for appt in appointments:
+        # Use persisted test details if available, otherwise fallback to catalog lookup
+        persisted_test_name = appt.get("test_name")
+        persisted_test_price = appt.get("test_price")
+        
         test_id = str(appt.get("test_id") or "")
         test_doc = test_by_id.get(test_id, {})
-        charge_value = float(test_doc.get("price") or 0)
+        
+        charge_value = float(persisted_test_price if persisted_test_price is not None else (test_doc.get("price") or 0))
         created_dt = _parse_dt(appt.get("created_at")) or _parse_dt(appt.get("assigned_at")) or _now_utc()
         phleb_id = str(appt.get("assigned_phlebotomist_id") or appt.get("phlebotomist_id") or "")
         phleb_doc = phleb_by_id.get(phleb_id, {})
@@ -110,10 +115,11 @@ def _load_orders():
                 "created_dt": created_dt,
                 "status": str(appt.get("status") or "pending_approval").lower().replace(" ", "_"),
                 "zip": (appt.get("address") or "").split(",")[-1].strip()[-5:],
-                "tests": test_doc.get("title", f"Test Ref: {test_id}"),
+                "tests": persisted_test_name or test_doc.get("title", f"Test Ref: {test_id}"),
                 "charge_raw": charge_value,
                 "charge": _money(charge_value),
                 "insurance": "N/A",
+                "payment_method": appt.get("payment_method", "N/A"),
                 "has_order": True,
                 "address": appt.get("address") or "",
             }

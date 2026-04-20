@@ -753,7 +753,7 @@ function OrdersTab({ data, setData }) {
                 <button style={{ ...actionBtnStyle, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }} onClick={() => setSelected(null)}>✕ Close</button>
               </div>
               <div style={{ display: 'grid', gap: '0.75rem' }}>
-                {[['Patient', selected.patient], ['Phlebotomist', selected.phlebotomist || 'Unassigned'], ['Company', selected.company || 'N/A'], ['Date/Time', `${selected.date} ${selected.time}`], ['Tests', selected.tests], ['Charge', selected.charge], ['Insurance', selected.insurance], ['Doctor Order', selected.has_order ? 'Yes' : 'No'], ['ZIP', selected.zip], ['Status', selected.status]].map(([l, v]) => (
+                {[['Patient', selected.patient], ['Phlebotomist', selected.phlebotomist || 'Unassigned'], ['Company', selected.company || 'N/A'], ['Date/Time', `${selected.date} ${selected.time}`], ['Tests', selected.tests], ['Charge', selected.charge], ['Insurance', selected.insurance], ['Payment Method', selected.payment_method], ['Doctor Order', selected.has_order ? 'Yes' : 'No'], ['ZIP', selected.zip], ['Status', selected.status]].map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.6rem 0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.5rem' }}>
                     <span style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.8rem' }}>{l}</span>
                     <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{v}</span>
