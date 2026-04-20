@@ -161,7 +161,10 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
 # High-Stakes SMTP Hardening
 EMAIL_TIMEOUT = 25 
 
-# Fallback to Console Backend in Debug if no password is set
-if not EMAIL_HOST_PASSWORD and DEBUG:
+# Fallback to Console Backend if no password is set (ensures product remains functional via logs)
+if not EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    print("[MUSB] EMAIL_HOST_PASSWORD not found. Emails will be logged to the console.")
+    print("\n" + "!"*60)
+    print("WARNING: EMAIL_HOST_PASSWORD not found.")
+    print("Emails will be logged to the console/Render logs instead of being sent.")
+    print("!"*60 + "\n")

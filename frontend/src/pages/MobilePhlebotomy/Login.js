@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertCircle, Loader2, ArrowLeft, ArrowRight, 
-  Upload, Camera, CheckCircle, Clock, ShieldCheck, 
-  MapPin, X, Globe 
+  Upload, Camera, CheckCircle, ShieldCheck, 
+  X 
 } from 'lucide-react';
 import api from '../../api/api';
 import './Portal.css';

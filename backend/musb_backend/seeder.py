@@ -29,48 +29,66 @@ MOCK_TESTS = [
 
 def seed_production_if_empty():
     """
-    Expert-level auto-seeder to ensure the database is never empty on production.
-    Checks for the 'lab_tests' collection count and seeds if zero.
+    Ensures the database has essential catalog, config, and administration accounts.
+    Only seeds if a collection is completely empty. Non-destructive.
     """
     db = get_db()
     if db is None:
         logger.warning("[SEEDER] Database unreachable. Skipping auto-seed.")
         return
 
+    # Master Data & Core Accounts
+    MOCK_ADMINS = [
+        {'email': 'admin@musb.com', 'password': 'admin123', 'role': 'SUPER_ADMIN', 'name': 'Master Admin'}
+    ]
+    MOCK_EMPLOYERS = [
+        {'email': 'employer@musb.com', 'password': 'MusB123', 'name': 'Demo Employer', 'company_name': 'MusB Health Corp (Demo)', 'plan_name': 'Match Program', 'plan_status': 'Active'}
+    ]
     MOCK_HUBS = [
         {'id': 'HUB-EAST-001', 'name': 'Atlantic Phlebotomy Fleet', 'email': 'east@musb.fleet', 'address': '450 Park Avenue, NY', 'status': 'active', 'created_at': '2026-01-15T09:00:00'},
-        {'id': 'HUB-WEST-002', 'name': 'Pacific Mobile Diagnostics', 'email': 'west@musb.fleet', 'address': '85 Broad St, NY', 'status': 'active', 'created_at': '2026-02-10T11:00:00'},
+        {'id': 'HUB-DEMO-001', 'name': 'MusB Demo Hub', 'email': 'hub@musb.com', 'password': 'Hub2026', 'status': 'active', 'fleet_size': 5}
+    ]
+
+    MOCK_PLANS = [
+        {'id': 1, 'name': 'Annual Coverage', 'price_display': '$108 - $178', 'price_suffix': '/ employee', 'description': 'Annual allotment per employee for covered diagnostic testing.', 'is_featured': False, 'tag_label': '', 'icon_name': 'Shield', 'features': [{'id': 1, 'text': 'Annual allotment per employee'}, {'id': 2, 'text': 'Onsite or in-clinic collections'}, {'id': 3, 'text': 'Pre-employment & DOT testing'}, {'id': 4, 'text': 'Basic health screenings'}]},
+        {'id': 2, 'name': 'Match Program', 'price_display': 'Co-Pay', 'price_suffix': 'Ledger tracked', 'description': 'Employer matches a portion of employee lab test costs.', 'is_featured': True, 'tag_label': 'Most Popular', 'icon_name': 'Handshake', 'features': [{'id': 5, 'text': 'Employer-employee cost sharing'}, {'id': 6, 'text': 'Flexible match ratios'}, {'id': 7, 'text': 'Executive health credits'}, {'id': 8, 'text': 'Family member add-ons'}]},
+        {'id': 3, 'name': 'Free Membership', 'price_display': '$0', 'price_suffix': '/ employee', 'description': 'Employees get self-pay pricing with no employer cost.', 'is_featured': False, 'tag_label': '', 'icon_name': 'Gift', 'features': [{'id': 9, 'text': 'Zero employer cost'}, {'id': 10, 'text': 'Self-pay discounted pricing'}, {'id': 11, 'text': 'Mobile phlebotomy access'}, {'id': 12, 'text': 'Online results portal'}]},
+        {'id': 4, 'name': 'Medical Advice', 'price_display': 'Custom', 'price_suffix': '', 'description': 'White-glove concierge medical advisory for executives.', 'is_featured': False, 'tag_label': '', 'icon_name': 'Stethoscope', 'features': [{'id': 13, 'text': 'Dedicated medical advisor'}, {'id': 14, 'text': 'Personalized health plans'}, {'id': 15, 'text': 'Priority scheduling'}, {'id': 16, 'text': '24/7 telemedicine access'}]}
+    ]
+
+    MOCK_COMPARISON = [
+        {'id': 1, 'feature_name': 'Annual Health Screening', 'annual_coverage': True, 'match_program': True, 'free_membership': False, 'medical_advice': True},
+        {'id': 2, 'feature_name': 'Onsite Collections (5+ employees)', 'annual_coverage': True, 'match_program': True, 'free_membership': False, 'medical_advice': True},
+        {'id': 3, 'feature_name': 'Pre-Employment & DOT Testing', 'annual_coverage': True, 'match_program': True, 'free_membership': False, 'medical_advice': True},
+        {'id': 4, 'feature_name': 'Executive Health Credits', 'annual_coverage': False, 'match_program': True, 'free_membership': False, 'medical_advice': True},
+        {'id': 5, 'feature_name': 'Family Member Add-ons', 'annual_coverage': False, 'match_program': True, 'free_membership': False, 'medical_advice': True},
+        {'id': 6, 'feature_name': 'Dedicated Medical Advisor', 'annual_coverage': False, 'match_program': False, 'free_membership': False, 'medical_advice': True},
+        {'id': 7, 'feature_name': 'Mobile Phlebotomy Access', 'annual_coverage': True, 'match_program': True, 'free_membership': True, 'medical_advice': True},
+        {'id': 8, 'feature_name': 'Online Results Portal', 'annual_coverage': True, 'match_program': True, 'free_membership': True, 'medical_advice': True}
     ]
 
     try:
-        # Check if tests are missing
-        if db['lab_tests'].count_documents({}) == 0:
-            logger.info("🌱 [SEEDER] Production database empty. Commencing auto-healing...")
-            
-            # Map collections
-            collections_data = {
-                'offers': MOCK_OFFERS,
-                'test_categories': MOCK_CATEGORIES,
-                'lab_tests': MOCK_TESTS,
-                'phlebotomy_hubs': MOCK_HUBS,
-                'hero_content': [
-                    {'id': 1, 'badge_text': 'Next-Gen Diagnostics', 'title': 'Affordable Lab Testing + Mobile Collections + Research-Grade Quality', 'subtitle': 'Self-pay, employer plans, physicians, facilities, research & biomarker validation.'}
-                ],
-                'popular_panels': [
-                    {'id': 1, 'name': 'Annual Health Check', 'icon_name': 'Activity', 'price': '150.00', 'link': '/tests'},
-                    {'id': 2, 'name': 'Comprehensive Metabolic', 'icon_name': 'Droplets', 'price': '45.00', 'link': '/tests'},
-                    {'id': 3, 'name': 'Advanced Thyroid Panel', 'icon_name': 'AlertCircle', 'price': '85.00', 'link': '/tests'},
-                ]
-            }
+        collections_data = {
+            'offers': MOCK_OFFERS,
+            'test_categories': MOCK_CATEGORIES,
+            'lab_tests': MOCK_TESTS,
+            'phlebotomy_hubs': MOCK_HUBS,
+            'admin_users': MOCK_ADMINS,
+            'employers': MOCK_EMPLOYERS,
+            'corporate_plans': MOCK_PLANS,
+            'comparison_matrix': MOCK_COMPARISON,
+            'hero_content': [
+                {'id': 1, 'badge_text': 'Next-Gen Diagnostics', 'title': 'Affordable Lab Testing + Mobile Collections + Research-Grade Quality', 'subtitle': 'Self-pay, employer plans, physicians, facilities, research & biomarker validation.'}
+            ],
+            'system_config': [
+                {'id': 'global', 'maintenance_mode': False, 'allow_signups': True}
+            ]
+        }
 
-            for coll_name, data in collections_data.items():
-                db[coll_name].delete_many({})
+        for coll_name, data in collections_data.items():
+            if db[coll_name].count_documents({}) == 0:
                 db[coll_name].insert_many(data)
-                logger.info(f"✅ [SEEDER] Seeded {len(data)} items into '{coll_name}'")
-            
-            logger.info("✨ [SEEDER] Auto-healing complete. Production database ready.")
-        else:
-            logger.info("[SEEDER] Production data verified. No action needed.")
+                logger.info(f"🌱 [SEEDER] Seeded {len(data)} items into empty collection '{coll_name}'")
             
     except Exception as e:
         logger.error(f"❌ [SEEDER] Auto-seed failed: {str(e)}")

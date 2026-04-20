@@ -28,19 +28,6 @@ def login_manual(email, password):
     Expert implementation of employer login: 
     Checks the 'employers' collection for an email match, then verifies the password.
     Includes a demo fallback for presentation reliability.
-    """
-    # Hardcoded fallback for presentation stability
-    if email == 'employer@musb.com' and password == 'MusB123':
-        return {
-            'token': generate_token('demo_id_123', email),
-            'user': {
-                'id': 'demo_id_123',
-                'email': email,
-                'company_name': 'MusB Health Corp (Demo)',
-                'name': 'Employer'
-            }
-        }
-
     coll = get_employers_collection()
     employer = coll.find_one({'email': email})
     

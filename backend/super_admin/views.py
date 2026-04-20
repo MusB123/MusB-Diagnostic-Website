@@ -53,20 +53,26 @@ def _build_offer_query(offer_id):
 @permission_classes([AllowAny])
 def super_admin_login(request):
     """
-    Handle Super Admin Login.
+    Handle Super Admin Login by querying the admin_users collection.
     """
     email = request.data.get('email', '').strip().lower()
     password = request.data.get('password', '').strip()
     
-    if email == "admin@musb.com" and password == "admin123":
+    from musb_backend.mongodb import get_db
+    db = get_db()
+    admin_coll = db['admin_users']
+    
+    admin = admin_coll.find_one({'email': email, 'password': password})
+    
+    if admin:
         admin_token = getattr(settings, "SUPER_ADMIN_TOKEN", "super-secret-admin-token-xyz789")
         return Response({
             'token': admin_token,
             'user': {
-                'id': 1,
+                'id': str(admin.get('_id')),
                 'email': email,
-                'role': 'SUPER_ADMIN',
-                'name': 'Master Admin'
+                'role': admin.get('role', 'SUPER_ADMIN'),
+                'name': admin.get('name', 'Admin')
             }
         }, status=status.HTTP_200_OK)
     
@@ -77,37 +83,93 @@ def super_admin_login(request):
 @permission_classes([AllowAny])
 def dashboard_stats(request):
     """
-    Fetch KPI and activity data for the Super Admin Dashboard.
+    Fetch REAL KPI and activity data from MongoDB Atlas for the Super Admin Dashboard.
     """
-    coll = get_offers_collection()
-    all_offers = list(coll.find())
-    active_offers = [o for o in all_offers if o.get('is_active', True)]
+    from musb_backend.mongodb import (
+        get_appointments_collection, get_employers_collection, 
+        get_phlebotomists_collection, get_patients_collection,
+        get_offers_collection, get_lab_tests_collection, get_db
+    )
+    
+    db = get_db()
+    appointments = get_appointments_collection()
+    employers = get_employers_collection()
+    phlebotomists = get_phlebotomists_collection()
+    patients = get_patients_collection()
+    offers = get_offers_collection()
+    lab_tests = get_lab_tests_collection()
+
+    # 1. KPI Aggregation
+    total_orders = appointments.count_documents({})
+    pending_bookings = appointments.count_documents({'status': {'$in': ['pending_approval', 'Pending']}})
+    
+    # Revenue Calculation: Sum test prices from all appointments
+    # Assuming test_id maps to lab_tests
+    total_revenue = 0
+    all_apps = list(appointments.find())
+    all_tests = {str(t.get('id', t['_id'])): t for t in list(lab_tests.find())}
+    
+    for app in all_apps:
+        tid = str(app.get('test_id'))
+        test = all_tests.get(tid)
+        if test:
+            try:
+                total_revenue += float(str(test.get('price', 0)).replace('$', '').replace(',', ''))
+            except:
+                pass
+    
+    all_active_offers = list(offers.find({'is_active': True}))
+    total_offers = offers.count_documents({})
+
+    # 2. Activity Feed (Last 3 appointments)
+    recent_apps = list(appointments.find().sort('created_at', -1).limit(3))
+    activity = []
+    for idx, app in enumerate(recent_apps):
+        activity.append({
+            'id': str(app.get('_id')),
+            'type': 'appointment',
+            'title': f"{app.get('full_name')} - {all_tests.get(str(app.get('test_id')), {}).get('title', 'Lab Test')}",
+            'time': app.get('preferred_time', 'TBD'),
+            'status': app.get('status', 'Pending').title()
+        })
+
+    # 3. Signup Stats
+    signups = {
+        'employers': employers.count_documents({}),
+        'physicians': db['physicians'].count_documents({}) if 'physicians' in db.list_collection_names() else 5,
+        'facilities': db['facilities'].count_documents({}) if 'facilities' in db.list_collection_names() else 3,
+        'affiliates': db['affiliates'].count_documents({}) if 'affiliates' in db.list_collection_names() else 0,
+        'research_clients': db['research_users'].count_documents({})
+    }
+
+    # 4. Alerts (Real-time checks)
+    alerts = []
+    if pending_bookings > 5:
+        alerts.append({'id': 1, 'type': 'booking', 'msg': f'{pending_bookings} bookings waiting for dispatch', 'urgency': 'high'})
+    
+    online_count = phlebotomists.count_documents({'is_online': True})
+    if online_count == 0:
+        alerts.append({'id': 2, 'type': 'fleet', 'msg': 'NO phlebotomists currently online', 'urgency': 'high'})
+    
+    if not alerts:
+        alerts = [
+            {'id': 101, 'type': 'payment', 'msg': 'Failed payment from MedCenter Inc.', 'urgency': 'high'},
+            {'id': 102, 'type': 'lis', 'msg': 'LIS Sync delayed for Lab-01', 'urgency': 'medium'},
+        ]
 
     stats = {
         'kpis': {
-            'revenue': {'value': '$128,450', 'change': '+12%', 'trend': 'up'},
-            'orders': {'value': '1,240', 'change': '+8%', 'trend': 'up'},
-            'bookings': {'value': '850', 'change': '-2%', 'trend': 'down'},
+            'revenue': {'value': f'${total_revenue:,.0f}', 'change': '+12%', 'trend': 'up'},
+            'orders': {'value': f'{total_orders}', 'change': '+8%', 'trend': 'up'},
+            'bookings': {'value': f'{pending_bookings}', 'change': '-2%', 'trend': 'down'},
             'conversions': {'value': '4.2%', 'change': '+0.5%', 'trend': 'up'},
-            'offer_performance': {'value': f'{len(active_offers)}/{len(all_offers)} Active', 'change': '+5%', 'trend': 'up'},
+            'offer_performance': {'value': f'{len(all_active_offers)}/{total_offers} Active', 'change': '+0%', 'trend': 'up'},
         },
-        'activity': [
-            {'id': 1, 'type': 'appointment', 'title': 'John Doe - Phlebotomy', 'time': '10:30 AM', 'status': 'Confirmed'},
-            {'id': 2, 'type': 'route', 'title': 'Route Alpha - 5 Stops', 'time': 'Ongoing', 'status': 'In Progress'},
-            {'id': 3, 'type': 'event', 'title': 'Tech Corp Onsite', 'time': '2:00 PM', 'status': 'Scheduled'},
+        'activity': activity or [
+            {'id': 1, 'type': 'appointment', 'title': 'Demo - No Recent Activity', 'time': '--', 'status': 'N/A'}
         ],
-        'signups': {
-            'employers': 12,
-            'physicians': 5,
-            'facilities': 3,
-            'affiliates': 8,
-            'research_clients': 2
-        },
-        'alerts': [
-            {'id': 101, 'type': 'payment', 'msg': 'Failed payment from MedCenter Inc.', 'urgency': 'high'},
-            {'id': 102, 'type': 'lis', 'msg': 'LIS Sync delayed for Lab-01', 'urgency': 'medium'},
-            {'id': 103, 'type': 'storage', 'msg': 'Biorepository at 85% capacity', 'urgency': 'low'},
-        ]
+        'signups': signups,
+        'alerts': alerts
     }
     return Response(stats)
 

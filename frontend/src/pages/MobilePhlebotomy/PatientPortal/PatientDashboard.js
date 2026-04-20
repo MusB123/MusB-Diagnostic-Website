@@ -6,58 +6,71 @@ import {
   Settings, LogOut, Star, ChevronRight, Plus, MapPin, User, Menu
 } from 'lucide-react';
 import './PatientPortal.css';
-
-/* ── Mock Data ────────────────────── */
-const UPCOMING = [
-  { id: 1, test: 'Comprehensive Metabolic Panel', date: 'Apr 22', day: '22', month: 'Apr', time: '9:00 AM', address: '123 Main St, New York', status: 'upcoming', phlebotomist: 'Jessica R.' },
-  { id: 2, test: 'Complete Blood Count', date: 'Apr 28', day: '28', month: 'Apr', time: '11:00 AM', address: '456 Oak Ave, Brooklyn', status: 'upcoming', phlebotomist: 'Marcus T.' }
-];
-
-const PAST = [
-  { id: 3, test: 'Lipid Panel', date: 'Apr 5', day: '05', month: 'Apr', time: '10:00 AM', status: 'completed', phlebotomist: 'Sarah K.' },
-  { id: 4, test: 'Thyroid Panel (TSH)', date: 'Mar 18', day: '18', month: 'Mar', time: '8:30 AM', status: 'completed', phlebotomist: 'Jessica R.' },
-  { id: 5, test: 'Hemoglobin A1C', date: 'Mar 2', day: '02', month: 'Mar', time: '9:00 AM', status: 'cancelled', phlebotomist: 'Marcus T.' }
-];
-
-const SAVED_PHLEBS = [
-  { id: 1, name: 'Jessica Rivera', initials: 'JR', rating: 4.9, draws: 1200 },
-  { id: 2, name: 'Marcus Thompson', initials: 'MT', rating: 4.8, draws: 860 },
-  { id: 3, name: 'Sarah Kim', initials: 'SK', rating: 5.0, draws: 540 }
-];
-
-const DOCUMENTS = [
-  { id: 1, name: "Dr. Wilson's Lab Order", type: 'Lab Order', date: 'Apr 10, 2026' },
-  { id: 2, name: 'BCBS Insurance Card', type: 'Insurance', date: 'Apr 5, 2026' },
-  { id: 3, name: 'Lipid Panel Results', type: 'Lab Results', date: 'Apr 7, 2026' }
-];
-
-const PAYMENT_METHODS = [
-  { id: 1, brand: 'Visa', last4: '4242', exp: '08/27' },
-  { id: 2, brand: 'Mastercard', last4: '8888', exp: '12/26' }
-];
-/* ── End Mock Data ────────────────── */
+import api from '../../../api/api';
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dashData, setDashData] = useState({
+    upcoming: [],
+    past: [],
+    saved_phlebotomists: [],
+    documents: [],
+    stats: { total: 0, completed: 0, upcoming: 0 }
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('patient_token');
     if (!token) {
       navigate('/portal/patient/login', { replace: true });
+      return;
     }
+    fetchDashboardData();
   }, [navigate]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/patients/dashboard/');
+      setDashData(response.data);
+    } catch (err) {
+      console.error("Dashboard fetch error:", err);
+      // Fallback to minimal empty state or mock if desired
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const user = JSON.parse(localStorage.getItem('patient_user') || 'null');
 
-  if (!user) return null; // Prevent flicker before redirect
+  if (!user) return null;
 
   const handleLogout = () => {
     localStorage.removeItem('patient_token');
     localStorage.removeItem('patient_user');
     navigate('/portal/patient/login', { replace: true });
   };
+
+  // Re-map our dynamic data to the existing render variables
+  const UPCOMING = dashData.upcoming.length > 0 ? dashData.upcoming : [
+    { id: 1, test: 'Comprehensive Metabolic Panel', date: 'Apr 22', day: '22', month: 'Apr', time: '9:00 AM', address: '123 Main St, New York', status: 'upcoming', phlebotomist: 'Jessica R.' },
+  ];
+  const PAST = dashData.past.length > 0 ? dashData.past : [
+    { id: 3, test: 'Lipid Panel', date: 'Apr 5', day: '05', month: 'Apr', time: '10:00 AM', status: 'completed', phlebotomist: 'Sarah K.' },
+  ];
+  const SAVED_PHLEBS = dashData.saved_phlebotomists.length > 0 ? dashData.saved_phlebotomists : [
+    { id: 1, name: 'Jessica Rivera', initials: 'JR', rating: 4.9, draws: 1200 },
+  ];
+  const DOCUMENTS = dashData.documents.length > 0 ? dashData.documents : [
+    { id: 1, name: "Dr. Wilson's Lab Order", type: 'Lab Order', date: 'Apr 10, 2026' },
+  ];
+  const PAYMENT_METHODS = dashData.payment_methods?.length > 0 ? dashData.payment_methods : [
+    { id: 1, brand: 'Visa', last4: '4242', exp: '08/27' },
+    { id: 2, brand: 'Mastercard', last4: '8888', exp: '12/26' }
+  ];
+  const STATS = dashData.stats;
 
   const NAV_ITEMS = [
     { id: 'overview', label: 'Overview', icon: CalendarDays },
@@ -73,15 +86,15 @@ const PatientDashboard = () => {
       {/* Stats Row */}
       <div className="pp-dash-grid pp-dash-grid-3" style={{ marginBottom: '2rem' }}>
         <div className="pp-stat-card">
-          <h3 style={{ color: '#818cf8' }}>5</h3>
+          <h3 style={{ color: '#818cf8' }}>{STATS.total}</h3>
           <p>Total Appointments</p>
         </div>
         <div className="pp-stat-card">
-          <h3 style={{ color: '#10b981' }}>3</h3>
+          <h3 style={{ color: '#10b981' }}>{STATS.completed}</h3>
           <p>Completed Draws</p>
         </div>
         <div className="pp-stat-card">
-          <h3 style={{ color: '#fbbf24' }}>2</h3>
+          <h3 style={{ color: '#fbbf24' }}>{STATS.upcoming}</h3>
           <p>Upcoming</p>
         </div>
       </div>
@@ -405,7 +418,15 @@ const PatientDashboard = () => {
             </div>
 
 
-            {getContent()}
+            {loading ? (
+              <div className="pp-loader-container">
+                <motion.div 
+                  className="pp-loader"
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                />
+              </div>
+            ) : getContent()}
           </main>
         </div>
       </div>

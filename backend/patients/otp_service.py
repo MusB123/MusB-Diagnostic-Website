@@ -18,6 +18,7 @@ class OTPService:
     def send_email_otp(recipient_email, code):
         """
         Sends a verification code via Email using Django's configured backend.
+        Returns (success: bool, error_message: str|None)
         """
         subject = "MusB Diagnostic Verification Code"
         message = f"Your verification code is: {code}. It will expire in 5 minutes."
@@ -30,13 +31,15 @@ class OTPService:
                 [recipient_email],
                 fail_silently=False,
             )
-            logger.info(f"OTP Email sent to {recipient_email}")
-            return True
+            logger.info(f"OTP Email sent successfully to {recipient_email}")
+            return True, None
         except Exception as e:
-            logger.error(f"EMAIL ERROR during OTP send to {recipient_email}: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
-            return False
+            err_msg = str(e)
+            logger.error(f"EMAIL ERROR during OTP send to {recipient_email}: {err_msg}")
+            # Expert Resilience: Always log the code to console so developers can find it in Render logs
+            print(f"\n[CRITICAL LOG] OTP for {recipient_email}: {code}")
+            print(f"[CRITICAL LOG] Reason for delivery failure: {err_msg}\n")
+            return False, err_msg
 
     @staticmethod
     def generate_totp_secret():

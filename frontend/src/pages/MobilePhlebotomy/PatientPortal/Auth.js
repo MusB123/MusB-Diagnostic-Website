@@ -48,20 +48,31 @@ const PatientAuth = () => {
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) {
       setError('Please fill in all fields.');
       return;
     }
     setLoading(true);
-    // Simulate login
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const response = await api.post('/api/patients/login/', {
+        email: form.email,
+        password: form.password
+      });
+
       setLoading(false);
-      localStorage.setItem('patient_token', 'demo_token');
-      localStorage.setItem('patient_user', JSON.stringify({ name: 'John Doe', email: form.email }));
+      localStorage.setItem('patient_token', response.data.token);
+      localStorage.setItem('patient_user', JSON.stringify(response.data.user));
       navigate('/portal/patient/dashboard', { replace: true });
-    }, 1500);
+    } catch (err) {
+      setLoading(false);
+      const data = err.response?.data;
+      const msg = data?.error || data?.message || err.message;
+      setError(msg);
+    }
   };
 
   const handleSignup = async (e) => {

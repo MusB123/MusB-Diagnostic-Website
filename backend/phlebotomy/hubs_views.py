@@ -73,12 +73,6 @@ def login_hub(request):
     email = request.data.get('email', '').strip().lower()
     password = request.data.get('password')
     
-    # Hardcoded demo for hub admin
-    if email == 'hub@musb.com' and password == 'Hub2026':
-        demo_hub = {'id': 'HUB-DEMO-001', 'email': email, 'name': 'MusB HQ Fleet'}
-        token = generate_hub_token(demo_hub)
-        return Response({'token': token, 'user': {**demo_hub, 'role': 'hub_admin'}})
-
     hub = coll.find_one({'email': email, 'password': password})
     if hub:
         hub_info = {'id': str(hub['_id']), 'email': hub['email'], 'name': hub['name']}
@@ -100,7 +94,7 @@ def get_fleet(request):
     hub_id = payload.get('hub_id')
     coll = get_phlebotomists_collection()
     
-    query = {'hub_id': hub_id} if hub_id != 'HUB-DEMO-001' else {}
+    query = {'hub_id': hub_id}
     fleet = list(coll.find(query)) 
     return Response(transform_doc(fleet))
 
@@ -173,7 +167,7 @@ def auto_allocate_all(request):
     pending = list(appointments_coll.find({'status': 'Pending'}))
     if not pending: return Response({'message': 'No pending orders found'})
     
-    query = {'hub_id': hub_id, 'is_online': True} if hub_id != 'HUB-DEMO-001' else {'is_online': True}
+    query = {'hub_id': hub_id, 'is_online': True}
     available_phlebs = list(phlebs_coll.find(query))
     
     if not available_phlebs:
@@ -205,7 +199,7 @@ def hub_dashboard_stats(request):
     app_coll = get_appointments_collection()
     phleb_coll = get_phlebotomists_collection()
     
-    hub_filter = {'hub_id': hub_id} if hub_id != 'HUB-DEMO-001' else {}
+    hub_filter = {'hub_id': hub_id}
     
     # 1. Fleet Stats
     total_fleet = phleb_coll.count_documents(hub_filter)
@@ -273,7 +267,7 @@ def hub_reports(request):
     app_coll = get_appointments_collection()
     phleb_coll = get_phlebotomists_collection()
     
-    hub_filter = {'hub_id': hub_id} if hub_id != 'HUB-DEMO-001' else {}
+    hub_filter = {'hub_id': hub_id}
     phlebs = list(phleb_coll.find(hub_filter))
     fleet_ids = [p.get('id', str(p.get('_id'))) for p in phlebs]
     
